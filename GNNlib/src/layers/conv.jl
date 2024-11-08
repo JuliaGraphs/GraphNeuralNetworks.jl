@@ -559,7 +559,7 @@ function transformer_conv(l, g::GNNGraph, x::AbstractMatrix,  e::Union{AbstractM
         g = add_self_loops(g)
     end
 
-    out = l.channels[2]
+    out = l.out_dims
     heads = l.heads
     W1x = !isnothing(l.W1) ? l.W1(x) : nothing
     W2x = reshape(l.W2(x), out, heads, :)
