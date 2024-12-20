@@ -344,6 +344,13 @@ end
     @test g1 !== g2
 end
 
+@testset "show" begin
+    # no throw when global data is not an array
+    g = rand_graph(10, 20, gdata = "ciao")
+    @test sprint(show, g) == "GNNGraph(10, 20) with u: string(4) data"
+    @test sprint(show, MIME("text/plain"), g) == "GNNGraph:\n  num_nodes: 10\n  num_edges: 20\n  gdata:\n    u = 4-codeunit String"
+end
+
 ## Cannot test this because DataStore is not an ordered collection
 ## Uncomment when/if it will be based on OrderedDict
 # @testset "show" begin

@@ -230,16 +230,20 @@ function Base.copy(g::GNNGraph; deep = false)
     end
 end
 
+feature_summary(x::AbstractArray) = "$(dims2string(size(x)))"
+feature_summary(x::AbstractString) = "string($(length(x)))"
+feature_summary(x::T) where T = "$T"
+
 function print_feature(io::IO, feature)
     if !isempty(feature)
         if length(keys(feature)) == 1
             k = first(keys(feature))
             v = first(values(feature))
-            print(io, "$(k): $(dims2string(size(v)))")
+            print(io, "$(k): $(feature_summary(v))")
         else
             print(io, "(")
             for (i, (k, v)) in enumerate(pairs(feature))
-                print(io, "$k: $(dims2string(size(v)))")
+                print(io, "$k: $(feature_summary(v))")
                 if i == length(feature)
                     print(io, ")")
                 else

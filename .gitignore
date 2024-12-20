@@ -19,3 +19,4 @@ GraphNeuralNetworks/docs/src/GNNGraphs
 GraphNeuralNetworks/docs/src/GNNlib
 tutorials/docs/build
 prova.jl
+pyg.ipynb
