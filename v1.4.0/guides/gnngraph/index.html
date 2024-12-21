@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Graphs · GNNGraphs.jl</title><meta name="title" content="Graphs · GNNGraphs.jl"/><meta property="og:title" content="Graphs · GNNGraphs.jl"/><meta property="twitter:title" content="Graphs · GNNGraphs.jl"/><meta name="description" content="Documentation for GNNGraphs.jl."/><meta property="og:description" content="Documentation for GNNGraphs.jl."/><meta property="twitter:description" content="Documentation for GNNGraphs.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">GNNGraphs.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Guides</span><ul><li class="is-active"><a class="tocitem" href>Graphs</a><ul class="internal"><li><a class="tocitem" href="#Graph-Creation"><span>Graph Creation</span></a></li><li><a class="tocitem" href="#Basic-Queries"><span>Basic Queries</span></a></li><li><a class="tocitem" href="#Data-Features"><span>Data Features</span></a></li><li><a class="tocitem" href="#Edge-weights"><span>Edge weights</span></a></li><li><a class="tocitem" href="#Batches-and-Subgraphs"><span>Batches and Subgraphs</span></a></li><li><a class="tocitem" href="#DataLoader-and-mini-batch-iteration"><span>DataLoader and mini-batch iteration</span></a></li><li><a class="tocitem" href="#Graph-Manipulation"><span>Graph Manipulation</span></a></li><li><a class="tocitem" href="#GPU-movement"><span>GPU movement</span></a></li><li><a class="tocitem" href="#Integration-with-Graphs.jl"><span>Integration with Graphs.jl</span></a></li></ul></li><li><a class="tocitem" href="../heterograph/">Heterogeneous Graphs</a></li><li><a class="tocitem" href="../temporalgraph/">Temporal Graphs</a></li><li><a class="tocitem" href="../datasets/">Datasets</a></li></ul></li><li><span class="tocitem">API Reference</span><ul><li><a class="tocitem" href="../../api/gnngraph/">GNNGraph</a></li><li><a class="tocitem" href="../../api/heterograph/">GNNHeteroGraph</a></li><li><a class="tocitem" href="../../api/temporalgraph/">TemporalSnapshotsGNNGraph</a></li><li><a class="tocitem" href="../../api/samplers/">Samplers</a></li><li><a class="tocitem" href="../../api/datasets/">Datasets</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Guides</a></li><li class="is-active"><a href>Graphs</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Graphs</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/master/GNNGraphs/docs/src/guides/gnngraph.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Static-Graphs"><a class="docs-heading-anchor" href="#Static-Graphs">Static Graphs</a><a id="Static-Graphs-1"></a><a class="docs-heading-anchor-permalink" href="#Static-Graphs" title="Permalink"></a></h1><p>The fundamental graph type in GNNGraphs.jl is the <a href="../../api/gnngraph/#GNNGraph"><code>GNNGraph</code></a>. A GNNGraph <code>g</code> is a directed graph with nodes labeled from 1 to <code>g.num_nodes</code>. The underlying implementation allows for efficient application of graph neural network operators, gpu movement, and storage of node/edge/graph related feature arrays.</p><p><code>GNNGraph</code> inherits from <a href="https://github.com/JuliaGraphs/Graphs.jl">Graphs.jl</a>&#39;s <code>AbstractGraph</code>, therefore it supports most functionality from that library. </p><h2 id="Graph-Creation"><a class="docs-heading-anchor" href="#Graph-Creation">Graph Creation</a><a id="Graph-Creation-1"></a><a class="docs-heading-anchor-permalink" href="#Graph-Creation" title="Permalink"></a></h2><p>A GNNGraph can be created from several different data sources encoding the graph topology:</p><pre><code class="language-julia hljs">using GNNGraphs, Graphs, SparseArrays
+
+
+# Construct a GNNGraph from from a Graphs.jl&#39;s graph
+lg = erdos_renyi(10, 30)
+g = GNNGraph(lg)
+
+# Same as above using convenience method rand_graph
+g = rand_graph(10, 60)
+
+# From an adjacency matrix
+A = sprand(10, 10, 0.3)
+g = GNNGraph(A)
+
+# From an adjacency list
+adjlist = [[2,3], [1,3], [1,2,4], [3]]
+g = GNNGraph(adjlist)
+
+# From COO representation
+source = [1,1,2,2,3,3,3,4]
+target = [2,3,1,3,1,2,4,3]
+g = GNNGraph(source, target)</code></pre><p>See also the related methods <a href="../../api/gnngraph/#Graphs.LinAlg.adjacency_matrix"><code>Graphs.adjacency_matrix</code></a>, <a href="../../api/gnngraph/#GNNGraphs.edge_index-Tuple{GNNGraph{&lt;:Tuple{T, T, V} where {T&lt;:(AbstractVector{&lt;:Integer}), V&lt;:Union{Nothing, AbstractVector}}}}"><code>edge_index</code></a>, and <a href="../../api/gnngraph/#GNNGraphs.adjacency_list-Tuple{GNNGraph, Any}"><code>adjacency_list</code></a>.</p><h2 id="Basic-Queries"><a class="docs-heading-anchor" href="#Basic-Queries">Basic Queries</a><a id="Basic-Queries-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Queries" title="Permalink"></a></h2><pre><code class="language-julia hljs">julia&gt; source = [1,1,2,2,3,3,3,4];
+
+julia&gt; target = [2,3,1,3,1,2,4,3];
+
+julia&gt; g = GNNGraph(source, target)
+GNNGraph:
+  num_nodes: 4
+  num_edges: 8
+
+
+julia&gt; @assert g.num_nodes == 4   # number of nodes
+
+julia&gt; @assert g.num_edges == 8   # number of edges
+
+julia&gt; @assert g.num_graphs == 1  # number of subgraphs (a GNNGraph can batch many graphs together)
+
+julia&gt; is_directed(g)      # a GNNGraph is always directed
+true
+
+julia&gt; is_bidirected(g)      # for each edge, also the reverse edge is present
+true
+
+julia&gt; has_self_loops(g)
+false
+
+julia&gt; has_multi_edges(g)      
+false</code></pre><h2 id="Data-Features"><a class="docs-heading-anchor" href="#Data-Features">Data Features</a><a id="Data-Features-1"></a><a class="docs-heading-anchor-permalink" href="#Data-Features" title="Permalink"></a></h2><p>One or more arrays can be associated to nodes, edges, and (sub)graphs of a <code>GNNGraph</code>. They will be stored in the fields <code>g.ndata</code>, <code>g.edata</code>, and <code>g.gdata</code> respectively.</p><p>The data fields are <a href="../../api/gnngraph/#DataStore"><code>DataStore</code></a> objects. <a href="../../api/gnngraph/#DataStore"><code>DataStore</code></a>s conveniently offer an interface similar to both dictionaries and named tuples. Similarly to dictionaries, DataStores support addition of new features after creation time.</p><p>The array contained in the datastores have last dimension equal to <code>num_nodes</code> (in <code>ndata</code>), <code>num_edges</code> (in <code>edata</code>), or <code>num_graphs</code> (in <code>gdata</code>) respectively.</p><pre><code class="language-julia hljs"># Create a graph with a single feature array `x` associated to nodes
+g = rand_graph(10,  60, ndata = (; x = rand(Float32, 32, 10)))
+
+g.ndata.x  # access the features
+
+# Equivalent definition passing directly the array
+g = rand_graph(10,  60, ndata = rand(Float32, 32, 10))
+
+g.ndata.x  # `:x` is the default name for node features
+
+g.ndata.z = rand(Float32, 3, 10)  # add new feature array `z`
+
+# For convenience, we can access the features through the shortcut
+g.x 
+
+# You can have multiple feature arrays
+g = rand_graph(10,  60, ndata = (; x=rand(Float32, 32, 10), y=rand(Float32, 10)))
+
+g.ndata.y, g.ndata.x   # or g.x, g.y
+
+# Attach an array with edge features.
+# Since `GNNGraph`s are directed, the number of edges
+# will be double that of the original Graphs&#39; undirected graph.
+g = GNNGraph(erdos_renyi(10,  30), edata = rand(Float32, 60))
+@assert g.num_edges == 60
+
+g.edata.e  # or g.e
+
+# If we pass only half of the edge features, they will be copied
+# on the reversed edges.
+g = GNNGraph(erdos_renyi(10,  30), edata = rand(Float32, 30))
+
+
+# Create a new graph from previous one, inheriting edge data
+# but replacing node data
+g′ = GNNGraph(g, ndata =(; z = ones(Float32, 16, 10)))
+
+g′.z
+g′.e</code></pre><h2 id="Edge-weights"><a class="docs-heading-anchor" href="#Edge-weights">Edge weights</a><a id="Edge-weights-1"></a><a class="docs-heading-anchor-permalink" href="#Edge-weights" title="Permalink"></a></h2><p>It is common to denote scalar edge features as edge weights. The <code>GNNGraph</code> has specific support for edge weights: they can be stored as part of internal representations of the graph (COO or adjacency matrix). Some graph convolutional layers, most notably the <code>GCNConv</code>, can use the edge weights to perform weighted sums over the nodes&#39; neighborhoods.</p><pre><code class="language-julia hljs">julia&gt; source = [1, 1, 2, 2, 3, 3];
+
+julia&gt; target = [2, 3, 1, 3, 1, 2];
+
+julia&gt; weight = [1.0, 0.5, 2.1, 2.3, 4, 4.1];
+
+julia&gt; g = GNNGraph(source, target, weight)
+GNNGraph:
+  num_nodes: 3
+  num_edges: 6
+
+julia&gt; get_edge_weight(g)
+6-element Vector{Float64}:
+ 1.0
+ 0.5
+ 2.1
+ 2.3
+ 4.0
+ 4.1</code></pre><h2 id="Batches-and-Subgraphs"><a class="docs-heading-anchor" href="#Batches-and-Subgraphs">Batches and Subgraphs</a><a id="Batches-and-Subgraphs-1"></a><a class="docs-heading-anchor-permalink" href="#Batches-and-Subgraphs" title="Permalink"></a></h2><p>Multiple <code>GNNGraph</code>s can be batched together into a single graph that contains the total number of the original nodes  and where the original graphs are disjoint subgraphs.</p><pre><code class="language-julia hljs">using MLUtils
+
+data = [rand_graph(10, 30, ndata=rand(Float32, 3, 10)) for _ in 1:160]
+gall = MLUtils.batch(data)
+
+# gall is a GNNGraph containing many graphs
+@assert gall.num_graphs == 160 
+@assert gall.num_nodes == 1600   # 10 nodes x 160 graphs
+@assert gall.num_edges == 4800  # 30 undirected edges x 160 graphs
+
+# Let&#39;s create a mini-batch from gall
+g23 = getgraph(gall, 2:3)
+@assert g23.num_graphs == 2
+@assert g23.num_nodes == 20   # 10 nodes x 2 graphs
+@assert g23.num_edges == 60  # 30 undirected edges X 2 graphs
+
+# We can pass a GNNGraph to MLUtils&#39; DataLoader
+train_loader = DataLoader(gall, batchsize=16, shuffle=true)
+
+for g in train_loader
+    @assert g.num_graphs == 16
+    @assert g.num_nodes == 160
+    @assert size(g.ndata.x) = (3, 160)    
+    # .....
+end
+
+# Access the nodes&#39; graph memberships 
+graph_indicator(gall)</code></pre><h2 id="DataLoader-and-mini-batch-iteration"><a class="docs-heading-anchor" href="#DataLoader-and-mini-batch-iteration">DataLoader and mini-batch iteration</a><a id="DataLoader-and-mini-batch-iteration-1"></a><a class="docs-heading-anchor-permalink" href="#DataLoader-and-mini-batch-iteration" title="Permalink"></a></h2><p>While constructing a batched graph and passing it to the <code>DataLoader</code> is always  an option for mini-batch iteration, the recommended way for better performance is to pass an array of graphs directly and set the <code>collate</code> option to <code>true</code>:</p><pre><code class="language-julia hljs">using MLUtils: DataLoader
+
+data = [rand_graph(10, 30, ndata=rand(Float32, 3, 10)) for _ in 1:320]
+
+train_loader = DataLoader(data, batchsize=16, shuffle=true, collate=true)
+
+for g in train_loader
+    @assert g.num_graphs == 16
+    @assert g.num_nodes == 160
+    @assert size(g.ndata.x) = (3, 160)    
+    # .....
+end</code></pre><h2 id="Graph-Manipulation"><a class="docs-heading-anchor" href="#Graph-Manipulation">Graph Manipulation</a><a id="Graph-Manipulation-1"></a><a class="docs-heading-anchor-permalink" href="#Graph-Manipulation" title="Permalink"></a></h2><pre><code class="language-julia hljs">g′ = add_self_loops(g)
+g′ = remove_self_loops(g)
+g′ = add_edges(g, [1, 2], [2, 3]) # add edges 1-&gt;2 and 2-&gt;3</code></pre><h2 id="GPU-movement"><a class="docs-heading-anchor" href="#GPU-movement">GPU movement</a><a id="GPU-movement-1"></a><a class="docs-heading-anchor-permalink" href="#GPU-movement" title="Permalink"></a></h2><p>Move a <code>GNNGraph</code> to a CUDA device using <code>Flux.gpu</code> method. </p><pre><code class="language-julia hljs">using Flux, CUDA # or using Metal or using AMDGPU 
+
+g_gpu = g |&gt; Flux.gpu</code></pre><h2 id="Integration-with-Graphs.jl"><a class="docs-heading-anchor" href="#Integration-with-Graphs.jl">Integration with Graphs.jl</a><a id="Integration-with-Graphs.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Integration-with-Graphs.jl" title="Permalink"></a></h2><p>Since <code>GNNGraph &lt;: Graphs.AbstractGraph</code>, we can use any functionality from <a href="https://github.com/JuliaGraphs/Graphs.jl">Graphs.jl</a> for querying and analyzing the graph structure.  Moreover, a <code>GNNGraph</code> can be easily constructed from a <code>Graphs.Graph</code> or a <code>Graphs.DiGraph</code>:</p><pre><code class="language-julia hljs">julia&gt; import Graphs
+
+julia&gt; using GNNGraphs
+
+# A Graphs.jl undirected graph
+julia&gt; gu = Graphs.erdos_renyi(10, 20)    
+{10, 20} undirected simple Int64 graph
+
+# Since GNNGraphs are undirected, the edges are doubled when converting 
+# to GNNGraph
+julia&gt; GNNGraph(gu)
+GNNGraph:
+  num_nodes: 10
+  num_edges: 40
+
+# A Graphs.jl directed graph
+julia&gt; gd = Graphs.erdos_renyi(10, 20, is_directed=true)
+{10, 20} directed simple Int64 graph
+
+julia&gt; GNNGraph(gd)
+GNNGraph:
+  num_nodes: 10
+  num_edges: 20</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../heterograph/">Heterogeneous Graphs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Saturday 21 December 2024 05:20">Saturday 21 December 2024</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
