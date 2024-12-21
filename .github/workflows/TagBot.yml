@@ -31,12 +31,86 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.DOCUMENTER_KEY }}
           subdir: GraphNeuralNetworks
+          changelog: |
+            {% if previous_release %}
+            [Diff since {{ previous_release }}]({{ compare_url }})
+            {% endif %}
+
+            {% if custom %}
+            {{ custom }}
+            {% endif %}
+
+            {% if backport %}
+            This release has been identified as a backport.
+            Automated changelogs for backports tend to be wildly incorrect.
+            Therefore, the list of issues and pull requests is hidden.
+            <!--
+            {% endif %}
+            {% if pulls %}
+            **Merged pull requests:**
+            {% for pull in pulls %}
+            {% if "gnnlib" in pull.labels or "gnngraphs" in pull.labels or "flux" in pull.labels %}
+            - {{ pull.title }} (#{{ pull.number }}) (@{{ pull.author.username }})
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            {% if issues %}
+            **Closed issues:**
+            {% for issue in issues %}
+            {% if "gnnlib" in issue.labels or "gnngraphs" in issue.labels or "flux" in issue.labels %}
+            - {{ issue.title }} (#{{ issue.number }})
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            {% if backport %}
+            -->
+            {% endif %}
+
       - name: Tag GNNlib
         uses: JuliaRegistries/TagBot@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.DOCUMENTER_KEY }}
           subdir: GNNlib
+          changelog: |
+            {% if previous_release %}
+            [Diff since {{ previous_release }}]({{ compare_url }})
+            {% endif %}
+
+            {% if custom %}
+            {{ custom }}
+            {% endif %}
+
+            {% if backport %}
+            This release has been identified as a backport.
+            Automated changelogs for backports tend to be wildly incorrect.
+            Therefore, the list of issues and pull requests is hidden.
+            <!--
+            {% endif %}
+            {% if pulls %}
+            **Merged pull requests:**
+            {% for pull in pulls %}
+            {% if "gnnlib" in pull.labels %}
+            - {{ pull.title }} (#{{ pull.number }}) (@{{ pull.author.username }})
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            {% if issues %}
+            **Closed issues:**
+            {% for issue in issues %}
+            {% if "gnnlib" in issue.labels %}
+            - {{ issue.title }} (#{{ issue.number }})
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            {% if backport %}
+            -->
+            {% endif %}
+
       - name: Tag GNNGraphs
         uses: JuliaRegistries/TagBot@v1
         with:
@@ -44,8 +118,6 @@ jobs:
           ssh: ${{ secrets.DOCUMENTER_KEY }}
           subdir: GNNGraphs
           changelog: |
-            ## {{ package }} {{ version }}
-
             {% if previous_release %}
             [Diff since {{ previous_release }}]({{ compare_url }})
             {% endif %}
@@ -81,9 +153,46 @@ jobs:
             {% if backport %}
             -->
             {% endif %}
+
       - name: Tag GNNLux
         uses: JuliaRegistries/TagBot@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.DOCUMENTER_KEY }}
           subdir: GNNLux
+          changelog: |
+            {% if previous_release %}
+            [Diff since {{ previous_release }}]({{ compare_url }})
+            {% endif %}
+
+            {% if custom %}
+            {{ custom }}
+            {% endif %}
+
+            {% if backport %}
+            This release has been identified as a backport.
+            Automated changelogs for backports tend to be wildly incorrect.
+            Therefore, the list of issues and pull requests is hidden.
+            <!--
+            {% endif %}
+            {% if pulls %}
+            **Merged pull requests:**
+            {% for pull in pulls %}
+            {% if "gnnlib" in pull.labels or "gnngraphs" in pull.labels or "lux" in pull.labels %}
+            - {{ pull.title }} (#{{ pull.number }}) (@{{ pull.author.username }})
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            {% if issues %}
+            **Closed issues:**
+            {% for issue in issues %}
+            {% if "gnnlib" in issue.labels or "gnngraphs" in issue.labels or "lux" in issue.labels %}
+            - {{ issue.title }} (#{{ issue.number }})
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            {% if backport %}
+            -->
+            {% endif %}
