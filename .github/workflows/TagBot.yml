@@ -43,6 +43,44 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.DOCUMENTER_KEY }}
           subdir: GNNGraphs
+          changelog: |
+            ## {{ package }} {{ version }}
+
+            {% if previous_release %}
+            [Diff since {{ previous_release }}]({{ compare_url }})
+            {% endif %}
+
+            {% if custom %}
+            {{ custom }}
+            {% endif %}
+
+            {% if backport %}
+            This release has been identified as a backport.
+            Automated changelogs for backports tend to be wildly incorrect.
+            Therefore, the list of issues and pull requests is hidden.
+            <!--
+            {% endif %}
+            {% if pulls %}
+            **Merged pull requests:**
+            {% for pull in pulls %}
+            {% if "gnngraphs" in pull.labels %}
+            - {{ pull.title }} (#{{ pull.number }}) (@{{ pull.author.username }})
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            {% if issues %}
+            **Closed issues:**
+            {% for issue in issues %}
+            {% if "gnngraphs" in issue.labels %}
+            - {{ issue.title }} (#{{ issue.number }})
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            {% if backport %}
+            -->
+            {% endif %}
       - name: Tag GNNLux
         uses: JuliaRegistries/TagBot@v1
         with:
