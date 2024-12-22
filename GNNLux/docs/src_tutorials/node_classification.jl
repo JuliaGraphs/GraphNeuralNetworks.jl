@@ -1,6 +1,6 @@
 # # Node Classification with Graph Neural Networks
 
-# In this tutorial, we will be learning how to use Graph Neural Networks (GNNs) for node classification. Given the ground-truth labels of only a small subset of nodes, and want to infer the labels for all the remaining nodes (transductive learning).
+# In this tutorial, we will be learning how to use Graph Neural Networks (GNNs) for node classification. Given the ground-truth labels of only a small subset of nodes, we want to infer the labels for all the remaining nodes (transductive learning).
 
 
 # ## Import
@@ -14,10 +14,10 @@ using Zygote, Optimisers, OneHotArrays
 
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true" # don't ask for dataset download confirmation
-rng = Random.seed!(17) # for reproducibility
+rng = Random.seed!(17); # for reproducibility
 
 # ## Visualize
-# We want to visualize the outputs of the results using t-distributed stochastic neighbor embedding (tsne) to embed our output embeddings onto a 2D plane.
+# We want to visualize our results using t-distributed stochastic neighbor embedding (tsne) to project our output onto a 2D plane.
 
 function visualize_tsne(out, targets)
     z = tsne(out, 2)
@@ -27,7 +27,7 @@ end;
 
 # ## Dataset: Cora
 
-# For our tutorial, we will be using the `Cora` dataset. `Cora` is a citation network of 2708 documents classified into one of seven classes and 5429 links. Each node represents articles/documents and the edges between them when they cite each other.
+# For our tutorial, we will be using the `Cora` dataset. `Cora` is a citation network of 2708 documents categorized into seven classes with 5,429 citation links. Each node represents an article or document, and edges between nodes indicate a citation relationship, where one cites the other.
 
 # Each publication in the dataset is described by a 0/1-valued word vector indicating the absence/presence of the corresponding word from the dictionary. The dictionary consists of 1433 unique words.
 
@@ -39,7 +39,7 @@ dataset = Cora()
 
 dataset.metadata
 
-# The `graphs` variable GraphDataset contains the graph. The `Cora` dataset contains only 1 graph.
+# The `graphs` variable contains the graph. The `Cora` dataset contains only 1 graph.
 
 dataset.graphs
 
@@ -58,8 +58,6 @@ println("Has isolated nodes: $(has_isolated_nodes(g))")
 println("Has self-loops: $(has_self_loops(g))")
 println("Is undirected: $(is_bidirected(g))")
 
-
-
 # Overall, this dataset is quite similar to the previously used [`KarateClub`](https://juliaml.github.io/MLDatasets.jl/stable/datasets/graphs/#MLDatasets.KarateClub) network.
 # We can see that the `Cora` network holds 2,708 nodes and 10,556 edges, resulting in an average node degree of 3.9.
 # For training this dataset, we are given the ground-truth categories of 140 nodes (20 for each class).
@@ -67,7 +65,7 @@ println("Is undirected: $(is_bidirected(g))")
 
 # We can further see that this network is undirected, and that there exists no isolated nodes (each document has at least one citation).
 
-x = g.ndata.features # we onehot encode both the node labels (what we want to predict):
+x = g.ndata.features # we onehot encode the node labels (what we want to predict):
 y = onehotbatch(g.ndata.targets, 1:7)
 train_mask = g.ndata.train_mask;
 num_features = size(x)[1];
@@ -86,7 +84,7 @@ MLP = Chain(Dense(num_features => hidden_channels, relu),
               Dropout(drop_rate),
               Dense(hidden_channels => num_classes))
 
-ps, st = Lux.setup(rng, MLP)
+ps, st = Lux.setup(rng, MLP);
 
 # ### Training a Multilayer Perceptron
 
@@ -122,8 +120,6 @@ function accuracy(model, x, ps, st, y, mask)
 end
 
 train_model!(MLP, ps, st, x,  2000)
-
-
 
 # After training the model, we can call the `accuracy` function to see how well our model performs on unseen labels.
 # Here, we are interested in the accuracy of the model, *i.e.*, the ratio of correctly classified nodes:
@@ -166,14 +162,14 @@ Lux.@concrete struct GCN <: GNNContainerLayer{(:conv1, :drop, :conv2)}
     use_bias::Bool
     init_weight
     init_bias
-end
+end;
 
 function GCN(num_features, num_classes, hidden_channels, drop_rate; use_bias = true, init_weight = glorot_uniform, init_bias = zeros32) # constructor
     conv1 = GCNConv(num_features => hidden_channels)
     conv2 = GCNConv(hidden_channels => num_classes)
     drop = Dropout(drop_rate)
     return GCN(num_features, num_classes, hidden_channels, conv1, conv2, drop, use_bias, init_weight, init_bias)
-end
+end;
 
 function (gcn::GCN)(g::GNNGraph, x, ps, st) # forward pass
     x, stconv1 = gcn.conv1(g, x, ps.conv1, st.conv1)
@@ -181,7 +177,7 @@ function (gcn::GCN)(g::GNNGraph, x, ps, st) # forward pass
     x, stdrop = gcn.drop(x, ps.drop, st.drop)
     x, stconv2 = gcn.conv2(g, x, ps.conv2, st.conv2)
     return x, (conv1 = stconv1, drop = stdrop, conv2 = stconv2)
-end
+end;
               
 
 # function LuxCore.initialparameters(rng::TaskLocalRNG, l::GCN) # initialize model parameters
@@ -234,8 +230,6 @@ end
 
 gcn, ps, st = train_model!(gcn, ps, st, g, x, y);
 
-
-
 # Now let's evaluate the loss of our trained GCN.
 
 function accuracy(model, g, x, ps, st, y, mask)
@@ -249,7 +243,6 @@ test_accuracy = accuracy(gcn, g, g.ndata.features, ps, st, y, .!train_mask)
 
 println("Train accuracy: $(train_accuracy)")
 println("Test accuracy: $(test_accuracy)")
-
 # **There it is!**
 # By simply swapping the linear layers with GNN layers, we can reach **76% of test accuracy**!
 # This is in stark contrast to the 50% of test accuracy obtained by our MLP, indicating that relational information plays a crucial role in obtaining better performance.
@@ -266,11 +259,11 @@ visualize_tsne(out_trained, g.ndata.targets)
 
 # ## (Optional) Exercises
 
-# 1. To achieve better model performance and to avoid overfitting, it is usually a good idea to select the best model based on an additional validation set. The `Cora` dataset provides a validation node set as `g.ndata.val_mask`, but we haven't used it yet. Can you modify the code to select and test the model with the highest validation performance? This should bring test performance to **82% accuracy**.
+# 1. To achieve better model performance and to avoid overfitting, it is usually a good idea to select the best model based on an additional validation set. The `Cora` dataset provides a validation node set as `g.ndata.val_mask`, but we haven't used it yet. Can you modify the code to select and test the model with the highest validation performance? This should bring test performance to **> 80% accuracy**.
 
 # 2. How does `GCN` behave when increasing the hidden feature dimensionality or the number of layers? Does increasing the number of layers help at all?
 
-# 3. You can try to use different GNN layers to see how model performance changes. What happens if you swap out all `GCNConv` instances with [`GATConv`](https://carlolucibello.github.io/GraphNeuralNetworks.jl/dev/api/conv/#GraphNeuralNetworks.GATConv) layers that make use of attention? Try to write a 2-layer `GAT` model that makes use of 8 attention heads in the first layer and 1 attention head in the second layer, uses a `dropout` ratio of `0.6` inside and outside each `GATConv` call, and uses a `hidden_channels` dimensions of `8` per head.
+# 3. You can try to use different GNN layers to see how model performance changes. What happens if you swap out all `GCNConv` instances with [`GATConv`](https://juliagraphs.org/GraphNeuralNetworks.jl/docs/GNNLux.jl/stable/api/conv/#GNNLux.GATConv) layers that make use of attention? Try to write a 2-layer `GAT` model that makes use of 8 attention heads in the first layer and 1 attention head in the second layer, uses a `dropout` ratio of `0.6` inside and outside each `GATConv` call, and uses a `hidden_channels` dimensions of `8` per head.
 
 
 # ## Conclusion

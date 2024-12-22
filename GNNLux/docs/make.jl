@@ -61,6 +61,7 @@ makedocs(;
         "Tutorials" => [
             "Introductory tutorials" => [
                 "Hands on" => "tutorials/gnn_intro.md",
+                "Node Classification" => "tutorials/node_classification.md",
                 ],
             ],
 
