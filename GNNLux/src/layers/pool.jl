@@ -13,7 +13,7 @@ where ``V`` is the set of nodes of the input graph and
 the type of aggregation represented by ``\square`` is selected by the `aggr` argument. 
 Commonly used aggregations are `mean`, `max`, and `+`.
 
-See also [`reduce_nodes`](@ref).
+See also [`GNNlib.reduce_nodes`](@ref).
 
 # Examples
 
