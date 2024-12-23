@@ -48,5 +48,8 @@ export TGCN,
        DCGRU,
        EvolveGCNO
 
+include("layers/pool.jl")
+export GlobalPool
+
 end #module
  
