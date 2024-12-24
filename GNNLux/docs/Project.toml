@@ -1,5 +1,6 @@
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+ConcreteStructs = "2569d6c7-a4a2-43d3-a901-331e8e4be471"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DocumenterInterLinks = "d12716ef-a0f6-4df4-a9f1-a5a34e75c656"
 GNNGraphs = "aed8fd31-079b-4b5a-b342-a13352159b8c"

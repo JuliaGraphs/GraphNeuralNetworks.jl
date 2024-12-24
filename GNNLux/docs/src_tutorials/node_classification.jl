@@ -10,7 +10,7 @@ using Lux, GNNLux
 using MLDatasets
 using Plots, TSne
 using Random, Statistics
-using Zygote, Optimisers, OneHotArrays
+using Zygote, Optimisers, OneHotArrays, ConcreteStructs
 
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true" # don't ask for dataset download confirmation
@@ -152,7 +152,7 @@ accuracy(MLP, x, ps, st, y, .!train_mask)
 
 # which does not make use of neighboring node information.
 
-Lux.@concrete struct GCN <: GNNContainerLayer{(:conv1, :drop, :conv2)} 
+@concrete struct GCN <: GNNContainerLayer{(:conv1, :drop, :conv2)} 
     nf::Int
     nc::Int
     hd::Int
@@ -179,22 +179,7 @@ function (gcn::GCN)(g::GNNGraph, x, ps, st) # forward pass
     return x, (conv1 = stconv1, drop = stdrop, conv2 = stconv2)
 end;
               
-
-# function LuxCore.initialparameters(rng::TaskLocalRNG, l::GCN) # initialize model parameters
-#     weight_c1 = l.init_weight(rng, l.hd, l.nf)
-#     weight_c2 = l.init_weight(rng, l.nc, l.hd)
-#     if l.use_bias
-#         bias_c1 = l.init_bias(rng, l.hd)
-#         bias_c2 = l.init_bias(rng, l.nc)
-#         return (; conv1 = ( weight = weight_c1, bias = bias_c1),  drop= LuxCore.initialparameters(rng, l.drop), conv2 = ( weight = weight_c2, bias = bias_c2))
-#     end
-#     return (; conv1 = ( weight = weight_c1), drop= LuxCore.initialparameters(rng, l.drop),  conv2 = ( weight = weight_c2))
-# end	
-
-
 # Now let's visualize the node embeddings of our **untrained** GCN network.
-
-
 
 gcn = GCN(num_features, num_classes, hidden_channels, drop_rate)
 ps, st = Lux.setup(rng, gcn)
