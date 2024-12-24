@@ -25,12 +25,12 @@ pool = GlobalPool(mean)
 
 g = GNNGraph(erdos_renyi(10, 4))
 X = rand(32, 10)
-pool(g, X) # => 32x1 matrix
+pool(g, X, ps, st) # => 32x1 matrix
 
 
 g = MLUtils.batch([GNNGraph(erdos_renyi(10, 4)) for _ in 1:5])
 X = rand(32, 50)
-pool(g, X) # => 32x5 matrix
+pool(g, X, ps, st) # => 32x5 matrix
 ```
 """
 struct GlobalPool{F} <: GNNLayer
@@ -39,4 +39,4 @@ end
 
 (l::GlobalPool)(g::GNNGraph, x::AbstractArray, ps, st) = GNNlib.global_pool(l, g, x), st
 
-(l::GlobalPool)(g::GNNGraph) = GNNGraph(g, gdata = l(g, node_features(g)))
+(l::GlobalPool)(g::GNNGraph) = GNNGraph(g, gdata = l(g, node_features(g), ps, st))
