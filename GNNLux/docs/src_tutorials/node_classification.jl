@@ -96,7 +96,7 @@ ps, st = Lux.setup(rng, MLP);
 # This time, we also define a **`accuracy` function** to evaluate how well our final model performs on the test node set (which labels have not been observed during training).
 
 
-function custom_loss(model, ps, st, x)
+function loss(model, ps, st, x)
     logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
     ŷ, st = model(x, ps, st)  
     return  logitcrossentropy(ŷ[:, train_mask], y[:, train_mask]), (st), 0
@@ -105,10 +105,10 @@ end
 function train_model!(MLP, ps, st, x, epochs)
     train_state = Lux.Training.TrainState(MLP, ps, st, Adam(1e-3))
     for iter in 1:epochs
-            _, loss, _, train_state = Lux.Training.single_train_step!(AutoZygote(), custom_loss, x, train_state)
+            _, loss_value, _, train_state = Lux.Training.single_train_step!(AutoZygote(), loss, x, train_state)
 
         if iter % 100 == 0
-            println("Epoch: $(iter) Loss: $(loss)")
+            println("Epoch: $(iter) Loss: $(loss_value)")
         end
     end
 end
@@ -208,7 +208,7 @@ visualize_tsne(h_untrained, g.ndata.targets)
 
 
 
-function custom_loss(gcn, ps, st, tuple)
+function loss(gcn, ps, st, tuple)
     g, x, y = tuple
     logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
     ŷ, st = gcn(g, x, ps, st)  
@@ -218,10 +218,10 @@ end
 function train_model!(gcn, ps, st, g, x, y)
     train_state = Lux.Training.TrainState(gcn, ps, st, Adam(1e-2))
     for iter in 1:2000
-            _, loss, _, train_state = Lux.Training.single_train_step!(AutoZygote(), custom_loss,(g, x, y), train_state)
+            _, loss_value, _, train_state = Lux.Training.single_train_step!(AutoZygote(), loss,(g, x, y), train_state)
 
         if iter % 100 == 0
-            println("Epoch: $(iter) Loss: $(loss)")
+            println("Epoch: $(iter) Loss: $(loss_value)")
         end
     end
 
