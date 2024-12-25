@@ -60,9 +60,9 @@ makedocs(;
 
         "Tutorials" => [
             "Introductory tutorials" => [
-                "Hands on" => "tutorials/gnn_intro_pluto.md",
-                "Node classification" => "tutorials/node_classification_pluto.md", 
-                "Graph classification" => "tutorials/graph_classification_pluto.md"
+                "Hands on" => "tutorials/gnn_intro.md",
+                "Node classification" => "tutorials/node_classification.md", 
+                "Graph classification" => "tutorials/graph_classification.md"
                 ],
             "Temporal graph neural networks" =>[
                 "Node autoregression" => "tutorials/traffic_prediction.md",
