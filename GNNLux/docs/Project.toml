@@ -1,5 +1,6 @@
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+ConcreteStructs = "2569d6c7-a4a2-43d3-a901-331e8e4be471"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DocumenterInterLinks = "d12716ef-a0f6-4df4-a9f1-a5a34e75c656"
 GNNGraphs = "aed8fd31-079b-4b5a-b342-a13352159b8c"
@@ -12,4 +13,5 @@ Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
 MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
 OneHotArrays = "0b1bfda6-eb8a-41d2-88d8-f5af5cad476f"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
+TSne = "24678dba-d5e9-5843-a4c6-250288b04835"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
