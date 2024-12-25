@@ -1,0 +1,270 @@
+<!DOCTYPE html><HTML lang="en"><head><script charset="utf-8" src="../../../../../assets/default/multidoc_injector.js" type="text/javascript"></script><script charset="utf-8" type="text/javascript">window.MULTIDOCUMENTER_ROOT_PATH = '/GraphNeuralNetworks.jl/'</script><script charset="utf-8" src="../../../../../assets/default/flexsearch.bundle.js" type="text/javascript"></script><script charset="utf-8" src="../../../../../assets/default/flexsearch_integration.js" type="text/javascript"></script><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Temporal Convolutional layers · GraphNeuralNetworks.jl</title><meta content="Temporal Convolutional layers · GraphNeuralNetworks.jl" name="title"/><meta content="Temporal Convolutional layers · GraphNeuralNetworks.jl" property="og:title"/><meta content="Temporal Convolutional layers · GraphNeuralNetworks.jl" property="twitter:title"/><meta content="Documentation for GraphNeuralNetworks.jl." name="description"/><meta content="Documentation for GraphNeuralNetworks.jl." property="og:description"/><meta content="Documentation for GraphNeuralNetworks.jl." property="twitter:description"/><script data-outdated-warner="" src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script data-main="../../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" data-theme-name="catppuccin-mocha" href="../../assets/themes/catppuccin-mocha.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="catppuccin-macchiato" href="../../assets/themes/catppuccin-macchiato.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="catppuccin-frappe" href="../../assets/themes/catppuccin-frappe.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="catppuccin-latte" href="../../assets/themes/catppuccin-latte.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="documenter-dark" data-theme-primary-dark="" href="../../assets/themes/documenter-dark.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="documenter-light" data-theme-primary="" href="../../assets/themes/documenter-light.css" rel="stylesheet" type="text/css"/><script src="../../assets/themeswap.js"></script><link href="../../../../../assets/default/multidoc.css" rel="stylesheet" type="text/css"/><link href="../../../../../assets/default/flexsearch.css" rel="stylesheet" type="text/css"/></head><body><nav id="multi-page-nav"><a class="brand" href="../../../../.."><img alt="home" src="../../../../../logo.svg"/></a><div class="hidden-on-mobile" id="nav-items"><a class="nav-link active nav-item" href="../../../">GraphNeuralNetworks.jl</a><a class="nav-link nav-item" href="../../../../GNNLux.jl/">GNNLux.jl</a><a class="nav-link nav-item" href="../../../../GNNGraphs.jl/">GNNGraphs.jl</a><a class="nav-link nav-item" href="../../../../GNNlib.jl/">GNNlib.jl</a><div class="search nav-item"><input id="search-input" placeholder="Search..."/><ul class="suggestions hidden" id="search-result-container"></ul><div class="search-keybinding">/</div></div></div><button id="multidoc-toggler"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg></button></nav><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img alt="GraphNeuralNetworks.jl logo" src="../../assets/logo.svg"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">GraphNeuralNetworks.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Guides</span><ul><li><a class="tocitem" href="../../GNNGraphs/guides/gnngraph/">Graphs</a></li><li><a class="tocitem" href="../../GNNlib/guides/messagepassing/">Message Passing</a></li><li><a class="tocitem" href="../../guides/models/">Models</a></li><li><a class="tocitem" href="../../GNNGraphs/guides/datasets/">Datasets</a></li><li><a class="tocitem" href="../../GNNGraphs/guides/heterograph/">Heterogeneous Graphs</a></li><li><a class="tocitem" href="../../GNNGraphs/guides/temporalgraph/">Temporal Graphs</a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Introductory tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/gnn_intro_pluto/">Hands on</a></li><li><a class="tocitem" href="../../tutorials/node_classification_pluto/">Node classification</a></li><li><a class="tocitem" href="../../tutorials/graph_classification_pluto/">Graph classification</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3-2" type="checkbox"/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Temporal graph neural networks</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../tutorials/traffic_prediction/">Node autoregression</a></li><li><a class="tocitem" href="../../tutorials/temporal_graph_classification_pluto/">Temporal graph classification</a></li></ul></li></ul></li><li><span class="tocitem">API Reference</span><ul><li><input class="collapse-toggle" id="menuitem-4-1" type="checkbox"/><label class="tocitem" for="menuitem-4-1"><span class="docs-label">Graphs (GNNGraphs.jl)</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../GNNGraphs/api/gnngraph/">GNNGraph</a></li><li><a class="tocitem" href="../../GNNGraphs/api/heterograph/">GNNHeteroGraph</a></li><li><a class="tocitem" href="../../GNNGraphs/api/temporalgraph/">TemporalSnapshotsGNNGraph</a></li><li><a class="tocitem" href="../../GNNGraphs/api/samplers/">Samplers</a></li><li><a class="tocitem" href="../../GNNGraphs/api/datasets/">Datasets</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4-2" type="checkbox"/><label class="tocitem" for="menuitem-4-2"><span class="docs-label">Message Passing (GNNlib.jl)</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../GNNlib/api/messagepassing/">Message Passing</a></li><li><a class="tocitem" href="../../GNNlib/api/utils/">Other Operators</a></li></ul></li><li><input checked="" class="collapse-toggle" id="menuitem-4-3" type="checkbox"/><label class="tocitem" for="menuitem-4-3"><span class="docs-label">Layers</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../basic/">Basic layers</a></li><li><a class="tocitem" href="../conv/">Convolutional layers</a></li><li><a class="tocitem" href="../pool/">Pooling layers</a></li><li class="is-active"><a class="tocitem" href="">Temporal Convolutional layers</a></li><li><a class="tocitem" href="../heteroconv/">Hetero Convolutional layers</a></li></ul></li></ul></li><li><a class="tocitem" href="../../dev/">Developer guide</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" href="#" id="documenter-sidebar-button"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">API Reference</a></li><li><a class="is-disabled">Layers</a></li><li class="is-active"><a href="">Temporal Convolutional layers</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="">Temporal Convolutional layers</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/master/GraphNeuralNetworks/docs/src/api/temporalconv.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" href="#" id="documenter-settings-button" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" href="javascript:;" id="documenter-article-toggle-button" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Temporal-Graph-Convolutional-Layers"><a class="docs-heading-anchor" href="#Temporal-Graph-Convolutional-Layers">Temporal Graph-Convolutional Layers</a><a id="Temporal-Graph-Convolutional-Layers-1"></a><a class="docs-heading-anchor-permalink" href="#Temporal-Graph-Convolutional-Layers" title="Permalink"></a></h1><p>Convolutions for time-varying graphs (temporal graphs) such as the <a href="../../GNNGraphs/api/temporalgraph/#TemporalSnapshotsGNNGraph"><code>TemporalSnapshotsGNNGraph</code></a>.</p><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.DCGRUCell" id="GraphNeuralNetworks.DCGRUCell"><code>GraphNeuralNetworks.DCGRUCell</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">DCGRUCell(in =&gt; out, k; [bias, init])</code></pre><p>Diffusion Convolutional Recurrent Neural Network (DCGRU) cell from the paper  <a href="https://arxiv.org/abs/1707.01926">Diffusion Convolutional Recurrent Neural Network: Data-driven Traffic Forecasting</a>.</p><p>Applyis a <a href="../conv/#GraphNeuralNetworks.DConv"><code>DConv</code></a> layer to model spatial dependencies,  in combination with a Gated Recurrent Unit (GRU) cell to model temporal dependencies.</p><p><strong>Arguments</strong></p><ul><li><code>in</code>: Number of input node features.</li><li><code>out</code>: Number of output node features.</li><li><code>k</code>: Diffusion step for the <code>DConv</code>.</li><li><code>bias</code>: Add learnable bias. Default <code>true</code>.</li><li><code>init</code>: Convolution weights' initializer. Default <code>glorot_uniform</code>.</li></ul><p><strong>Forward</strong></p><pre><code class="nohighlight hljs">cell(g::GNNGraph, x, [h])</code></pre><ul><li><code>g</code>: The input graph.</li><li><code>x</code>: The node features. It should be a matrix of size <code>in x num_nodes</code>.</li><li><code>h</code>: The current state of the GRU cell. It is a matrix of size <code>out x num_nodes</code>.      If not provided, it is assumed to be a matrix of zeros.</li></ul><p>Performs one recurrence step and returns a tuple <code>(h, h)</code>, where <code>h</code> is the updated hidden state of the GRU cell.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; using GraphNeuralNetworks, Flux
+
+julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = rand_graph(num_nodes, num_edges);
+
+julia&gt; x = [rand(Float32, d_in, num_nodes) for t in 1:timesteps];
+
+julia&gt; cell = DCGRUCell(d_in =&gt; d_out, 2);
+
+julia&gt; state = Flux.initialstates(cell);
+
+julia&gt; y = state;
+
+julia&gt; for xt in x
+           y, state = cell(g, xt, state)
+       end
+
+julia&gt; size(y) # (d_out, num_nodes)
+(3, 5)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L479-L536" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.EvolveGCNOCell" id="GraphNeuralNetworks.EvolveGCNOCell"><code>GraphNeuralNetworks.EvolveGCNOCell</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><p>"     EvolveGCNOCell(in =&gt; out; bias = true, init = glorot_uniform)</p><p>Evolving Graph Convolutional Network cell of type "-O" from the paper  <a href="https://arxiv.org/abs/1902.10191">EvolveGCN: Evolving Graph Convolutional Networks for Dynamic Graphs</a>.</p><p>Uses a <a href="../conv/#GraphNeuralNetworks.GCNConv"><code>GCNConv</code></a> layer to model spatial dependencies, and an <code>LSTMCell</code> to model temporal dependencies. Can work with time-varying graphs and node features.</p><p><strong>Arguments</strong></p><ul><li><code>in =&gt; out</code>: A pair where <code>in</code> is the number of input node features and <code>out</code>  is the number of output node features.</li><li><code>bias</code>: Add learnable bias for the convolution and the lstm cell. Default <code>true</code>.</li><li><code>init</code>: Weights' initializer for the convolution. Default <code>glorot_uniform</code>.</li></ul><p><strong>Forward</strong></p><pre><code class="nohighlight hljs">cell(g::GNNGraph, x, [state]) -&gt; x, state</code></pre><ul><li><code>g</code>: The input graph.</li><li><code>x</code>: The node features. It should be a matrix of size <code>in x num_nodes</code>.</li><li><code>state</code>: The current state of the cell.   A state is a tuple <code>(weight, lstm)</code> where <code>weight</code> is the convolution's weight and <code>lstm</code> is the lstm's state.   If not provided, it is generated by calling <code>Flux.initialstates(cell)</code>.</li></ul><p>Returns the updated node features <code>x</code> and the updated state.</p><pre><code class="language-julia-repl hljs">julia&gt; using GraphNeuralNetworks, Flux
+
+julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = [rand_graph(num_nodes, num_edges) for t in 1:timesteps];
+
+julia&gt; x = [rand(Float32, d_in, num_nodes) for t in 1:timesteps];
+
+julia&gt; cell1 = EvolveGCNOCell(d_in =&gt; d_out)
+EvolveGCNOCell(2 =&gt; 3)  # 321 parameters
+
+julia&gt; cell2 = EvolveGCNOCell(d_out =&gt; d_out)
+EvolveGCNOCell(3 =&gt; 3)  # 696 parameters
+
+julia&gt; state1 = Flux.initialstates(cell1);
+
+julia&gt; state2 = Flux.initialstates(cell2);
+
+julia&gt; outputs = [];
+
+julia&gt; for t in 1:timesteps
+           zt, state1 = cell1(g[t], x[t], state1)
+           yt, state2 = cell2(g[t], zt, state2)
+           outputs = vcat(outputs, [yt])
+       end
+
+julia&gt; size(outputs[end]) # (d_out, num_nodes)
+(3, 5)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L615-L678" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.GConvGRUCell" id="GraphNeuralNetworks.GConvGRUCell"><code>GraphNeuralNetworks.GConvGRUCell</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">GConvGRUCell(in =&gt; out, k; [bias, init])</code></pre><p>Graph Convolutional Gated Recurrent Unit (GConvGRU) recurrent cell from the paper  <a href="https://arxiv.org/abs/1612.07659">Structured Sequence Modeling with Graph Convolutional Recurrent Networks</a>.</p><p>Uses <a href="../conv/#GraphNeuralNetworks.ChebConv"><code>ChebConv</code></a> to model spatial dependencies,  followed by a Gated Recurrent Unit (GRU) cell to model temporal dependencies.</p><p><strong>Arguments</strong></p><ul><li><code>in =&gt; out</code>: A pair  where <code>in</code> is the number of input node features and <code>out</code>  is the number of output node features.</li><li><code>k</code>: Chebyshev polynomial order.</li><li><code>bias</code>: Add learnable bias. Default <code>true</code>.</li><li><code>init</code>: Weights' initializer. Default <code>glorot_uniform</code>.</li></ul><p><strong>Forward</strong></p><pre><code class="nohighlight hljs">cell(g::GNNGraph, x, [h])</code></pre><ul><li><code>g</code>: The input graph.</li><li><code>x</code>: The node features. It should be a matrix of size <code>in x num_nodes</code>.</li><li><code>h</code>: The current hidden state of the GRU cell. If given, it is a matrix of size <code>out x num_nodes</code>.      If not provided, it is assumed to be a matrix of zeros.</li></ul><p>Performs one recurrence step and returns a tuple <code>(h, h)</code>,  where <code>h</code> is the updated hidden state of the GRU cell.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; using GraphNeuralNetworks, Flux
+
+julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = rand_graph(num_nodes, num_edges);
+
+julia&gt; x = [rand(Float32, d_in, num_nodes) for t in 1:timesteps];
+
+julia&gt; cell = GConvGRUCell(d_in =&gt; d_out, 2);
+
+julia&gt; state = Flux.initialstates(cell);
+
+julia&gt; y = state;
+
+julia&gt; for xt in x
+           y, state = cell(g, xt, state)
+       end
+
+julia&gt; size(y) # (d_out, num_nodes)
+(3, 5)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L142-L199" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.GConvLSTMCell" id="GraphNeuralNetworks.GConvLSTMCell"><code>GraphNeuralNetworks.GConvLSTMCell</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">GConvLSTMCell(in =&gt; out, k; [bias, init])</code></pre><p>Graph Convolutional LSTM recurrent cell from the paper  <a href="https://arxiv.org/abs/1612.07659">Structured Sequence Modeling with Graph Convolutional Recurrent Networks</a>.</p><p>Uses <a href="../conv/#GraphNeuralNetworks.ChebConv"><code>ChebConv</code></a> to model spatial dependencies,  followed by a Long Short-Term Memory (LSTM) cell to model temporal dependencies.</p><p><strong>Arguments</strong></p><ul><li><code>in =&gt; out</code>: A pair  where <code>in</code> is the number of input node features and <code>out</code>  is the number of output node features.</li><li><code>k</code>: Chebyshev polynomial order.</li><li><code>bias</code>: Add learnable bias. Default <code>true</code>.</li><li><code>init</code>: Weights' initializer. Default <code>glorot_uniform</code>.</li></ul><p><strong>Forward</strong></p><pre><code class="nohighlight hljs">cell(g::GNNGraph, x, [state])</code></pre><ul><li><code>g</code>: The input graph.</li><li><code>x</code>: The node features. It should be a matrix of size <code>in x num_nodes</code>.</li><li><code>state</code>: The current state of the LSTM cell.        If given, it is a tuple <code>(h, c)</code> where both <code>h</code> and <code>c</code> are arrays of size <code>out x num_nodes</code>.      If not provided, it is assumed to be a tuple of matrices of zeros.</li></ul><p>Performs one recurrence step and returns a tuple <code>(output, state)</code>,  where <code>output</code> is the updated hidden state <code>h</code> of the LSTM cell and <code>state</code> is the updated tuple <code>(h, c)</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; using GraphNeuralNetworks, Flux
+
+julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = rand_graph(num_nodes, num_edges);
+
+julia&gt; x = [rand(Float32, d_in, num_nodes) for t in 1:timesteps];
+
+julia&gt; cell = GConvLSTMCell(d_in =&gt; d_out, 2);
+
+julia&gt; state = Flux.initialstates(cell);
+
+julia&gt; y = state[1];
+
+julia&gt; for xt in x
+           y, state = cell(g, xt, state)
+       end
+
+julia&gt; size(y) # (d_out, num_nodes)
+(3, 5)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L296-L354" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.GNNRecurrence" id="GraphNeuralNetworks.GNNRecurrence"><code>GraphNeuralNetworks.GNNRecurrence</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">GNNRecurrence(cell)</code></pre><p>Construct a recurrent layer that applies the graph recurrent <code>cell</code> forward multiple times to process an entire temporal sequence of node features at once.</p><p>The <code>cell</code> has to satisfy the following interface for the forward pass:  <code>yt, state = cell(g, xt, state)</code>, where <code>xt</code> is the input node features, <code>yt</code> is the updated node features, <code>state</code> is the cell state to be updated.</p><p><strong>Forward</strong></p><pre><code class="nohighlight hljs">layer(g, x, [state])</code></pre><p>Applies the recurrent cell to each timestep of the input sequence.</p><p><strong>Arguments</strong></p><ul><li><code>g</code>: The input <code>GNNGraph</code> or <code>TemporalSnapshotsGNNGraph</code>.<ul><li>If <code>GNNGraph</code>, the same graph is used for all timesteps.</li><li>If <code>TemporalSnapshotsGNNGraph</code>, a different graph is used for each timestep. Not all cells support this.</li></ul></li><li><code>x</code>: The time-varying node features. <ul><li>If <code>g</code> is <code>GNNGraph</code>, it is an array of size <code>in x timesteps x num_nodes</code>.</li><li>If <code>g</code> is <code>TemporalSnapshotsGNNGraph</code>, it is an vector of length <code>timesteps</code>, with element <code>t</code> of size <code>in x num_nodes_t</code>.</li></ul></li><li><code>state</code>: The initial state for the cell.   If not provided, it is generated by calling <code>Flux.initialstates(cell)</code>.</li></ul><p><strong>Return</strong></p><p>Returns the updated node features:</p><ul><li>If <code>g</code> is <code>GNNGraph</code>, returns an array of size <code>out_features x timesteps x num_nodes</code>.</li><li>If <code>g</code> is <code>TemporalSnapshotsGNNGraph</code>, returns a vector of length <code>timesteps</code>,  with element <code>t</code> of size <code>out_features x num_nodes_t</code>.</li></ul><p><strong>Examples</strong></p><p>The following example considers a static graph and a time-varying node features.</p><pre><code class="language-julia-repl hljs">julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = rand_graph(num_nodes, num_edges);
+GNNGraph:
+  num_nodes: 5
+  num_edges: 10
+
+julia&gt; x = rand(Float32, d_in, timesteps, num_nodes);
+
+julia&gt; cell = GConvLSTMCell(d_in =&gt; d_out, 2)
+GConvLSTMCell(2 =&gt; 3, 2)  # 168 parameters
+
+julia&gt; layer = GNNRecurrence(cell)
+GNNRecurrence(
+  GConvLSTMCell(2 =&gt; 3, 2),             # 168 parameters
+)                   # Total: 24 arrays, 168 parameters, 2.023 KiB.
+
+julia&gt; y = layer(g, x);
+
+julia&gt; size(y) # (d_out, timesteps, num_nodes)
+(3, 5, 5)</code></pre><p>Now consider a time-varying graph and time-varying node features.</p><pre><code class="language-julia-repl hljs">julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; num_nodes = [10, 10, 10, 10, 10];
+
+julia&gt; num_edges = [10, 12, 14, 16, 18];
+
+julia&gt; snapshots = [rand_graph(n, m) for (n, m) in zip(num_nodes, num_edges)];
+
+julia&gt; tg = TemporalSnapshotsGNNGraph(snapshots)
+
+julia&gt; x = [rand(Float32, d_in, n) for n in num_nodes];
+
+julia&gt; cell = EvolveGCNOCell(d_in =&gt; d_out)
+EvolveGCNOCell(2 =&gt; 3)  # 321 parameters
+
+julia&gt; layer = GNNRecurrence(cell)
+GNNRecurrence(
+  EvolveGCNOCell(2 =&gt; 3),               # 321 parameters
+)                   # Total: 5 arrays, 321 parameters, 1.535 KiB.
+
+julia&gt; y = layer(tg, x);
+
+julia&gt; length(y)    # timesteps
+5
+
+julia&gt; size(y[end]) # (d_out, num_nodes[end])
+(3, 10)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L22-L120" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.TGCNCell" id="GraphNeuralNetworks.TGCNCell"><code>GraphNeuralNetworks.TGCNCell</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">TGCNCell(in =&gt; out; kws...)</code></pre><p>Recurrent graph convolutional cell from the paper <a href="https://arxiv.org/pdf/1811.05320">T-GCN: A Temporal Graph Convolutional Network for Traffic Prediction</a>.</p><p>Uses two stacked <a href="../conv/#GraphNeuralNetworks.GCNConv"><code>GCNConv</code></a> layers to model spatial dependencies, and a GRU mechanism to model temporal dependencies.</p><p><code>in</code> and <code>out</code> are the number of input and output node features, respectively. The keyword arguments are passed to the <a href="../conv/#GraphNeuralNetworks.GCNConv"><code>GCNConv</code></a> constructor.</p><p><strong>Forward</strong></p><pre><code class="nohighlight hljs">cell(g::GNNGraph, x, [state])</code></pre><ul><li><code>g</code>: The input graph.</li><li><code>x</code>: The node features. It should be a matrix of size <code>in x num_nodes</code>.</li><li><code>state</code>: The current state of the cell.   If not provided, it is generated by calling <code>Flux.initialstates(cell)</code>.   The state is a matrix of size <code>out x num_nodes</code>.</li></ul><p>Returns the updated node features and the updated state.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; using GraphNeuralNetworks, Flux
+
+julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = rand_graph(num_nodes, num_edges);
+
+julia&gt; x = [rand(Float32, d_in, num_nodes) for t in 1:timesteps];
+
+julia&gt; cell = DCGRUCell(d_in =&gt; d_out, 2);
+
+julia&gt; state = Flux.initialstates(cell);
+
+julia&gt; y = state;
+
+julia&gt; for xt in x
+           y, state = cell(g, xt, state)
+       end
+
+julia&gt; size(y) # (d_out, num_nodes)
+(3, 5)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L755-L808" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.DCGRU-Tuple" id="GraphNeuralNetworks.DCGRU-Tuple"><code>GraphNeuralNetworks.DCGRU</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">DCGRU(args...; kws...)</code></pre><p>Construct a recurrent layer corresponding to the <a href="#GraphNeuralNetworks.DCGRUCell"><code>DCGRUCell</code></a> cell. It can be used to process an entire temporal sequence of node features at once.</p><p>The arguments are passed to the <a href="#GraphNeuralNetworks.DCGRUCell"><code>DCGRUCell</code></a> constructor. See <a href="#GraphNeuralNetworks.GNNRecurrence"><code>GNNRecurrence</code></a> for more details.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = rand_graph(num_nodes, num_edges);
+
+julia&gt; x = rand(Float32, d_in, timesteps, num_nodes);
+
+julia&gt; layer = DCGRU(d_in =&gt; d_out, 2)
+GNNRecurrence(
+  DCGRUCell(2 =&gt; 3, 2),                 # 189 parameters
+)                   # Total: 6 arrays, 189 parameters, 1.184 KiB.
+
+julia&gt; y = layer(g, x);
+
+julia&gt; size(y) # (d_out, timesteps, num_nodes)
+(3, 5, 5)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L581-L612" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.EvolveGCNO-Tuple" id="GraphNeuralNetworks.EvolveGCNO-Tuple"><code>GraphNeuralNetworks.EvolveGCNO</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">EvolveGCNO(args...; kws...)</code></pre><p>Construct a recurrent layer corresponding to the <a href="#GraphNeuralNetworks.EvolveGCNOCell"><code>EvolveGCNOCell</code></a> cell. It can be used to process an entire temporal sequence of graphs and node features at once.</p><p>The arguments are passed to the <a href="#GraphNeuralNetworks.EvolveGCNOCell"><code>EvolveGCNOCell</code></a> constructor. See <a href="#GraphNeuralNetworks.GNNRecurrence"><code>GNNRecurrence</code></a> for more details.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; num_nodes = [10, 10, 10, 10, 10];
+
+julia&gt; num_edges = [10, 12, 14, 16, 18];
+
+julia&gt; snapshots = [rand_graph(n, m) for (n, m) in zip(num_nodes, num_edges)];
+
+julia&gt; tg = TemporalSnapshotsGNNGraph(snapshots)
+
+julia&gt; x = [rand(Float32, d_in, n) for n in num_nodes];
+
+julia&gt; cell = EvolveGCNO(d_in =&gt; d_out)
+GNNRecurrence(
+  EvolveGCNOCell(2 =&gt; 3),               # 321 parameters
+)                   # Total: 5 arrays, 321 parameters, 1.535 KiB.
+
+julia&gt; y = layer(tg, x);
+
+julia&gt; length(y)    # timesteps
+5 
+
+julia&gt; size(y[end]) # (d_out, num_nodes[end])
+(3, 10)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L712-L751" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.GConvGRU-Tuple" id="GraphNeuralNetworks.GConvGRU-Tuple"><code>GraphNeuralNetworks.GConvGRU</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">GConvGRU(args...; kws...)</code></pre><p>Construct a recurrent layer corresponding to the <a href="#GraphNeuralNetworks.GConvGRUCell"><code>GConvGRUCell</code></a> cell. It can be used to process an entire temporal sequence of node features at once.</p><p>The arguments are passed to the <a href="#GraphNeuralNetworks.GConvGRUCell"><code>GConvGRUCell</code></a> constructor. See <a href="#GraphNeuralNetworks.GNNRecurrence"><code>GNNRecurrence</code></a> for more details.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = rand_graph(num_nodes, num_edges);
+
+julia&gt; x = rand(Float32, d_in, timesteps, num_nodes);
+
+julia&gt; layer = GConvGRU(d_in =&gt; d_out, 2)
+GConvGRU(
+  GConvGRUCell(2 =&gt; 3, 2),              # 108 parameters
+)                   # Total: 12 arrays, 108 parameters, 1.148 KiB.
+
+julia&gt; y = layer(g, x);
+
+julia&gt; size(y) # (d_out, timesteps, num_nodes)
+(3, 5, 5)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L260-L292" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.GConvLSTM-Tuple" id="GraphNeuralNetworks.GConvLSTM-Tuple"><code>GraphNeuralNetworks.GConvLSTM</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">GConvLSTM(args...; kws...)</code></pre><p>Construct a recurrent layer corresponding to the <a href="#GraphNeuralNetworks.GConvLSTMCell"><code>GConvLSTMCell</code></a> cell. It can be used to process an entire temporal sequence of node features at once.</p><p>The arguments are passed to the <a href="#GraphNeuralNetworks.GConvLSTMCell"><code>GConvLSTMCell</code></a> constructor. See <a href="#GraphNeuralNetworks.GNNRecurrence"><code>GNNRecurrence</code></a> for more details.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = rand_graph(num_nodes, num_edges);
+
+julia&gt; x = rand(Float32, d_in, timesteps, num_nodes);
+
+julia&gt; layer = GConvLSTM(d_in =&gt; d_out, 2)
+GNNRecurrence(
+  GConvLSTMCell(2 =&gt; 3, 2),             # 168 parameters
+)                   # Total: 24 arrays, 168 parameters, 2.023 KiB.
+
+julia&gt; y = layer(g, x);
+
+julia&gt; size(y) # (d_out, timesteps, num_nodes)
+(3, 5, 5)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L444-L476" target="_blank">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" href="#GraphNeuralNetworks.TGCN-Tuple" id="GraphNeuralNetworks.TGCN-Tuple"><code>GraphNeuralNetworks.TGCN</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">TGCN(args...; kws...)</code></pre><p>Construct a recurrent layer corresponding to the <a href="#GraphNeuralNetworks.TGCNCell"><code>TGCNCell</code></a> cell.</p><p>The arguments are passed to the <a href="#GraphNeuralNetworks.TGCNCell"><code>TGCNCell</code></a> constructor. See <a href="#GraphNeuralNetworks.GNNRecurrence"><code>GNNRecurrence</code></a> for more details.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; num_nodes, num_edges = 5, 10;
+
+julia&gt; d_in, d_out = 2, 3;
+
+julia&gt; timesteps = 5;
+
+julia&gt; g = rand_graph(num_nodes, num_edges);
+
+julia&gt; x = rand(Float32, d_in, timesteps, num_nodes);
+
+julia&gt; layer = TGCN(d_in =&gt; d_out)
+
+julia&gt; y = layer(g, x);
+
+julia&gt; size(y) # (d_out, timesteps, num_nodes)
+(3, 5, 5)</code></pre></div><a class="docs-sourcelink" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/7e07564f69949251ac3d381f1a8e163b35c830b7/GraphNeuralNetworks/src/layers/temporalconv.jl#L855-L883" target="_blank">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../pool/">« Pooling layers</a><a class="docs-footer-nextpage" href="../heteroconv/">Hetero Convolutional layers »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label></p><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div><p></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Saturday 21 December 2024 10:05">Saturday 21 December 2024</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div><div data-docstringscollapsed="true"></div></body></HTML>
