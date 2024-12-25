@@ -1,7 +1,7 @@
 name = "GNNGraphs"
 uuid = "aed8fd31-079b-4b5a-b342-a13352159b8c"
 authors = ["Carlo Lucibello and contributors"]
-version = "1.4.0"
+version = "1.4.1"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"

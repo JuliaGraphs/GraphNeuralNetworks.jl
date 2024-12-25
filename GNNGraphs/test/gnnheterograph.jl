@@ -31,9 +31,9 @@ end
     @test hg.ndata isa Dict{Symbol, DataStore}
     @test hg.edata isa Dict{Tuple{Symbol, Symbol, Symbol}, DataStore}
     @test isempty(hg.gdata)
+    @test hg.gdata._n == -1 # no constraints on gdata
     @test sort(hg.ntypes) == [:A, :B]
     @test sort(hg.etypes) == [(:A, :rel1, :B), (:B, :rel2, :A)]
-
 end
 
 @testset "features" begin
