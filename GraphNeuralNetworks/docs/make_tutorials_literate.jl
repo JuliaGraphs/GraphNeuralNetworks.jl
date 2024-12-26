@@ -13,3 +13,5 @@ Literate.markdown("src_tutorials/introductory_tutorials/graph_classification.jl"
 
 Literate.markdown("src_tutorials/introductory_tutorials/temporal_graph_classification.jl", 
                   "src/tutorials/"; execute = true)
+
+Literate.markdown("src_tutorials/introductory_tutorials/traffic_prediction.jl", "src/tutorials/"; execute = true)
