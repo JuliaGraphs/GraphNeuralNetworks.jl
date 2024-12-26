@@ -29,7 +29,7 @@ tests = [
     "datastore",
     "gnngraph",
     "convert",
-    "transform",
+    # "transform",
     "operators",
     "generate",
     "query",

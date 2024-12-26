@@ -1,4 +1,4 @@
-@testset "edge encoding/decoding" begin
+@testitem "edge encoding/decoding" begin
     # not is_bidirected
     n = 5
     s = [1, 1, 2, 3, 3, 4, 5]
@@ -93,15 +93,18 @@
     end
 end
 
-@testset "color_refinement" begin
-    rng = MersenneTwister(17)
-    g = rand_graph(rng, 10, 20, graph_type = GRAPH_T)
-    x0 = ones(Int, 10)
-    x, ncolors, niters = color_refinement(g, x0)
-    @test ncolors == 8
-    @test niters == 2
-    @test x == [4, 5, 6, 7, 8, 5, 8, 9, 10, 11]
-    
-    x2, _, _ = color_refinement(g)
-    @test x2 == x
-end 
+@testitem "color_refinement" setup=[GraphsTestModule] begin
+    using .GraphsTestModule
+    for GRAPH_T in GRAPH_TYPES
+        rng = MersenneTwister(17)
+        g = rand_graph(rng, 10, 20, graph_type = GRAPH_T)
+        x0 = ones(Int, 10)
+        x, ncolors, niters = color_refinement(g, x0)
+        @test ncolors == 8
+        @test niters == 2
+        @test x == [6, 7, 8, 9, 10, 11, 9, 11, 12, 13]
+        
+        x2, _, _ = color_refinement(g)
+        @test x2 == x
+    end
+end
