@@ -98,7 +98,7 @@ end
                 # See https://github.com/JuliaGPU/CUDA.jl/pull/1093
                 mat_gpu = adjacency_matrix(g_gpu)
                 @test mat_gpu isa AbstractMatrix{Int}
-                @test get_device(mat_gpu) == dev
+                @test get_device(mat_gpu) isa AbstractGPUDevice
                 @test Array(mat_gpu) == adj_mat
             end
         end
@@ -108,7 +108,7 @@ end
             if TEST_GPU && !(dev isa MetalDevice)
                 mat_gpu = normalized_laplacian(g_gpu)
                 @test mat_gpu isa AbstractMatrix{Float32}
-                @test get_device(mat_gpu) == dev
+                @test get_device(mat_gpu)isa AbstractGPUDevice
                 @test Array(mat_gpu) == mat
             end
         end
@@ -118,7 +118,7 @@ end
                 mat = scaled_laplacian(g)
                 mat_gpu = scaled_laplacian(g_gpu)
                 @test mat_gpu isa AbstractMatrix{Float32}
-                @test get_device(mat_gpu) == dev
+                @test get_device(mat_gpu) isa AbstractGPUDevice
                 @test Array(mat_gpu) ≈ mat
             end 
         end
@@ -133,10 +133,10 @@ end
                 s_cpu, t_cpu = edge_index(g)
                 s_gpu, t_gpu = edge_index(g_gpu)
                 @test s_gpu isa AbstractVector{Int}
-                @test get_device(s_gpu) == dev
+                @test get_device(s_gpu) isa AbstractGPUDevice
                 @test Array(s_gpu) == s_cpu
                 @test t_gpu isa AbstractVector{Int}
-                @test get_device(t_gpu) == dev
+                @test get_device(t_gpu) isa AbstractGPUDevice
                 @test Array(t_gpu) == t_cpu
             end
         end

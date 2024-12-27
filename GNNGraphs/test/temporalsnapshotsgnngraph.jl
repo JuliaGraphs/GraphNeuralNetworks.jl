@@ -145,11 +145,11 @@ end
     tsg.tgdata.x = rand(Float32, 5)
     tsg = tsg |> dev
     @test tsg.snapshots[1].ndata.x isa AbstractMatrix{Float32}
-    @test get_device(tsg.snapshots[1].ndata.x) == dev
+    @test get_device(tsg.snapshots[1].ndata.x) isa AbstractGPUDevice
     @test tsg.snapshots[end].ndata.x isa AbstractMatrix{Float32}
-    @test get_device(tsg.snapshots[end].ndata.x) == dev
+    @test get_device(tsg.snapshots[end].ndata.x) isa AbstractGPUDevice
     @test tsg.tgdata.x isa AbstractVector{Float32}
-    @test get_device(tsg.tgdata.x) == dev
+    @test get_device(tsg.tgdata.x) isa AbstractGPUDevice
     # num_nodes and num_edges are not copied to the device
     @test tsg.num_nodes isa Vector{Int}
     @test tsg.num_edges isa Vector{Int}

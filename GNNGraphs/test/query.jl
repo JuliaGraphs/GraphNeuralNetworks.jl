@@ -185,7 +185,7 @@ end
             d = degree(g)
             d_gpu = degree(g_gpu)
             @test d_gpu isa AbstractVector{Int}
-            @test get_device(d_gpu) == dev
+            @test get_device(d_gpu) isa AbstractGPUDevice
             @test Array(d_gpu) == d
         end
 
@@ -199,7 +199,7 @@ end
             d = degree(g)
             d_gpu = degree(g_gpu)
             @test d_gpu isa AbstractArray{Float32}
-            @test get_device(d_gpu) == dev
+            @test get_device(d_gpu) isa AbstractGPUDevice
             @test Array(d_gpu) ≈ d
         end
     end

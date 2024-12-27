@@ -28,6 +28,7 @@ using FiniteDifferences: FiniteDifferences
 using Reexport: @reexport
 using MLUtils: MLUtils
 using Zygote: gradient
+using MLDataDevices: AbstractGPUDevice
 @reexport using SparseArrays
 @reexport using MLDataDevices
 @reexport using Random
@@ -36,7 +37,7 @@ using Zygote: gradient
 @reexport using GNNGraphs
 @reexport using Test
 @reexport using Graphs
-export MLUtils, gradient
+export MLUtils, gradient, AbstractGPUDevice
 export ngradient, GRAPH_TYPES
 
 
