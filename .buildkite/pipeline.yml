@@ -100,3 +100,54 @@ steps:
       GNN_TEST_AMDGPU: "true"
       GNN_TEST_CPU: "false"
     timeout_in_minutes: 60
+
+  - label: "GNNGraphs CUDA"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1"
+      - JuliaCI/julia-coverage#v1:
+          dirs:
+            - GNNGraphs/src
+    command: |
+      julia --color=yes --depwarn=yes --project=GNNGraphs/test -e '
+        import Pkg
+        dev_pkgs = Pkg.PackageSpec[]
+        for pkg in ("GNNGraphs",)
+          push!(dev_pkgs, Pkg.PackageSpec(path=pkg));
+        end
+        Pkg.develop(dev_pkgs)
+        Pkg.add(["CUDA", "cuDNN"])
+        Pkg.test("GNNGraphs")'
+    agents:
+      queue: "juliagpu"
+      cuda: "*"
+    env:
+      GNN_TEST_CUDA: "true"
+      GNN_TEST_CPU: "false"
+    timeout_in_minutes: 60
+
+  - label: "GNNGraphs AMDGPU"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1"
+      - JuliaCI/julia-coverage#v1:
+          dirs:
+            - GNNGraphs/src
+    command: |
+      julia --color=yes --depwarn=yes --project=GNNGraphs/test -e '
+        import Pkg
+        dev_pkgs = Pkg.PackageSpec[]
+        for pkg in ("GNNGraphs",)
+          push!(dev_pkgs, Pkg.PackageSpec(path=pkg));
+        end
+        Pkg.develop(dev_pkgs)
+        Pkg.add(["AMDGPU"])
+        Pkg.test("GNNGraphs")'
+    agents:
+      queue: "juliagpu"
+      rocm: "*"
+      rocmgpu: "*"
+    env:
+      GNN_TEST_AMDGPU: "true"
+      GNN_TEST_CPU: "false"
+    timeout_in_minutes: 60
