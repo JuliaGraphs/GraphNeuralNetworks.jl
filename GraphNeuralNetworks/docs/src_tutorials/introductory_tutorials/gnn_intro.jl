@@ -42,7 +42,7 @@ karate.node_data.labels_comm
 
 # Now we convert the single-graph dataset to a `GNNGraph`. Moreover, we add a an array of node features, a **34-dimensional feature vector**  for each node which uniquely describes the members of the karate club. We also add a training mask selecting the nodes to be used for training in our semi-supervised node classification task.
 
-g = mldataset2gnngraph(dataset) # convert a MLDataset.jl's dataset to a GNNGraphs (or a collection of graphs)
+g = mldataset2gnngraph(dataset) # convert a MLDatasets.jl's dataset to a GNNGraphs (or a collection of graphs)
 
 x = zeros(Float32, g.num_nodes, g.num_nodes)
 x[diagind(x)] .= 1

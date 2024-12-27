@@ -1,5 +1,5 @@
 @testitem "mldataset2gnngraph" begin
-    using MLDataset
+    using MLDatasets: Cora
     ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
     dataset = Cora()
     classes = dataset.metadata["classes"]

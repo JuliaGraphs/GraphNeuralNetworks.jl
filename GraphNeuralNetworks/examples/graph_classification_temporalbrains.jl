@@ -1,6 +1,6 @@
 # Example of graph classification when graphs are temporal and modeled as `TemporalSnapshotsGNNGraphs'. 
 # In this code, we train a simple temporal graph neural network architecture to classify subjects' gender (female or male) using the temporal graphs extracted from their brain fMRI scan signals.
-# The dataset used is the TemporalBrains dataset from the MLDataset.jl package, and the accuracy achieved with the model reaches 65-70% (it can be improved by fine-tuning the parameters of the model). 
+# The dataset used is the TemporalBrains dataset from the MLDatasets.jl package, and the accuracy achieved with the model reaches 65-70% (it can be improved by fine-tuning the parameters of the model). 
 # Author: Aurora Rossi
 
 # Load packages
