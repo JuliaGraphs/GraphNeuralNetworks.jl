@@ -38,7 +38,7 @@ end
     @test ds2.x == ds.x .+ 1
     @test ds2.y == ds.y .+ 1
 
-    @test_throws AssertionError ds2=map(x -> [x; x], ds)
+    @test_throws AssertionError ds2 == map(x -> [x; x], ds)
 end
 
 @testitem "getdata / getn" begin
