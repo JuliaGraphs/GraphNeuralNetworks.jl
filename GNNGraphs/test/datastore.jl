@@ -1,5 +1,5 @@
 
-@testset "constructor" begin
+@testitem "constructor" begin
     @test_throws AssertionError DataStore(10, (:x => rand(10), :y => rand(2, 4)))
 
     @testset "keyword args" begin
@@ -13,7 +13,7 @@
     end
 end
 
-@testset "getproperty / setproperty!" begin
+@testitem "getproperty / setproperty!" begin
     x = rand(10)
     ds = DataStore(10, (:x => x, :y => rand(2, 10)))
     @test ds.x == ds[:x] == x
@@ -25,14 +25,14 @@ end
     @test fill(DataStore(), 3) isa Vector
 end
 
-@testset "setindex!" begin
+@testitem "setindex!" begin
     ds = DataStore(10)
     x = rand(10)
     @test (ds[:x] = x) == x # Tests setindex!
     @test ds.x == ds[:x] == x
 end
 
-@testset "map" begin
+@testitem "map" begin
     ds = DataStore(10, (:x => rand(10), :y => rand(2, 10)))
     ds2 = map(x -> x .+ 1, ds)
     @test ds2.x == ds.x .+ 1
@@ -41,33 +41,34 @@ end
     @test_throws AssertionError ds2=map(x -> [x; x], ds)
 end
 
-@testset "getdata / getn" begin
+@testitem "getdata / getn" begin
     ds = DataStore(10, (:x => rand(10), :y => rand(2, 10)))
-    @test getdata(ds) == getfield(ds, :_data)
+    @test GNNGraphs.getdata(ds) == getfield(ds, :_data)
     @test_throws KeyError ds.data
-    @test getn(ds) == getfield(ds, :_n)
+    @test GNNGraphs.getn(ds) == getfield(ds, :_n)
     @test_throws KeyError ds.n
 end
 
-@testset "cat empty" begin
+@testitem "cat empty" begin
     ds1 = DataStore(2, (:x => rand(2)))
     ds2 = DataStore(1, (:x => rand(1)))
     dsempty = DataStore(0, (:x => rand(0)))
 
     ds = GNNGraphs.cat_features(ds1, ds2)
-    @test getn(ds) == 3
+    @test GNNGraphs.getn(ds) == 3
     ds = GNNGraphs.cat_features(ds1, dsempty)
-    @test getn(ds) == 2
+    @test GNNGraphs.getn(ds) == 2
 
     # issue #280
     g = GNNGraph([1], [2])
     h = add_edges(g, Int[], Int[])  # adds no edges
-    @test getn(g.edata) == 1
-    @test getn(h.edata) == 1
+    @test GNNGraphs.getn(g.edata) == 1
+    @test GNNGraphs.getn(h.edata) == 1
 end
 
 
-@testset "gradient" begin
+@testitem "gradient"  setup=[GraphsTestModule] begin
+    using .GraphsTestModule
     ds = DataStore(10, (:x => rand(10), :y => rand(2, 10)))
 
     f1(ds) = sum(ds.x)
@@ -80,11 +81,12 @@ end
     @test grad == exp.(x)
 end
 
-@testset "functor" begin
+@testitem "functor" begin
+    using Functors
     ds = DataStore(10, (:x => zeros(10), :y => ones(2, 10)))
     p, re = Functors.functor(ds)
-    @test p[1] === getn(ds)
-    @test p[2] === getdata(ds)
+    @test p[1] === GNNGraphs.getn(ds)
+    @test p[2] === GNNGraphs.getdata(ds)
     @test ds == re(p)
 
     ds2 = Functors.fmap(ds) do x

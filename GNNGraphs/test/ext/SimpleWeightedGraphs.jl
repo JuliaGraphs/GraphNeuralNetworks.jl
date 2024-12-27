@@ -1,4 +1,5 @@
-@testset "simple_weighted_graph" begin
+@testitem "simple_weighted_graph" begin
+    using SimpleWeightedGraphs
     srcs = [1, 2, 1]
     dsts = [2, 3, 3]
     wts = [0.5, 0.8, 2.0]

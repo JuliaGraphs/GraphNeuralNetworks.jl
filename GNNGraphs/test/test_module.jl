@@ -1,18 +1,45 @@
 @testmodule GraphsTestModule begin
+
+using Pkg
+
+## Uncomment below to change the default test settings
+# ENV["GNN_TEST_CUDA"] = "true"
+# ENV["GNN_TEST_AMDGPU"] = "true"
+ENV["GNN_TEST_Metal"] = "true"
+
+to_test(backend) = get(ENV, "GNN_TEST_$(backend)", "false") == "true"
+has_dependecies(pkgs) = all(pkg -> haskey(Pkg.project().dependencies, pkg), pkgs)
+deps_dict = Dict(:CUDA => ["CUDA", "cuDNN"], :AMDGPU => ["AMDGPU"], :Metal => ["Metal"])
+
+for (backend, deps) in deps_dict
+    if to_test(backend)
+        if !has_dependecies(deps)
+            Pkg.add(deps)
+        end
+        @eval using $backend
+        if backend == :CUDA
+            @eval using cuDNN
+        end
+        @eval $backend.allowscalar(false)
+    end
+end
+    
 using FiniteDifferences: FiniteDifferences
 using Reexport: @reexport
 using MLUtils: MLUtils
-
+using Zygote: gradient
+using SparseArrays: sprand, findnz
+@reexport using MLDataDevices
 @reexport using Random
 @reexport using Statistics
 @reexport using LinearAlgebra
 @reexport using GNNGraphs
 @reexport using Test
 @reexport using Graphs
-export MLUtils
+export MLUtils, gradient,
+       sprand, findnz
 
-export ngradient
-export GRAPH_TYPES
+export ngradient, GRAPH_TYPES
 
 
 # Using this until https://github.com/JuliaDiff/FiniteDifferences.jl/issues/188 is fixed

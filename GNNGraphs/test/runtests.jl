@@ -22,22 +22,22 @@ const ACUMatrix{T} = Union{CuMatrix{T}, CUDA.CUSPARSE.CuSparseMatrix{T}}
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
 
-include("test_utils.jl")
+# include("test_utils.jl")
 
 tests = [
-    "chainrules",
-    "datastore",
-    "gnngraph",
-    "convert",
+    # "chainrules",
+    # "datastore",
+    # "gnngraph",
+    # "convert",
     # "transform",
     "operators",
-    "generate",
+    # "generate",
     "query",
     "sampling",
     "gnnheterograph",
     "temporalsnapshotsgnngraph",
     "mldatasets",
-    "ext/SimpleWeightedGraphs",
+    # "ext/SimpleWeightedGraphs",
     "samplers"
 ]
 
