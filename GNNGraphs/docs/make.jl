@@ -45,7 +45,6 @@ makedocs(;
             "GNNGraph" => "api/gnngraph.md",
             "GNNHeteroGraph" => "api/heterograph.md",
             "TemporalSnapshotsGNNGraph" => "api/temporalgraph.md",
-            "Samplers" => "api/samplers.md",
             "Datasets" => "api/datasets.md",
         ],
     ]

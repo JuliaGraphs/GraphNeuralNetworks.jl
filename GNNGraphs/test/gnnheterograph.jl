@@ -1,6 +1,6 @@
 
 
-@testset "Empty constructor" begin
+@testitem "Empty constructor" begin
     g = GNNHeteroGraph()
     @test isempty(g.num_nodes)
     g = add_edges(g, (:user, :like, :actor) => ([1,2,3,3,3], [3,5,1,9,4]))
@@ -9,7 +9,7 @@
     @test g.num_edges[(:user, :like, :actor)] == 5
 end
 
-@testset "Constructor from pairs" begin
+@testitem "Constructor from pairs" begin
     hg = GNNHeteroGraph((:A, :e1, :B) => ([1,2,3,4], [3,2,1,5]))
     @test hg.num_nodes == Dict(:A => 4, :B => 5)
     @test hg.num_edges == Dict((:A, :e1, :B) => 4)
@@ -20,7 +20,7 @@ end
     @test hg.num_edges == Dict((:A, :e1, :B) => 3, (:A, :e2, :C) => 3)
 end
 
-@testset "Generation" begin
+@testitem "Generation" begin
     hg = rand_heterograph(Dict(:A => 10, :B => 20),
                             Dict((:A, :rel1, :B) => 30, (:B, :rel2, :A) => 10))
 
@@ -36,7 +36,7 @@ end
     @test sort(hg.etypes) == [(:A, :rel1, :B), (:B, :rel2, :A)]
 end
 
-@testset "features" begin
+@testitem "features" begin
     hg = rand_heterograph(Dict(:A => 10, :B => 20),
                             Dict((:A, :rel1, :B) => 30, (:B, :rel2, :A) => 10),
                             ndata = Dict(:A => rand(2, 10),
@@ -52,7 +52,7 @@ end
 
 end
 
-@testset "indexing syntax" begin
+@testitem "indexing syntax" begin
     g = GNNHeteroGraph((:user, :rate, :movie) => ([1,1,2,3], [7,13,5,7]))
     g[:movie].z = rand(Float32, 64, 13);
     g[:user, :rate, :movie].e = rand(Float32, 64, 4);
@@ -63,7 +63,7 @@ end
 end
 
 
-@testset "simplified constructor" begin
+@testitem "simplified constructor" begin
     hg = rand_heterograph((:A => 10, :B => 20),
                             ((:A, :rel1, :B) => 30, (:B, :rel2, :A) => 10),
                             ndata = (:A => rand(2, 10),
@@ -96,7 +96,7 @@ end
     @test hg.num_edges == Dict((:A, :rel1, :B) => 20, (:B, :rel2, :A) => 30)
 end
 
-@testset "num_edge_types / num_node_types" begin
+@testitem "num_edge_types / num_node_types" begin
     hg = rand_heterograph((:A => 10, :B => 20),
             ((:A, :rel1, :B) => 30, (:B, :rel2, :A) => 10),
             ndata = (:A => rand(2, 10),
@@ -111,7 +111,8 @@ end
     @test num_node_types(g) == 1
 end
 
-@testset "numobs" begin
+@testitem "numobs" begin
+    using MLUtils
     hg = rand_heterograph((:A => 10, :B => 20),
             ((:A, :rel1, :B) => 30, (:B, :rel2, :A) => 10),
             ndata = (:A => rand(2, 10),
@@ -121,7 +122,7 @@ end
     @test MLUtils.numobs(hg) == 1
 end
 
-@testset "get/set node features" begin
+@testitem "get/set node features" begin
     d, n = 3, 5
     g = rand_bipartite_heterograph((n, 2*n), 15)
     g[:A].x = rand(Float32, d, n)
@@ -131,7 +132,7 @@ end
     @test size(g[:B].y) == (d, 2*n)
 end
 
-@testset "add_edges" begin
+@testitem "add_edges" begin
     d, n = 3, 5
     g = rand_bipartite_heterograph((n, 2 * n), 15)
     s, t = [1, 2, 3], [3, 2, 1]
@@ -177,7 +178,7 @@ end
     @test g3.num_nodes[:C] == 10
 end
 
-@testset "add self loops" begin
+@testitem "add self loops" begin
     g1 = GNNHeteroGraph((:A, :to, :B) => ([1,2,3,4], [3,2,1,5]))
     g2 = add_self_loops(g1, (:A, :to, :B))
     @test g2.num_edges[(:A, :to, :B)] === g1.num_edges[(:A, :to, :B)]

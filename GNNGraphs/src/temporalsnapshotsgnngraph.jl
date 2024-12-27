@@ -61,6 +61,9 @@ struct TemporalSnapshotsGNNGraph{G<:GNNGraph, D<:DataStore}
     tgdata::D   
 end
 
+# do not move to gpu num_nodes and num_edges
+@functor TemporalSnapshotsGNNGraph (snapshots, tgdata)
+
 function TemporalSnapshotsGNNGraph(snapshots)
     snapshots = collect(snapshots)
     return TemporalSnapshotsGNNGraph(

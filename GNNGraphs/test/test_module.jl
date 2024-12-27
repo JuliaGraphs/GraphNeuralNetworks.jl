@@ -28,7 +28,7 @@ using FiniteDifferences: FiniteDifferences
 using Reexport: @reexport
 using MLUtils: MLUtils
 using Zygote: gradient
-using SparseArrays: sprand, findnz
+@reexport using SparseArrays
 @reexport using MLDataDevices
 @reexport using Random
 @reexport using Statistics
@@ -36,9 +36,7 @@ using SparseArrays: sprand, findnz
 @reexport using GNNGraphs
 @reexport using Test
 @reexport using Graphs
-export MLUtils, gradient,
-       sprand, findnz
-
+export MLUtils, gradient
 export ngradient, GRAPH_TYPES
 
 

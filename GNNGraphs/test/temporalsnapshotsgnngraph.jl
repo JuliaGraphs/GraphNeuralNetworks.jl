@@ -1,21 +1,24 @@
 #TODO add graph_type = GRAPH_TYPE to all constructor calls
 
-@testset "Constructor array TemporalSnapshotsGNNGraph" begin
-    snapshots = [rand_graph(10, 20) for i in 1:5]
-    tg = TemporalSnapshotsGNNGraph(snapshots)
-    @test tg.num_nodes == [10 for i in 1:5]
-    @test tg.num_edges == [20 for i in 1:5]
-    @test tg.num_snapshots == 5
-    
-    snapshots = [rand_graph(i, 2*i) for i in 10:10:50]
-    tg = TemporalSnapshotsGNNGraph(snapshots)
-    @test tg.num_nodes == [i for i in 10:10:50]
-    @test tg.num_edges == [2*i for i in 10:10:50]
-    @test tg.num_snapshots == 5
+@testitem "Constructor array TemporalSnapshotsGNNGraph" setup=[GraphsTestModule] begin
+    using .GraphsTestModule
+    for GRAPH_T in GRAPH_TYPES
+        snapshots = [rand_graph(10, 20, graph_type=GRAPH_T) for i in 1:5]
+        tg = TemporalSnapshotsGNNGraph(snapshots)
+        @test tg.num_nodes == [10 for i in 1:5]
+        @test tg.num_edges == [20 for i in 1:5]
+        @test tg.num_snapshots == 5
+        
+        snapshots = [rand_graph(i, 2*i, graph_type=GRAPH_T) for i in 10:10:50]
+        tg = TemporalSnapshotsGNNGraph(snapshots)
+        @test tg.num_nodes == [i for i in 10:10:50]
+        @test tg.num_edges == [2*i for i in 10:10:50]
+        @test tg.num_snapshots == 5
+    end
 end
 
 
-@testset "==" begin
+@testitem "==" begin
     snapshots = [rand_graph(10, 20) for i in 1:5]
     tsg1 = TemporalSnapshotsGNNGraph(snapshots)
     tsg2 = TemporalSnapshotsGNNGraph(snapshots)
@@ -25,14 +28,14 @@ end
     @test tsg1 !== tsg3
 end
 
-@testset "getindex" begin
+@testitem "getindex" begin
     snapshots = [rand_graph(10, 20) for i in 1:5]
     tsg = TemporalSnapshotsGNNGraph(snapshots)
     @test tsg[3] == snapshots[3]
     @test tsg[[1,2]] == TemporalSnapshotsGNNGraph([10,10], [20,20], 2, snapshots[1:2], tsg.tgdata)
 end
 
-@testset "setindex!" begin
+@testitem "setindex!" begin
     snapshots = [rand_graph(10, 20) for i in 1:5]
     tsg = TemporalSnapshotsGNNGraph(snapshots)
     g = rand_graph(20, 40)
@@ -43,7 +46,7 @@ end
     @test_throws MethodError tsg[3:4] = g
 end
 
-@testset "getproperty" begin
+@testitem "getproperty" begin
     x = rand(Float32, 10)
     snapshots = [rand_graph(10, 20, ndata = x) for i in 1:5]
     tsg = TemporalSnapshotsGNNGraph(snapshots)
@@ -53,7 +56,7 @@ end
     @test_throws ArgumentError tsg.w
 end
 
-@testset "add/remove_snapshot" begin
+@testitem "add/remove_snapshot" begin
     snapshots = [rand_graph(10, 20) for i in 1:5]
     tsg = TemporalSnapshotsGNNGraph(snapshots)
     g = rand_graph(10, 20)
@@ -67,7 +70,7 @@ end
     @test tsg.snapshots == snapshots
 end
 
-@testset "add/remove_snapshot" begin
+@testitem "add/remove_snapshot" begin
     snapshots = [rand_graph(10, 20) for i in 1:5]
     tsg = TemporalSnapshotsGNNGraph(snapshots)
     g = rand_graph(10, 20)
@@ -93,7 +96,7 @@ end
 end
 
 
-# @testset "add/remove_snapshot!" begin
+# @testitem "add/remove_snapshot!" begin
 #     snapshots = [rand_graph(10, 20) for i in 1:5]
 #     tsg = TemporalSnapshotsGNNGraph(snapshots)
 #     g = rand_graph(10, 20)
@@ -111,7 +114,7 @@ end
 #     @test tsg3 === tsg
 # end
 
-@testset "show" begin
+@testitem "show" begin
     snapshots = [rand_graph(10, 20) for i in 1:5]
     tsg = TemporalSnapshotsGNNGraph(snapshots)
     @test sprint(show,tsg) == "TemporalSnapshotsGNNGraph(5)"
@@ -121,30 +124,33 @@ end
     @test sprint(show,tsg) == "TemporalSnapshotsGNNGraph(5)"
 end
 
-@testset "broadcastable" begin
+@testitem "broadcastable" begin
     snapshots = [rand_graph(10, 20) for i in 1:5]
     tsg = TemporalSnapshotsGNNGraph(snapshots)
     f(g) = g isa GNNGraph
     @test f.(tsg) == trues(5)
 end
 
-@testset "iterate" begin
+@testitem "iterate" begin
     snapshots = [rand_graph(10, 20) for i in 1:5]
     tsg = TemporalSnapshotsGNNGraph(snapshots)
     @test [g for g in tsg] isa Vector{<:GNNGraph}
 end
 
-if TEST_GPU
-    @testset "gpu" begin
-        snapshots = [rand_graph(10, 20; ndata = rand(Float32, 5,10)) for i in 1:5]
-        tsg = TemporalSnapshotsGNNGraph(snapshots)
-        tsg.tgdata.x = rand(Float32, 5)
-        dev = CUDADevice() #TODO replace with `gpu_device()`
-        tsg = tsg |> dev
-        @test tsg.snapshots[1].ndata.x isa CuArray
-        @test tsg.snapshots[end].ndata.x isa CuArray
-        @test tsg.tgdata.x isa CuArray
-        @test tsg.num_nodes isa CuArray
-        @test tsg.num_edges isa CuArray
-    end
+@testitem "gpu" setup=[GraphsTestModule] tags=[:gpu] begin
+    using .GraphsTestModule
+    dev = gpu_device(force=true)
+    snapshots = [rand_graph(10, 20; ndata = rand(Float32, 5,10)) for i in 1:5]
+    tsg = TemporalSnapshotsGNNGraph(snapshots)
+    tsg.tgdata.x = rand(Float32, 5)
+    tsg = tsg |> dev
+    @test tsg.snapshots[1].ndata.x isa AbstractMatrix{Float32}
+    @test get_device(tsg.snapshots[1].ndata.x) == dev
+    @test tsg.snapshots[end].ndata.x isa AbstractMatrix{Float32}
+    @test get_device(tsg.snapshots[end].ndata.x) == dev
+    @test tsg.tgdata.x isa AbstractVector{Float32}
+    @test get_device(tsg.tgdata.x) == dev
+    # num_nodes and num_edges are not copied to the device
+    @test tsg.num_nodes isa Vector{Int}
+    @test tsg.num_edges isa Vector{Int}
 end

@@ -13,6 +13,7 @@ using LinearAlgebra, Random, Statistics
 import MLUtils
 using MLUtils: getobs, numobs, ones_like, zeros_like, chunk, batch, rand_like
 using MLDataDevices: get_device, cpu_device, CPUDevice
+using Functors: @functor
 
 include("chainrules.jl") # hacks for differentiability
 
@@ -54,7 +55,7 @@ export adjacency_list,
        normalized_laplacian,
        scaled_laplacian,
        laplacian_lambda_max,
-# from Graphs
+# from Graphs.jl
        adjacency_matrix,
        degree,
        has_edge, 
@@ -82,7 +83,7 @@ export add_nodes,
        perturb_edges,
        remove_nodes,
        ppr_diffusion,
-# from MLUtils
+# from MLUtils.jl
        batch,
        unbatch,
 # from SparseArrays
@@ -97,9 +98,6 @@ export rand_graph,
        radius_graph,
        rand_temporal_radius_graph,
        rand_temporal_hyperbolic_graph
-
-include("sampling.jl")
-export sample_neighbors
 
 include("operators.jl")
 # Base.intersect
@@ -117,7 +115,8 @@ export mldataset2gnngraph
 
 include("deprecations.jl")
 
-include("samplers.jl")
-export NeighborLoader
+include("sampling.jl")
+export NeighborLoader, sample_neighbors, 
+      induced_subgraph # from Graphs.jl
 
 end #module

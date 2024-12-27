@@ -1,56 +1,34 @@
-using CUDA, cuDNN
-using GNNGraphs
-using GNNGraphs: getn, getdata
-using Functors: Functors
-using LinearAlgebra, Statistics, Random
-using NNlib
-import MLUtils
-import StatsBase
-using SparseArrays
-using Graphs
-using Zygote
-using Test
-using MLDatasets
-using InlineStrings  # not used but with the import we test #98 and #104
-using SimpleWeightedGraphs
-using MLDataDevices: gpu_device, cpu_device, get_device
-using MLDataDevices: CUDADevice
+## The test environment is instantiated as follows:
+# using Pkg
+# Pkg.activate(@__DIR__)
+# Pkg.develop(path=joinpath(@__DIR__, ".."))
+# Pkg.instantiate()
 
-CUDA.allowscalar(false)
+using TestItemRunner
 
-const ACUMatrix{T} = Union{CuMatrix{T}, CUDA.CUSPARSE.CuSparseMatrix{T}}
+## See https://www.julia-vscode.org/docs/stable/userguide/testitems/
+## for how to run the tests within VS Code.
+## See test_module.jl for the test infrastructure.
 
-ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
+## Uncomment below and in test_module.jl to change the default test settings
+# ENV["GNN_TEST_CPU"] = "false"
+# ENV["GNN_TEST_CUDA"] = "true"
+# ENV["GNN_TEST_AMDGPU"] = "true"
+# ENV["GNN_TEST_Metal"] = "true"
 
-# include("test_utils.jl")
+# The only available tag at the moment is :gpu
+# Tests not tagged with :gpu are considered to be CPU tests
+# Tests tagged with :gpu should run on all GPU backends
 
-tests = [
-    # "chainrules",
-    # "datastore",
-    # "gnngraph",
-    # "convert",
-    # "transform",
-    "operators",
-    # "generate",
-    "query",
-    "sampling",
-    "gnnheterograph",
-    "temporalsnapshotsgnngraph",
-    "mldatasets",
-    # "ext/SimpleWeightedGraphs",
-    "samplers"
-]
-
-!CUDA.functional() && @warn("CUDA unavailable, not testing GPU support")
-
-for graph_type in (:coo, :dense, :sparse)
-    @info "Testing graph format :$graph_type"
-    global GRAPH_T = graph_type
-    global TEST_GPU = CUDA.functional() && (GRAPH_T != :sparse)
-    # global GRAPH_T = :sparse
-    # global TEST_GPU = false
-
-    @testset "$t" for t in tests
-        include("$t.jl")
-    end
+if get(ENV, "GNN_TEST_CPU", "true") == "true"
+    @run_package_tests filter = ti -> :gpu ∉ ti.tags
+end
+if get(ENV, "GNN_TEST_CUDA", "false") == "true"
+    @run_package_tests filter = ti -> :gpu ∈ ti.tags
+end
+if get(ENV, "GNN_TEST_AMDGPU", "false") == "true"
+    @run_package_tests filter = ti -> :gpu ∈ ti.tags
+end
+if get(ENV, "GNN_TEST_Metal", "false") == "true"
+    @run_package_tests filter = ti -> :gpu ∈ ti.tags
 end

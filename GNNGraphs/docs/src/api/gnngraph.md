@@ -77,12 +77,8 @@ Base.intersect
 
 ## Sampling 
 
-```@autodocs; canonical = true
-Modules = [GNNGraphs]
-Pages   = ["src/sampling.jl"]
-Private = false
-```
-
-```@docs; canonical = true
+```@docs
+NeighborLoader
+sample_neighbors
 Graphs.induced_subgraph(::GNNGraph, ::Vector{Int})
 ```
