@@ -94,16 +94,16 @@
 end
 
 @testitem "color_refinement" setup=[GraphsTestModule] begin
-    # TODO: this passes only on julia 1.10. Use a deterministic graph generator
     using .GraphsTestModule
+    using StableRNGs
     for GRAPH_T in GRAPH_TYPES
-        rng = MersenneTwister(17)
+        rng = StableRNG(17)
         g = rand_graph(rng, 10, 20, graph_type = GRAPH_T)
         x0 = ones(Int, 10)
         x, ncolors, niters = color_refinement(g, x0)
-        @test ncolors == 7
+        @test ncolors == 9
         @test niters == 2
-        @test x == [1, 1, 6, 6, 6, 7, 8, 9, 10, 11] 
+        @test x == [6, 7, 8, 9, 10, 11, 12, 6, 13, 14]
         
         x2, _, _ = color_refinement(g)
         @test x2 == x

@@ -108,7 +108,6 @@ end
         @test !isempty(mini_batch_gnn.graph)
 
         num_sampled_nodes = mini_batch_gnn.num_nodes
-        println("Number of nodes in mini-batch: ", num_sampled_nodes)
 
         @test num_sampled_nodes == 2
 
