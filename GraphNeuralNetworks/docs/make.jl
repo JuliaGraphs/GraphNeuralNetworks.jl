@@ -66,7 +66,7 @@ makedocs(;
                 ],
             "Temporal graph neural networks" =>[
                 "Node autoregression" => "tutorials/traffic_prediction.md",
-                "Temporal graph classification" => "tutorials/temporal_graph_classification_pluto.md"
+                "Temporal graph classification" => "tutorials/temporal_graph_classification.md"
             ],
         ],
 
