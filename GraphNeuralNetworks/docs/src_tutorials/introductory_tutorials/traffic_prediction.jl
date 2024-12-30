@@ -9,11 +9,14 @@
 using Flux, GraphNeuralNetworks
 using Flux.Losses: mae
 using MLDatasets: METRLA
-using Statistics, Plots
+using Statistics, Plots, Random
+
+ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"  # don't ask for dataset download confirmation
+Random.seed!(42); # for reproducibility
 
 # ## Dataset: METR-LA
 
-# We use the `METR-LA` dataset from the paper [Diffusion Convolutional Recurrent Neural Network: Data-driven Traffic Forecasting](https://arxiv.org/pdf/1707.01926.pdf), which contains traffic data from loop detectors in the highway of Los Angeles County. The dataset contains traffic speed data from March 1, 2012 to June 30, 2012. The data is collected every 5 minutes, resulting in 12 observations per hour, from 207 sensors. Each sensor is a node in the graph, and the edges represent the distances between the sensors.
+# We use the `METR-LA` dataset from the paper [Diffusion Convolutional Recurrent Neural Network: Data-driven Traffic Forecasting](https://arxiv.org/pdf/1707.01926.pdf), which contains traffic data from loop detectors in the highway of Los Angeles County. The dataset contains traffic speed data from March 1, 2012 to June 30, 2012. The data is collected every 5 minutes, resulting in 12 observations per hour, from 207 sensors. Each sensor is a node in the graph, and the edge weights are the distances between the sensor locations.
 
 dataset_metrla = METRLA(; num_timesteps = 3)
 # 
@@ -29,7 +32,7 @@ features = map(x -> permutedims(x,(1,3,2)), g.node_data.features)
 
 size(features[1])
 
-# The first dimension correspond to the two features (first line the speed value and the second line the time of the day), the second to the number of timestep `num_timesteps` and the third to the nodes.
+# The first dimension corresponds to the two features (the first line the speed value and the second line the time of day), the second to the number of time steps `num_timesteps` and the third to the nodes.
 
 targets = map(x -> permutedims(x,(1,3,2)), g.node_data.targets)
 
@@ -57,20 +60,26 @@ function plot_data(data,sensor)
 	return p
 end
 
-plot_data(features[1:288],1)
+plot_data(features[1:288],1) # Plot the speed of the first sensor for the first day
 
 # Now let's construct the static graph, the `train_loader` and `data_loader`.
 
 graph = GNNGraph(g.edge_index; edata = g.edge_data, g.num_nodes);
 
-train_loader = zip(features[1:200], targets[1:200]);
-test_loader = zip(features[2001:2288], targets[2001:2288]);
+train_loader = zip(features[1:288], targets[1:288]); # train on 24 hours
+test_loader = zip(features[289:577], targets[289:577]); # test on next 24 hours
 
 # ## Model: T-GCN
 
 # We use the T-GCN model from the paper [T-GCN: A Temporal Graph Convolutional Network for Traffic Prediction] (https://arxiv.org/pdf/1811.05320.pdf), which consists of a graph convolutional network (GCN) and a gated recurrent unit (GRU). The GCN is used to capture spatial features from the graph, and the GRU is used to capture temporal features from the feature time series.
 
 model = GNNChain(TGCN(2 => 100; add_self_loops = false), Dense(100, 1))
+
+# Let's look at the output of the model for the first batch of the training data.
+
+model(graph, features[1])
+
+# The output of the model is a tensor of size `(1, 3, 207)`, which corresponds to the dimension of the feature (in this case speed), the number of time steps, and the number of nodes in the graph, respectively. The model outputs the predicted traffic speed for each sensor at each time step.
 
 # ![](https://www.researchgate.net/profile/Haifeng-Li-3/publication/335353434/figure/fig4/AS:851870352437249@1580113127759/The-architecture-of-the-Gated-Recurrent-Unit-model.jpg)
 
@@ -106,19 +115,19 @@ train(graph, train_loader, model)
 function plot_predicted_data(graph, features, targets, sensor)
 	p = plot(xlabel="Time (h)", ylabel="Normalized speed")
 	prediction = []
-	grand_truth = []
+	ground_truth = []
 	for i in 1:3:length(features)
-		push!(grand_truth,targets[i][1,:,sensor])
+		push!(ground_truth,targets[i][1,:,sensor])
 		push!(prediction, model(graph, features[i])[1,:,sensor]) 
 	end
 	prediction = reduce(vcat,prediction)
-	grand_truth = reduce(vcat, grand_truth)
-	plot!(p, collect(1:length(features)), grand_truth, color = :blue, label = "Grand Truth", xticks =([i for i in 0:50:250], ["$(i)" for i in 0:4:24]))
-	plot!(p, collect(1:length(features)), prediction, color = :red, label= "Prediction")
+	ground_truth = reduce(vcat, ground_truth)
+	plot!(p, collect(1:length(prediction)), prediction, color = :red, label= "Prediction")
+	plot!(p, collect(1:length(ground_truth)), ground_truth, color = :blue, label = "Ground Truth",  xticks = ([i for i in 0:50:250], ["$(i)" for i in 0:4:20]))
 	return p
 end
 
-plot_predicted_data(graph,features[301:588],targets[301:588], 1)
+plot_predicted_data(graph,features[289:577],targets[289:577], 1)
 
 # 
 accuracy(ŷ, y) = 1 - Statistics.norm(y-ŷ)/Statistics.norm(y)
