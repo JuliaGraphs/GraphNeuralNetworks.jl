@@ -69,8 +69,7 @@ end
 
 function (l::GlobalPool)(g::TemporalSnapshotsGNNGraph, x::AbstractVector)
     h = [reduce_nodes(l.aggr, g[i], x[i]) for i in 1:(g.num_snapshots)]
-    sze = size(h[1])
-    reshape(reduce(hcat, h), sze[1], length(h))
+    return mean(h)
 end
 
 # Then we implement the constructor of the model, which we call `GenderPredictionModel`, and the foward pass.
@@ -95,7 +94,6 @@ end
 function (m::GenderPredictionModel)(g::TemporalSnapshotsGNNGraph)
     h = m.gin(g, g.ndata.x)
     h = m.globalpool(g, h)
-    h = mean(h, dims=2)
     return m.dense(h)
 end
 	
@@ -139,16 +137,16 @@ function train(dataset)
             end
             Flux.update!(opt, model, grads[1])
         end
-        if  epoch % 10 == 0
+        if  epoch % 20 == 0
             report(epoch)
         end
     end
     return model
 end
 
-
 train(brain_dataset);
 
-## Conclusions
+
 #
-# In this tutorial, we implemented a very simple architecture to classify temporal graphs in the context of gender classification using brain data. We then trained the model on the GPU for 100 epochs on the TemporalBrains dataset. The accuracy of the model is approximately 80%, but can be improved by fine-tuning the parameters and training on more data.
+# # Conclusions
+# In this tutorial, we implemented a very simple architecture to classify temporal graphs in the context of gender classification using brain data. We then trained the model on the GPU for 100 epochs on the TemporalBrains dataset. The accuracy of the model is approximately 85%, but can be improved by fine-tuning the parameters and training on more data.

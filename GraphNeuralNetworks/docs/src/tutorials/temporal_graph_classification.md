@@ -1,7 +1,3 @@
-```@meta
-EditURL = "../../src_tutorials/introductory_tutorials/temporal_graph_classification.jl"
-```
-
 # Temporal Graph classification with GraphNeuralNetworks.jl
 
 In this tutorial, we will learn how to extend the graph classification task to the case of temporal graphs, i.e., graphs whose topology and features are time-varying.
@@ -86,8 +82,7 @@ First, we start by adapting the `GlobalPool` to the `TemporalSnapshotsGNNGraphs`
 ````julia
 function (l::GlobalPool)(g::TemporalSnapshotsGNNGraph, x::AbstractVector)
     h = [reduce_nodes(l.aggr, g[i], x[i]) for i in 1:(g.num_snapshots)]
-    sze = size(h[1])
-    reshape(reduce(hcat, h), sze[1], length(h))
+    return mean(h)
 end
 ````
 
@@ -114,7 +109,6 @@ end
 function (m::GenderPredictionModel)(g::TemporalSnapshotsGNNGraph)
     h = m.gin(g, g.ndata.x)
     h = m.globalpool(g, h)
-    h = mean(h, dims=2)
     return m.dense(h)
 end
 ````
@@ -160,35 +154,28 @@ function train(dataset)
             end
             Flux.update!(opt, model, grads[1])
         end
-        if  epoch % 10 == 0
+        if  epoch % 20 == 0
             report(epoch)
         end
     end
     return model
 end
 
-
 train(brain_dataset);
-
-# Conclusions
 ````
 
 ````
 Epoch: 0  (train_loss = 0.80321693f0, train_acc = 50.5)  (test_loss = 0.79863846f0, test_acc = 60.0)
-Epoch: 10  (train_loss = 0.61757874f0, train_acc = 63.5)  (test_loss = 0.6142881f0, test_acc = 72.0)
-Epoch: 20  (train_loss = 0.50907505f0, train_acc = 74.0)  (test_loss = 0.646904f0, test_acc = 60.0)
-Epoch: 30  (train_loss = 0.35090268f0, train_acc = 81.0)  (test_loss = 0.65224814f0, test_acc = 60.0)
-Epoch: 40  (train_loss = 0.13825743f0, train_acc = 97.0)  (test_loss = 0.58508986f0, test_acc = 74.0)
-Epoch: 50  (train_loss = 0.44244948f0, train_acc = 77.0)  (test_loss = 1.5108807f0, test_acc = 62.0)
-Epoch: 60  (train_loss = 0.033900682f0, train_acc = 99.5)  (test_loss = 0.593368f0, test_acc = 78.0)
-Epoch: 70  (train_loss = 0.04119176f0, train_acc = 99.5)  (test_loss = 0.4229265f0, test_acc = 84.0)
-Epoch: 80  (train_loss = 0.018655278f0, train_acc = 99.5)  (test_loss = 0.5038431f0, test_acc = 88.0)
-Epoch: 90  (train_loss = 0.0074938983f0, train_acc = 100.0)  (test_loss = 0.5612772f0, test_acc = 88.0)
-Epoch: 100  (train_loss = 0.021453373f0, train_acc = 99.5)  (test_loss = 0.4984316f0, test_acc = 84.0)
+Epoch: 20  (train_loss = 0.5073769f0, train_acc = 74.5)  (test_loss = 0.64655066f0, test_acc = 60.0)
+Epoch: 40  (train_loss = 0.13417317f0, train_acc = 96.5)  (test_loss = 0.5689327f0, test_acc = 74.0)
+Epoch: 60  (train_loss = 0.01875147f0, train_acc = 100.0)  (test_loss = 0.45651233f0, test_acc = 82.0)
+Epoch: 80  (train_loss = 0.12695672f0, train_acc = 95.0)  (test_loss = 0.65159386f0, test_acc = 82.0)
+Epoch: 100  (train_loss = 0.036399372f0, train_acc = 99.0)  (test_loss = 0.6491585f0, test_acc = 86.0)
 
 ````
 
-In this tutorial, we implemented a very simple architecture to classify temporal graphs in the context of gender classification using brain data. We then trained the model on the GPU for 100 epochs on the TemporalBrains dataset. The accuracy of the model is approximately 80%, but can be improved by fine-tuning the parameters and training on more data.
+# Conclusions
+In this tutorial, we implemented a very simple architecture to classify temporal graphs in the context of gender classification using brain data. We then trained the model on the GPU for 100 epochs on the TemporalBrains dataset. The accuracy of the model is approximately 85%, but can be improved by fine-tuning the parameters and training on more data.
 
 ---
 
