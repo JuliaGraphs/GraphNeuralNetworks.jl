@@ -54,10 +54,10 @@ GNNGraph:
 ```
 """
 struct TemporalSnapshotsGNNGraph{G<:GNNGraph, D<:DataStore}
-    num_nodes::AbstractVector{Int}   
-    num_edges::AbstractVector{Int}
+    num_nodes::Vector{Int}   
+    num_edges::Vector{Int}
     num_snapshots::Int
-    snapshots::AbstractVector{G}
+    snapshots::Vector{G}
     tgdata::D   
 end
 
