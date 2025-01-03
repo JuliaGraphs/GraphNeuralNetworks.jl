@@ -50,7 +50,8 @@ export TGCN,
 
 include("layers/pool.jl")
 export GlobalPool,
-       GlobalAttentionPool
+       GlobalAttentionPool,
+       TopKPool
 
 end #module
  
