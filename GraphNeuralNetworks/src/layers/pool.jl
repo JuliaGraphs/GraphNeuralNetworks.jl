@@ -156,7 +156,7 @@ function Set2Set(n_in::Int, n_iters::Int, n_layers::Int = 1)
 end
 
 function (l::Set2Set)(g, x)
-    m = (; l.lstm, l.num_iters, Wh = lstm.Wh)
+    m = (; l.lstm, l.num_iters, Wh = l.lstm.Wh)
     return GNNlib.set2set_pool(m, g, x)
 end
 
