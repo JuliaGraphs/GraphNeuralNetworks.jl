@@ -61,10 +61,10 @@ operation:
 # Arguments
 
 - `fgate`: The function ``f_{gate}: \mathbb{R}^{D_{in}} \to \mathbb{R}``. 
-           It is tipically expressed by a neural network.
+           It is typically expressed by a neural network.
 
 - `ffeat`: The function ``f_{feat}: \mathbb{R}^{D_{in}} \to \mathbb{R}^{D_{out}}``. 
-           It is tipically expressed by a neural network.
+           It is typically expressed by a neural network.
 
 # Examples
 
