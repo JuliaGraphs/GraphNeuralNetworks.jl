@@ -49,7 +49,9 @@ export TGCN,
        EvolveGCNO
 
 include("layers/pool.jl")
-export GlobalPool
+export GlobalPool,
+       GlobalAttentionPool,
+       TopKPool
 
 end #module
  
