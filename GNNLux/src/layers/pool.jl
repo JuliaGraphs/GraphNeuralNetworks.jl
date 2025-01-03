@@ -51,7 +51,7 @@ Networks](https://arxiv.org/abs/1511.05493) paper
 \mathbf{u}_V = \sum_{i\in V} \alpha_i\, f_{feat}(\mathbf{x}_i)
 ```
 
-where the coefficients ``\alpha_i`` are given by a [`GNNLib.softmax_nodes`](@ref)
+where the coefficients ``\alpha_i`` are given by a [`GNNLib.softmax_nodes`](https://juliagraphs.org/GraphNeuralNetworks.jl/docs/GNNlib.jl/stable/api/utils/#GNNlib.softmax_nodes)
 operation:
 
 ```math
