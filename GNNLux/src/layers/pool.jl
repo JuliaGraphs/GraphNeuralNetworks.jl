@@ -51,7 +51,7 @@ Networks](https://arxiv.org/abs/1511.05493) paper
 \mathbf{u}_V = \sum_{i\in V} \alpha_i\, f_{feat}(\mathbf{x}_i)
 ```
 
-where the coefficients ``\alpha_i`` are given by a [`softmax_nodes`](@ref)
+where the coefficients ``\alpha_i`` are given by a [`GNNLib.softmax_nodes`](@ref)
 operation:
 
 ```math
@@ -92,9 +92,9 @@ u, st = pool(g, g.ndata.x, ps, st)
 @assert size(u) == (chout, g.num_graphs)
 ```
 """
-struct GlobalAttentionPool{G, F}
-    fgate::G
-    ffeat::F
+struct GlobalAttentionPool <: GNNContainerLayer{(:fgate, :ffeat)}
+    fgate
+    ffeat
 end
 
 GlobalAttentionPool(fgate) = GlobalAttentionPool(fgate, identity)
