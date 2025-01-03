@@ -24,5 +24,23 @@
     
             test_lux_layer(rng, l, g, g.ndata.x, sizey=(chout,ng), container=true)
         end
+
+        @testset "TopKPool" begin
+            N = 10
+            k, in_channel = 4, 7
+            X = rand(in_channel, N)
+            ps = (;)
+            st = (;)
+            for T in [Bool, Float64]
+                adj = rand(T, N, N)
+                p = GNNLux.TopKPool(adj, k, in_channel)
+                @test eltype(p.p) === Float32
+                @test size(p.p) == (in_channel,)
+                @test eltype(p.Ã) === T
+                @test size(p.Ã) == (k, k)
+                y = p(X, ps, st)
+                @test size(y) == (in_channel, k)
+            end
+        end
     end
 end
