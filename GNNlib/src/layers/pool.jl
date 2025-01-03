@@ -29,8 +29,8 @@ topk_index(y::Adjoint, k::Int) = topk_index(y', k)
 function set2set_pool(l, g::GNNGraph, x::AbstractMatrix)
     n_in = size(x, 1)    
     qstar = zeros_like(x, (2*n_in, g.num_graphs))
-    h = zeros_like(l.lstm.Wh, size(l.lstm.Wh, 2))
-    c = zeros_like(l.lstm.Wh, size(l.lstm.Wh, 2))
+    h = zeros_like(l.Wh, size(l.Wh, 2))
+    c = zeros_like(l.Wh, size(l.Wh, 2))
     state = (h, c)
     for t in 1:l.num_iters
         q, state = l.lstm(qstar, state)                     # [n_in, n_graphs]
