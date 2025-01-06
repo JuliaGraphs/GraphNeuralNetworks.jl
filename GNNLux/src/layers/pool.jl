@@ -92,7 +92,7 @@ u, st = pool(g, g.ndata.x, ps, st)
 @assert size(u) == (chout, g.num_graphs)
 ```
 """
-struct GlobalAttentionPool <: GNNContainerLayer{(:fgate, :ffeat)}
+@concrete struct GlobalAttentionPool <: GNNContainerLayer{(:fgate, :ffeat)}
     fgate
     ffeat
 end
