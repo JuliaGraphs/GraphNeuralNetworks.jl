@@ -130,4 +130,4 @@ function TopKPool(adj::AbstractMatrix, k::Int, in_channel::Int; init = glorot_un
     TopKPool(adj, k, init(in_channel), similar(adj, k, k))
 end
 
-(t::TopKPool)(x::AbstractArray, ps, st) = GNNlib.topk_pool(t, x)
+(t::TopKPool)(x::AbstractArray, ps, st) = GNNlib.topk_pool(t, x), st
