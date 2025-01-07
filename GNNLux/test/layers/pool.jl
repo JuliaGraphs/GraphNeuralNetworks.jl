@@ -38,7 +38,7 @@
                 @test size(p.p) == (in_channel,)
                 @test eltype(p.Ã) === T
                 @test size(p.Ã) == (k, k)
-                y = p(X, ps, st)
+                y, st = p(X, ps, st)
                 @test size(y) == (in_channel, k)
             end
         end
