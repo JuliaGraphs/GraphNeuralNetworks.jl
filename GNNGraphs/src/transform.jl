@@ -808,8 +808,8 @@ function _unbatch_edgemasks(s, t, num_graphs, cumnum_nodes)
     return edgemasks
 end
 
-@non_differentiable _unbatch_nodemasks(::Any...)
-@non_differentiable _unbatch_edgemasks(::Any...)
+CRC.@non_differentiable _unbatch_nodemasks(::Any...)
+CRC.@non_differentiable _unbatch_edgemasks(::Any...)
 
 """
     getgraph(g::GNNGraph, i; nmap=false)
@@ -998,10 +998,10 @@ dense_zeros_like(x, sz = size(x)) = dense_zeros_like(x, eltype(x), sz)
 # """
 ci2t(ci::AbstractVector{<:CartesianIndex}, dims) = ntuple(i -> map(x -> x[i], ci), dims)
 
-@non_differentiable negative_sample(x...)
-@non_differentiable add_self_loops(x...)     # TODO this is wrong, since g carries feature arrays, needs rrule
-@non_differentiable remove_self_loops(x...)  # TODO this is wrong, since g carries feature arrays, needs rrule
-@non_differentiable dense_zeros_like(x...)
+CRC.@non_differentiable negative_sample(x...)
+CRC.@non_differentiable add_self_loops(x...)     # TODO this is wrong, since g carries feature arrays, needs rrule
+CRC.@non_differentiable remove_self_loops(x...)  # TODO this is wrong, since g carries feature arrays, needs rrule
+CRC.@non_differentiable dense_zeros_like(x...)
 
 """
     ppr_diffusion(g::GNNGraph{<:COO_T}, alpha =0.85f0) -> GNNGraph

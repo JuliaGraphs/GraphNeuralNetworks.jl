@@ -273,7 +273,7 @@ end
 
 # TODO this is not correct but Zygote cannot differentiate
 # through dictionary generation
-# @non_differentiable edge_type_subgraph(::Any...)
+# CRC.@non_differentiable edge_type_subgraph(::Any...)
 
 function _ntypes_from_edges(edge_ts::AbstractVector{<:EType})
     ntypes = Symbol[]
@@ -285,7 +285,7 @@ function _ntypes_from_edges(edge_ts::AbstractVector{<:EType})
     return ntypes
 end 
 
-@non_differentiable _ntypes_from_edges(::Any...)
+CRC.@non_differentiable _ntypes_from_edges(::Any...)
 
 function Base.getindex(g::GNNHeteroGraph, node_t::NType)
     return g.ndata[node_t]

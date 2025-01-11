@@ -241,37 +241,46 @@ function Graphs.adjacency_matrix(g::GNNGraph{<:ADJMAT_T}, T::DataType = eltype(g
     return dir == :out ? A : A'
 end
 
-function ChainRulesCore.rrule(::typeof(adjacency_matrix), g::G, T::DataType; 
+function CRC.rrule(::typeof(adjacency_matrix), g::G, T::DataType; 
             dir = :out, weighted = true) where {G <: GNNGraph{<:ADJMAT_T}}
     A = adjacency_matrix(g, T; dir, weighted)
     if !weighted
         function adjacency_matrix_pullback_noweight(Δ)
-            return (NoTangent(), ZeroTangent(), NoTangent())  
+            return (CRC.NoTangent(), CRC.ZeroTangent(), CRC.NoTangent())  
         end
         return A, adjacency_matrix_pullback_noweight
     else
         function adjacency_matrix_pullback_weighted(Δ)
-            dg = Tangent{G}(; graph = Δ .* binarize(A))
-            return (NoTangent(), dg, NoTangent())  
+            dy = CRC.unthunk(Δ)
+            dg = CRC.Tangent{G}(; graph = dy .* binarize(dy))
+            return (CRC.NoTangent(), dg, CRC.NoTangent())  
         end
         return A, adjacency_matrix_pullback_weighted
     end
 end
 
-function ChainRulesCore.rrule(::typeof(adjacency_matrix), g::G, T::DataType; 
+function CRC.rrule(::typeof(adjacency_matrix), g::G, T::DataType; 
             dir = :out, weighted = true) where {G <: GNNGraph{<:COO_T}}
     A = adjacency_matrix(g, T; dir, weighted)
     w = get_edge_weight(g)
     if !weighted || w === nothing
         function adjacency_matrix_pullback_noweight(Δ)
-            return (NoTangent(), ZeroTangent(), NoTangent())  
+            return (CRC.NoTangent(), CRC.ZeroTangent(), CRC.NoTangent())  
         end
         return A, adjacency_matrix_pullback_noweight
     else
         function adjacency_matrix_pullback_weighted(Δ)
+            dy = CRC.unthunk(Δ)
             s, t = edge_index(g)
-            dg = Tangent{G}(; graph = (NoTangent(), NoTangent(), NNlib.gather(Δ, s, t)))
-            return (NoTangent(), dg, NoTangent())  
+            @show dy s t
+            #TODO using CRC.@thunk gives an error
+            #TODO use gather when https://github.com/FluxML/NNlib.jl/issues/625 is fixed
+            dw = zeros_like(w)
+            idx = CartesianIndex.(s, t) #TODO remove when https://github.com/FluxML/NNlib.jl/issues/626 is fixed
+            NNlib.gather!(dw, dy, idx)
+            @show dw
+            dg = CRC.Tangent{G}(; graph = (CRC.NoTangent(), CRC.NoTangent(), dw))
+            return (CRC.NoTangent(), dg, CRC.NoTangent())  
         end
         return A, adjacency_matrix_pullback_weighted
     end
@@ -378,34 +387,35 @@ function _degree(A::AbstractMatrix, T::Type, dir::Symbol, edge_weight::Bool, num
            vec(sum(A, dims = 1)) .+ vec(sum(A, dims = 2))
 end
 
-function ChainRulesCore.rrule(::typeof(_degree), graph, T, dir, edge_weight::Nothing, num_nodes)
+function CRC.rrule(::typeof(_degree), graph, T, dir, edge_weight::Nothing, num_nodes)
     degs = _degree(graph, T, dir, edge_weight, num_nodes)
     function _degree_pullback(Δ)
-        return (NoTangent(), NoTangent(), NoTangent(), NoTangent(), NoTangent(), NoTangent())
+        return ntuple(i -> (CRC.NoTangent(),), 6)
     end
     return degs, _degree_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(_degree), A::ADJMAT_T, T, dir, edge_weight::Bool, num_nodes)
+function CRC.rrule(::typeof(_degree), A::ADJMAT_T, T, dir, edge_weight::Bool, num_nodes)
     degs = _degree(A, T, dir, edge_weight, num_nodes)
     if edge_weight === false
         function _degree_pullback_noweights(Δ)
-            return (NoTangent(), NoTangent(), NoTangent(), NoTangent(), NoTangent(), NoTangent())
+            return ntuple(i -> (CRC.NoTangent(),), 6)
         end
         return degs, _degree_pullback_noweights
     else
         function _degree_pullback_weights(Δ)
+            dy = CRC.unthunk(Δ)
             # We propagate the gradient only to the non-zero elements
             # of the adjacency matrix.
             bA = binarize(A)
             if dir == :in
-                dA = bA .* Δ'
+                dA = bA .* dy'
             elseif dir == :out
-                dA = Δ .* bA
+                dA = dy .* bA
             else # dir == :both
-                dA = Δ .* bA + Δ' .* bA
+                dA = dy .* bA + dy' .* bA
             end
-            return (NoTangent(), dA, NoTangent(), NoTangent(), NoTangent(), NoTangent())
+            return (CRC.NoTangent(), dA, CRC.NoTangent(), CRC.NoTangent(), CRC.NoTangent(), CRC.NoTangent())
         end
         return degs, _degree_pullback_weights
     end
@@ -452,7 +462,7 @@ function normalized_adjacency(g::GNNGraph, T::DataType = Float32;
         A = A + I
     end
     degs = vec(sum(A; dims = 2))
-    ChainRulesCore.ignore_derivatives() do
+    CRC.ignore_derivatives() do
         @assert all(!iszero, degs) "Graph contains isolated nodes, cannot compute `normalized_adjacency`."
     end
     inv_sqrtD = Diagonal(inv.(sqrt.(degs)))
@@ -609,12 +619,12 @@ function laplacian_lambda_max(g::GNNGraph, T::DataType = Float32;
     end
 end
 
-@non_differentiable edge_index(x...)
-@non_differentiable adjacency_list(x...)
-@non_differentiable graph_indicator(x...)
-@non_differentiable has_multi_edges(x...)
-@non_differentiable Graphs.has_self_loops(x...)
-@non_differentiable is_bidirected(x...)
-@non_differentiable normalized_adjacency(x...) # TODO remove this in the future
-@non_differentiable normalized_laplacian(x...) # TODO remove this in the future
-@non_differentiable scaled_laplacian(x...) # TODO remove this in the future
+CRC.@non_differentiable edge_index(x...)
+CRC.@non_differentiable adjacency_list(x...)
+CRC.@non_differentiable graph_indicator(x...)
+CRC.@non_differentiable has_multi_edges(x...)
+CRC.@non_differentiable Graphs.has_self_loops(x...)
+CRC.@non_differentiable is_bidirected(x...)
+CRC.@non_differentiable normalized_adjacency(x...) # TODO remove this in the future
+CRC.@non_differentiable normalized_laplacian(x...) # TODO remove this in the future
+CRC.@non_differentiable scaled_laplacian(x...) # TODO remove this in the future

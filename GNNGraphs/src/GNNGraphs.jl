@@ -8,7 +8,7 @@ import NearestNeighbors
 import NNlib
 import StatsBase
 import KrylovKit
-using ChainRulesCore
+import ChainRulesCore as CRC
 using LinearAlgebra, Random, Statistics
 import MLUtils
 using MLUtils: getobs, numobs, ones_like, zeros_like, chunk, batch, rand_like

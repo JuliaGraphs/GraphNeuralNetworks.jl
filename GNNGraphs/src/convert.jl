@@ -78,7 +78,7 @@ function _findnz_idx(A)
     return s, t, nz
 end
 
-@non_differentiable _findnz_idx(A)
+CRC.@non_differentiable _findnz_idx(A)
 
 function to_coo(A::ADJMAT_T; dir = :out, num_nodes = nothing, weighted = true)
     s, t, nz = _findnz_idx(A)

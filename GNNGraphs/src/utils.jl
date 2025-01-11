@@ -292,9 +292,9 @@ end
 
 binarize(x) = map(>(0), x)
 
-@non_differentiable binarize(x...)
-@non_differentiable edge_encoding(x...)
-@non_differentiable edge_decoding(x...)
+CRC.@non_differentiable binarize(x...)
+CRC.@non_differentiable edge_encoding(x...)
+CRC.@non_differentiable edge_decoding(x...)
 
 ### PRINTING #####
 
@@ -330,11 +330,11 @@ function dims2string(d)
     join(map(string, d), '×')
 end
 
-@non_differentiable normalize_graphdata(::NamedTuple{(), Tuple{}})
-@non_differentiable normalize_graphdata(::Nothing)
+CRC.@non_differentiable normalize_graphdata(::NamedTuple{(), Tuple{}})
+CRC.@non_differentiable normalize_graphdata(::Nothing)
 
 iscuarray(x::AbstractArray) = false 
-@non_differentiable iscuarray(::Any)
+CRC.@non_differentiable iscuarray(::Any)
 
 
 @doc raw"""
