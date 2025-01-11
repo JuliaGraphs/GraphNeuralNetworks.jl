@@ -155,9 +155,6 @@ function Set2Set(n_in::Int, n_iters::Int, n_layers::Int = 1)
     return Set2Set(lstm, n_iters)
 end
 
-function (l::Set2Set)(g, x)
-    m = (; l.lstm, l.num_iters, Wh = l.lstm.Wh)
-    return GNNlib.set2set_pool(m, g, x)
-end
+(l::Set2Set)(g, x) = GNNlib.set2set_pool(l, g, x)
 
 (l::Set2Set)(g::GNNGraph) = GNNGraph(g, gdata = l(g, node_features(g)))
