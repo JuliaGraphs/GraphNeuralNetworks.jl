@@ -21,10 +21,6 @@ CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 GNNlibAMDGPUExt = "AMDGPU"
 GNNlibCUDAExt = "CUDA"
 
-# GPUArraysCore is not needed as a direct dependency
-# but pinning it to 0.1 avoids problems when we do Pkg.add("CUDA") in testing
-# See https://github.com/JuliaGPU/CUDA.jl/issues/2564
-
 [compat]
 AMDGPU = "1"
 CUDA = "5"

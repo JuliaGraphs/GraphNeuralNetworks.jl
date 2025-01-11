@@ -95,7 +95,7 @@ See [`rand_heterograph`](@ref) for a more general version.
 
 # Examples
 
-```julia-repl
+```julia
 julia> g = rand_bipartite_heterograph((10, 15), 20)
 GNNHeteroGraph:
   num_nodes: (:A => 10, :B => 15)
