@@ -127,6 +127,12 @@ function GNNGraph(data::D;
     @assert graph_type ∈ [:coo, :dense, :sparse] "Invalid graph_type $graph_type requested"
     @assert dir ∈ [:in, :out]
 
+    if ndata !== nothing && num_nodes === nothing
+        # Infer num_nodes from ndata
+        # Should be more robust than inferring from data
+        num_nodes = numobs(ndata)
+    end
+
     if graph_type == :coo
         graph, num_nodes, num_edges = to_coo(data; num_nodes, dir)
     elseif graph_type == :dense
@@ -151,7 +157,16 @@ function GNNGraph(data::D;
              ndata, edata, gdata)
 end
 
-GNNGraph(; kws...) = GNNGraph(0; kws...)
+function GNNGraph(; num_nodes = nothing, ndata = nothing, kws...)
+    if num_nodes === nothing
+        if ndata === nothing
+            num_nodes = 0
+        else
+            num_nodes = numobs(ndata)
+        end
+    end
+    return GNNGraph(num_nodes; ndata, kws...)
+end
 
 function (::Type{<:GNNGraph})(num_nodes::T; kws...) where {T <: Integer}
     s, t = T[], T[]
