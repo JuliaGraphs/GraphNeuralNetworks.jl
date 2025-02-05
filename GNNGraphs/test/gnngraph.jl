@@ -53,6 +53,34 @@ end
     end
 end
 
+@testitem "Constructor: empty" setup=[GraphsTestModule] begin
+    g = GNNGraph(ndata=ones(2, 1))
+    @test g.num_nodes == 1
+    @test g.num_edges == 0
+    @test g.ndata.x == ones(2, 1)
+
+    g = GNNGraph(num_nodes=1)
+    @test g.num_nodes == 1
+    @test g.num_edges == 0
+    @test isempty(g.ndata) 
+
+    g = GNNGraph((Int[], Int[]); ndata=(;a=[1]))
+    @test g.num_nodes == 1
+    @test g.num_edges == 0
+    @test g.ndata.a == [1]
+
+    g = GNNGraph((Int[], Int[]); ndata=(;a=[1]), edata=(;b=Int[]), num_nodes=1)
+    @test g.num_nodes == 1
+    @test g.num_edges == 0
+    @test g.ndata.a == [1]
+    @test g.edata.b == Int[]
+
+    g = GNNGraph(; edata=(;b=Int[]))
+    @test g.num_nodes == 0
+    @test g.num_edges == 0
+    @test g.edata.b == Int[]
+end
+
 @testitem "symmetric graph" setup=[GraphsTestModule] tags=[:gpu] begin
     using .GraphsTestModule
     dev = gpu_device()

@@ -129,16 +129,16 @@ function normalize_graphdata(data; default_name::Symbol, kws...)
     normalize_graphdata(NamedTuple{(default_name,)}((data,)); default_name, kws...)
 end
 
-function normalize_graphdata(data::NamedTuple; default_name, n, duplicate_if_needed = false)
+function normalize_graphdata(data::NamedTuple; default_name, n, duplicate_if_needed = false, glob=false)
     # This had to workaround two Zygote bugs with NamedTuples
     # https://github.com/FluxML/Zygote.jl/issues/1071
-    # https://github.com/FluxML/Zygote.jl/issues/1072
+    # https://github.com/FluxML/Zygote.jl/issues/1072 # TODO this is fixed
 
     if n > 1
         @assert all(x -> x isa AbstractArray, data) "Non-array features provided."
     end
 
-    if n <= 1
+    if n <= 1 && glob
         # If last array dimension is not 1, add a new dimension.
         # This is mostly useful to reshape global feature vectors
         # of size D to Dx1 matrices.

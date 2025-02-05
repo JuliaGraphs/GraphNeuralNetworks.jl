@@ -145,7 +145,7 @@ function GNNHeteroGraph(data::EDict;
         edata = normalize_heterographdata(edata, default_name = :e, ns = num_edges,
                                           duplicate_if_needed = true)
         gdata = normalize_graphdata(gdata, default_name = :u,
-                                        n = num_graphs > 1 ? num_graphs : -1)
+                                        n = num_graphs > 1 ? num_graphs : -1, glob=true)
     end
 
     return GNNHeteroGraph(graph,
