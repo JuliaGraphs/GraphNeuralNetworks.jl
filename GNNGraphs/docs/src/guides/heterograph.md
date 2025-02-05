@@ -99,10 +99,10 @@ GNNHeteroGraph:
   num_nodes: Dict(:movie => 13, :user => 3)
   num_edges: Dict((:user, :rate, :movie) => 4)
   ndata:
-        :movie  =>  DataStore(z = [64×13 Matrix{Float32}])
-        :user  =>  DataStore(x = [64×3 Matrix{Float32}])
+    :movie  =>  DataStore(z = [64×13 Matrix{Float32}])
+    :user  =>  DataStore(x = [64×3 Matrix{Float32}])
   edata:
-        (:user, :rate, :movie)  =>  DataStore(e = [64×4 Matrix{Float32}])
+    (:user, :rate, :movie)  =>  DataStore(e = [64×4 Matrix{Float32}])
 ```
 
 ## Batching
@@ -140,4 +140,4 @@ end
 
 ## Graph convolutions on heterographs
 
-See [`HeteroGraphConv`](@ref) for how to perform convolutions on heterogeneous graphs.
+See `HeteroGraphConv` for how to perform convolutions on heterogeneous graphs.
