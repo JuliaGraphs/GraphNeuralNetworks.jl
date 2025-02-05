@@ -37,7 +37,6 @@ cp(joinpath(@__DIR__, "../../GNNlib/docs/src"),
 
 makedocs(;
     modules = [GraphNeuralNetworks, GNNGraphs, GNNlib],
-    doctest = false, # TODO: enable doctest
     plugins = [interlinks],
     format = Documenter.HTML(; mathengine, 
                             prettyurls = get(ENV, "CI", nothing) == "true", 

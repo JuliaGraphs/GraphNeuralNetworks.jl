@@ -198,18 +198,18 @@ function Base.show(io::IO, ::MIME"text/plain", g::GNNHeteroGraph)
             print(io, "\n  ndata:")
             for k in sort(collect(keys(g.ndata)))
                 isempty(g.ndata[k]) && continue    
-                print(io, "\n\t", _str(k), "  =>  $(shortsummary(g.ndata[k]))")
+                print(io, "\n    ", _str(k), "  =>  $(shortsummary(g.ndata[k]))")
             end
         end
         if !isempty(g.edata) && !all(isempty, values(g.edata))
             print(io, "\n  edata:")
             for k in sort(collect(keys(g.edata)))
                 isempty(g.edata[k]) && continue
-                print(io, "\n\t$k  =>  $(shortsummary(g.edata[k]))")
+                print(io, "\n    $k  =>  $(shortsummary(g.edata[k]))")
             end
         end
         if !isempty(g.gdata)
-            print(io, "\n  gdata:\n\t")
+            print(io, "\n  gdata:\n    ")
             shortsummary(io, g.gdata)
         end
     end

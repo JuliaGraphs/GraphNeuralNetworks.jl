@@ -459,14 +459,14 @@ GNNGraph:
   num_nodes: 4
   num_edges: 5
   edata:
-        e = 5-element Vector{Float64}
+    e = 5-element Vector{Float64}
 
 julia> g2 = to_bidirected(g)
 GNNGraph:
   num_nodes: 4
   num_edges: 7
   edata:
-        e = 7-element Vector{Float64}
+    e = 7-element Vector{Float64}
 
 julia> edge_index(g2)
 ([1, 2, 2, 3, 3, 4, 4], [2, 1, 3, 2, 4, 3, 4])
@@ -644,14 +644,14 @@ GNNGraph:
   num_nodes: 4
   num_edges: 4
   ndata:
-        x = 3×4 Matrix{Float32}
+    x = 3×4 Matrix{Float32}
 
 julia> g2 = rand_graph(5, 4, ndata=zeros(Float32, 3, 5))
 GNNGraph:
   num_nodes: 5
   num_edges: 4
   ndata:
-        x = 3×5 Matrix{Float32}
+    x = 3×5 Matrix{Float32}
 
 julia> g12 = MLUtils.batch([g1, g2])
 GNNGraph:
@@ -659,7 +659,7 @@ GNNGraph:
   num_edges: 8
   num_graphs: 2
   ndata:
-        x = 3×9 Matrix{Float32}
+    x = 3×9 Matrix{Float32}
 
 julia> g12.ndata.x
 3×9 Matrix{Float32}:

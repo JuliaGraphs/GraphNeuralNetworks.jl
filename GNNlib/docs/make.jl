@@ -26,7 +26,6 @@ cp(joinpath(@__DIR__, "../../GNNGraphs/docs/src/"),
 
 makedocs(;
     modules = [GNNlib, GNNGraphs],
-    doctest = false, # TODO enable doctest
     plugins = [interlinks],
     format = Documenter.HTML(; mathengine, prettyurls, assets = assets, size_threshold=nothing),
     sitename = "GNNlib.jl",

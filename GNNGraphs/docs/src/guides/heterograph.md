@@ -88,13 +88,11 @@ julia> g.etypes  # edge types
 
 Node, edge, and graph features can be added at construction time or later using:
 ```jldoctest hetero
-# equivalent to g.ndata[:user][:x] = ...
-julia> g[:user].x = rand(Float32, 64, 3);
+julia> g[:user].x = rand(Float32, 64, 3); # equivalent to g.ndata[:user][:x] = ...
 
 julia> g[:movie].z = rand(Float32, 64, 13);
 
-# equivalent to g.edata[(:user, :rate, :movie)][:e] = ...
-julia> g[:user, :rate, :movie].e = rand(Float32, 64, 4);
+julia> g[:user, :rate, :movie].e = rand(Float32, 64, 4); # equivalent to g.edata[(:user, :rate, :movie)][:e] = ...
 
 julia> g
 GNNHeteroGraph:
@@ -110,6 +108,8 @@ GNNHeteroGraph:
 ## Batching
 Similarly to graphs, also heterographs can be batched together.
 ```jldoctest hetero
+julia> using MLUtils
+
 julia> gs = [rand_bipartite_heterograph((5, 10), 20) for _ in 1:32];
 
 julia> MLUtils.batch(gs)
@@ -140,4 +140,4 @@ end
 
 ## Graph convolutions on heterographs
 
-See `HeteroGraphConv` for how to perform convolutions on heterogeneous graphs.
+See [`HeteroGraphConv`](@ref) for how to perform convolutions on heterogeneous graphs.

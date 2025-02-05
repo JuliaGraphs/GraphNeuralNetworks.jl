@@ -65,6 +65,10 @@ Snapshots in a temporal graph can be accessed using indexing:
 julia> snapshots = [rand_graph(10, 20), rand_graph(10, 14), rand_graph(10, 22)];
 
 julia> tg = TemporalSnapshotsGNNGraph(snapshots)
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10, 10]
+  num_edges: [20, 14, 22]
+  num_snapshots: 3
 
 julia> tg[1] # first snapshot
 GNNGraph:
@@ -169,7 +173,7 @@ TemporalSnapshotsGNNGraph:
   num_edges: [20, 14, 22]
   num_snapshots: 3
   tgdata:
-        y = 3×1 Matrix{Float32}
+    y = 3×1 Matrix{Float32}
 
 julia> tg.ndata # vector of DataStore containing node features for each snapshot
 3-element Vector{DataStore}:
