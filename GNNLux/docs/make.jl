@@ -85,7 +85,7 @@ makedocs(;
             "Layers" => [
                 "Basic layers" => "api/basic.md",
                 "Convolutional layers" => "api/conv.md",
-                # "Pooling layers" => "api/pool.md",
+                "Pooling layers" => "api/pool.md",
                 "Temporal Convolutional layers" => "api/temporalconv.md",
                 # "Hetero Convolutional layers" => "api/heteroconv.md",
             ]

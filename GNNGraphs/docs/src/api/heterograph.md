@@ -38,3 +38,4 @@ Modules = [GNNGraphs]
 Pages   = ["gnnheterograph/generate.jl"]
 Private = false
 ```
+å
