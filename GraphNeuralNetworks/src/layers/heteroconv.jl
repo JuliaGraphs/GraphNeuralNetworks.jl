@@ -21,10 +21,12 @@ have to be aggregated using the `aggr` function. The default is to sum the outpu
 # Examples 
 
 ```jldoctest
-julia> g = rand_bipartite_heterograph((10, 15), 20)
+julia> using GraphNeuralNetworks, Flux
+
+julia> g = rand_bipartite_heterograph((10, 15), 80)
 GNNHeteroGraph:
   num_nodes: Dict(:A => 10, :B => 15)
-  num_edges: Dict((:A, :to, :B) => 20, (:B, :to, :A) => 20)
+  num_edges: Dict((:A, :to, :B) => 80, (:B, :to, :A) => 80)
 
 julia> x = (A = rand(Float32, 64, 10), B = rand(Float32, 64, 15));
 

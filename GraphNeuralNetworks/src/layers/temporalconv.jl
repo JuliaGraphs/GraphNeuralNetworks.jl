@@ -59,16 +59,13 @@ Returns the updated node features:
 The following example considers a static graph and a time-varying node features.
 
 ```jldoctest
-julia> num_nodes, num_edges = 5, 10;
+julia> num_nodes, num_edges = 5, 16;
 
 julia> d_in, d_out = 2, 3;
 
 julia> timesteps = 5;
 
 julia> g = rand_graph(num_nodes, num_edges);
-GNNGraph:
-  num_nodes: 5
-  num_edges: 10
 
 julia> x = rand(Float32, d_in, timesteps, num_nodes);
 
@@ -93,11 +90,15 @@ julia> timesteps = 5;
 
 julia> num_nodes = [10, 10, 10, 10, 10];
 
-julia> num_edges = [10, 12, 14, 16, 18];
+julia> num_edges = [20, 22, 24, 26, 28];
 
 julia> snapshots = [rand_graph(n, m) for (n, m) in zip(num_nodes, num_edges)];
 
 julia> tg = TemporalSnapshotsGNNGraph(snapshots)
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10, 10, 10, 10]
+  num_edges: [20, 22, 24, 26, 28]
+  num_snapshots: 5
 
 julia> x = [rand(Float32, d_in, n) for n in num_nodes];
 
@@ -269,7 +270,7 @@ See [`GNNRecurrence`](@ref) for more details.
 # Examples
 
 ```jldoctest
-julia> num_nodes, num_edges = 5, 10;
+julia> num_nodes, num_edges = 5, 16;
 
 julia> d_in, d_out = 2, 3;
 
@@ -280,7 +281,7 @@ julia> g = rand_graph(num_nodes, num_edges);
 julia> x = rand(Float32, d_in, timesteps, num_nodes);
 
 julia> layer = GConvGRU(d_in => d_out, 2)
-GConvGRU(
+GNNRecurrence(
   GConvGRUCell(2 => 3, 2),              # 108 parameters
 )                   # Total: 12 arrays, 108 parameters, 1.148 KiB.
 
@@ -326,9 +327,9 @@ where `output` is the updated hidden state `h` of the LSTM cell and `state` is t
 # Examples
 
 ```jldoctest
-julia> using GraphNeuralNetworks, Flux
+julia> using Flux
 
-julia> num_nodes, num_edges = 5, 10;
+julia> num_nodes, num_edges = 5, 16;
 
 julia> d_in, d_out = 2, 3;
 
@@ -453,7 +454,7 @@ See [`GNNRecurrence`](@ref) for more details.
 # Examples
 
 ```jldoctest
-julia> num_nodes, num_edges = 5, 10;
+julia> num_nodes, num_edges = 5, 16;
 
 julia> d_in, d_out = 2, 3;
 
@@ -727,15 +728,19 @@ julia> timesteps = 5;
 
 julia> num_nodes = [10, 10, 10, 10, 10];
 
-julia> num_edges = [10, 12, 14, 16, 18];
+julia> num_edges = [60, 62, 64, 66, 68];
 
 julia> snapshots = [rand_graph(n, m) for (n, m) in zip(num_nodes, num_edges)];
 
 julia> tg = TemporalSnapshotsGNNGraph(snapshots)
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10, 10, 10, 10]
+  num_edges: [60, 62, 64, 66, 68]
+  num_snapshots: 5
 
 julia> x = [rand(Float32, d_in, n) for n in num_nodes];
 
-julia> cell = EvolveGCNO(d_in => d_out)
+julia> layer = EvolveGCNO(d_in => d_out)
 GNNRecurrence(
   EvolveGCNOCell(2 => 3),               # 321 parameters
 )                   # Total: 5 arrays, 321 parameters, 1.535 KiB.
@@ -743,7 +748,7 @@ GNNRecurrence(
 julia> y = layer(tg, x);
 
 julia> length(y)    # timesteps
-5 
+5
 
 julia> size(y[end]) # (d_out, num_nodes[end])
 (3, 10)
@@ -874,6 +879,9 @@ julia> g = rand_graph(num_nodes, num_edges);
 julia> x = rand(Float32, d_in, timesteps, num_nodes);
 
 julia> layer = TGCN(d_in => d_out)
+GNNRecurrence(
+  TGCNCell(2 => 3),                     # 126 parameters
+)                   # Total: 18 arrays, 126 parameters, 1.469 KiB.
 
 julia> y = layer(g, x);
 

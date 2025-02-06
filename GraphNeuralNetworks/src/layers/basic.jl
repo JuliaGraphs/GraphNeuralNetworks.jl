@@ -74,30 +74,22 @@ julia> using Flux, GraphNeuralNetworks
 julia> m = GNNChain(GCNConv(2=>5), 
                     BatchNorm(5), 
                     x -> relu.(x), 
-                    Dense(5, 4))
-GNNChain(GCNConv(2 => 5), BatchNorm(5), #7, Dense(5 => 4))
+                    Dense(5, 4));
 
 julia> x = randn(Float32, 2, 3);
 
 julia> g = rand_graph(3, 6)
 GNNGraph:
-    num_nodes = 3
-    num_edges = 6
+  num_nodes: 3
+  num_edges: 6
 
-julia> m(g, x)
-4×3 Matrix{Float32}:
-    -0.795592  -0.795592  -0.795592
-    -0.736409  -0.736409  -0.736409
-    0.994925   0.994925   0.994925
-    0.857549   0.857549   0.857549
+julia> m(g, x) |> size
+(4, 3)
 
-julia> m2 = GNNChain(enc = m, 
-                     dec = DotDecoder())
-GNNChain(enc = GNNChain(GCNConv(2 => 5), BatchNorm(5), #7, Dense(5 => 4)), dec = DotDecoder())
+julia> m2 = GNNChain(enc = m, dec = DotDecoder());
 
-julia> m2(g, x)
-1×6 Matrix{Float32}:
- 2.90053  2.90053  2.90053  2.90053  2.90053  2.90053
+julia> m2(g, x) |> size
+(1, 6)
 
 julia> m2[:enc](g, x) == m(g, x)
 true
@@ -196,15 +188,14 @@ returns the dot product `x_i ⋅ xj` on each edge.
 ```jldoctest
 julia> g = rand_graph(5, 6)
 GNNGraph:
-    num_nodes = 5
-    num_edges = 6
+  num_nodes: 5
+  num_edges: 6
 
 julia> dotdec = DotDecoder()
 DotDecoder()
 
-julia> dotdec(g, rand(2, 5))
-1×6 Matrix{Float64}:
- 0.345098  0.458305  0.106353  0.345098  0.458305  0.106353
+julia> dotdec(g, rand(2, 5)) |> size
+(1, 6)
 ```
 """
 struct DotDecoder <: GNNLayer end
