@@ -9,6 +9,7 @@ Pkg.instantiate()
 
 using Documenter
 using GNNLux
+using MLUtils
 using Lux, GNNGraphs, GNNlib, Graphs
 using DocumenterInterLinks
 

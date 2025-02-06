@@ -11,10 +11,12 @@ using Documenter
 using GraphNeuralNetworks
 using Flux, GNNGraphs, GNNlib, Graphs
 using DocumenterInterLinks
+using MLUtils
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
 
 DocMeta.setdocmeta!(GNNGraphs, :DocTestSetup, :(using GNNGraphs, MLUtils); recursive = true)
+DocMeta.setdocmeta!(GNNlib, :DocTestSetup, :(using GNNlib); recursive = true)
 DocMeta.setdocmeta!(GraphNeuralNetworks, :DocTestSetup, :(using GraphNeuralNetworks); recursive = true)
 
 mathengine = MathJax3(Dict(:loader => Dict("load" => ["[tex]/require", "[tex]/mathtools"]),
