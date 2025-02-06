@@ -12,6 +12,10 @@ using GNNLux
 using Lux, GNNGraphs, GNNlib, Graphs
 using DocumenterInterLinks
 
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
+
+DocMeta.setdocmeta!(GNNGraphs, :DocTestSetup, :(using GNNGraphs, MLUtils); recursive = true)
+DocMeta.setdocmeta!(GNNlib, :DocTestSetup, :(using GNNlib); recursive = true)
 DocMeta.setdocmeta!(GNNLux, :DocTestSetup, :(using GNNLux); recursive = true)
 
 mathengine = MathJax3(Dict(:loader => Dict("load" => ["[tex]/require", "[tex]/mathtools"]),

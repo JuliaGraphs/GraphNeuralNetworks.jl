@@ -12,6 +12,10 @@ using GNNGraphs
 import Graphs
 using DocumenterInterLinks
 
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
+DocMeta.setdocmeta!(GNNGraphs, :DocTestSetup, :(using GNNGraphs, MLUtils); recursive = true)
+DocMeta.setdocmeta!(GNNlib, :DocTestSetup, :(using GNNlib); recursive = true)
+
 assets=[]
 prettyurls = get(ENV, "CI", nothing) == "true"
 mathengine = MathJax3()

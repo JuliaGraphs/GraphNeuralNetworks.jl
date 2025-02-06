@@ -31,9 +31,14 @@ julia> using Lux, GNNLux, Random
 
 julia> rng = Random.default_rng();
 
-julia> m = GNNChain(GCNConv(2=>5), 
-                    x -> relu.(x), 
-                    Dense(5=>4))
+julia> m = GNNChain(GCNConv(2 => 5, relu), Dense(5 => 4))
+GNNChain(
+    layers = NamedTuple(
+        layer_1 = GCNConv(2 => 5, relu),  # 15 parameters
+        layer_2 = Dense(5 => 4),        # 24 parameters
+    ),
+)         # Total: 39 parameters,
+          #        plus 0 states.
 
 julia> x = randn(rng, Float32, 2, 3);
 
@@ -44,8 +49,10 @@ GNNGraph:
 
 julia> ps, st = LuxCore.setup(rng, m);
 
-julia> m(g, x, ps, st)     # First entry is the output, second entry is the state of the model
-(Float32[-0.15594329 -0.15594329 -0.15594329; 0.93431795 0.93431795 0.93431795; 0.27568763 0.27568763 0.27568763; 0.12568939 0.12568939 0.12568939], (layer_1 = NamedTuple(), layer_2 = NamedTuple(), layer_3 = NamedTuple()))
+julia> y, st = m(g, x, ps, st);     # First entry is the output, second entry is the state of the model
+
+julia> size(y)
+(4, 3)
 ```
 """
 @concrete struct GNNChain <: GNNContainerLayer{(:layers,)}
