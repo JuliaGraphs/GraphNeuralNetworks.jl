@@ -213,6 +213,24 @@ end
     end
 end
 
+@testitem "Constructor: empty" setup=[GraphsTestModule] begin
+    g = GNNGraph(ndata=ones(2, 1))
+    @test g.num_nodes == 1
+    @test g.num_edges == 0
+    @test g.ndata.x == ones(2, 1)
+
+    g = GNNGraph(num_nodes=1)
+    @test g.num_nodes == 1
+    @test g.num_edges == 0
+    @test isempty(g.ndata) 
+
+    g = GNNGraph((Int[], Int[]); ndata=(; a=[1]))
+    @test g.num_nodes == 1
+    @test g.num_edges == 0
+    @test g.ndata.a == [1]
+end
+
+
 @testitem "Features" setup=[GraphsTestModule] begin
     using .GraphsTestModule
     for GRAPH_T in GRAPH_TYPES

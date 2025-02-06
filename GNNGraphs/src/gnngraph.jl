@@ -1,4 +1,4 @@
-#===================================
+#============================================
 Define GNNGraph type as a subtype of Graphs.AbstractGraph.
 For the core methods to be implemented by any AbstractGraph, see
 https://juliagraphs.org/Graphs.jl/latest/types/#AbstractGraph-Type
@@ -103,7 +103,6 @@ source, target = edge_index(g)
 ```
 A `GNNGraph` can be sent to the GPU, for example by using Flux.jl's `gpu` function
 or MLDataDevices.jl's utilities. 
-```
 """
 struct GNNGraph{T <: Union{COO_T, ADJMAT_T}} <: AbstractGNNGraph{T}
     graph::T
@@ -126,6 +125,12 @@ function GNNGraph(data::D;
                   gdata = nothing) where {D <: Union{COO_T, ADJMAT_T, ADJLIST_T}}
     @assert graph_type ∈ [:coo, :dense, :sparse] "Invalid graph_type $graph_type requested"
     @assert dir ∈ [:in, :out]
+
+    if num_nodes === nothing && ndata !== nothing
+        # Infer num_nodes from ndata
+        # Should be more robust than inferring from data
+        num_nodes = numobs(ndata)
+    end
 
     if graph_type == :coo
         graph, num_nodes, num_edges = to_coo(data; num_nodes, dir)
@@ -151,7 +156,16 @@ function GNNGraph(data::D;
              ndata, edata, gdata)
 end
 
-GNNGraph(; kws...) = GNNGraph(0; kws...)
+function GNNGraph(; num_nodes=nothing, ndata=nothing, kws...)
+    if num_nodes === nothing
+        if ndata === nothing
+            num_nodes = 0
+        else
+            num_nodes = numobs(ndata)
+        end
+    end
+    return GNNGraph(num_nodes; ndata, kws...)
+end
 
 function (::Type{<:GNNGraph})(num_nodes::T; kws...) where {T <: Integer}
     s, t = T[], T[]
@@ -162,7 +176,7 @@ Base.zero(::Type{G}) where {G <: GNNGraph} = G(0)
 
 # COO convenience constructors
 function GNNGraph(s::AbstractVector, t::AbstractVector, v = nothing; kws...)
-    GNNGraph((s, t, v); kws...)
+    return GNNGraph((s, t, v); kws...)
 end
 GNNGraph((s, t)::NTuple{2}; kws...) = GNNGraph((s, t, nothing); kws...)
 
