@@ -129,19 +129,24 @@ function normalize_graphdata(data; default_name::Symbol, kws...)
     normalize_graphdata(NamedTuple{(default_name,)}((data,)); default_name, kws...)
 end
 
-function normalize_graphdata(data::NamedTuple; default_name, n, duplicate_if_needed = false)
+function normalize_graphdata(data::NamedTuple; default_name::Symbol, n::Int, 
+        duplicate_if_needed::Bool = false, glob::Bool = false)
     # This had to workaround two Zygote bugs with NamedTuples
     # https://github.com/FluxML/Zygote.jl/issues/1071
-    # https://github.com/FluxML/Zygote.jl/issues/1072
+    # https://github.com/FluxML/Zygote.jl/issues/1072 # TODO fixed. Can we simplify something?
+
 
     if n > 1
         @assert all(x -> x isa AbstractArray, data) "Non-array features provided."
     end
 
-    if n <= 1
-        # If last array dimension is not 1, add a new dimension.
-        # This is mostly useful to reshape global feature vectors
-        # of size D to Dx1 matrices.
+    if n <= 1 && glob == true
+        @assert n == 1
+        n = -1 # relax the case of a single graph, allowing to store arbitrary types
+    #     # # If last array dimension is not 1, add a new dimension.
+    #     # # This is mostly useful to reshape global feature vectors
+    #     # # of size D to Dx1 matrices.
+        # TODO remove this and handle better the batching of global features
         unsqz_last(v::AbstractArray) = size(v)[end] != 1 ? reshape(v, size(v)..., 1) : v
         unsqz_last(v) = v
 
@@ -161,7 +166,7 @@ function normalize_graphdata(data::NamedTuple; default_name, n, duplicate_if_nee
 
         for x in data
             if x isa AbstractArray
-                @assert size(x)[end]==n "Wrong size in last dimension for feature array, expected $n but got $(size(x)[end])."
+                @assert size(x)[end] == n "Wrong size in last dimension for feature array, expected $n but got $(size(x)[end])."
             end
         end
     end

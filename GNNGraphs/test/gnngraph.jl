@@ -228,6 +228,17 @@ end
     @test g.num_nodes == 1
     @test g.num_edges == 0
     @test g.ndata.a == [1]
+
+    g = GNNGraph((Int[], Int[]); ndata=(;a=[1]), edata=(;b=Int[]), num_nodes=1)
+    @test g.num_nodes == 1
+    @test g.num_edges == 0
+    @test g.ndata.a == [1]
+    @test g.edata.b == Int[]
+
+    g = GNNGraph(; edata=(;b=Int[]))
+    @test g.num_nodes == 0
+    @test g.num_edges == 0
+    @test g.edata.b == Int[]
 end
 
 

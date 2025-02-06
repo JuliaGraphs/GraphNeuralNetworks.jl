@@ -146,11 +146,9 @@ function GNNGraph(data::D;
     edata = normalize_graphdata(edata, default_name = :e, n = num_edges,
                                 duplicate_if_needed = true)
 
-    # don't force the shape of the data when there is only one graph
-    gdata = normalize_graphdata(gdata, default_name = :u,
-                                n = num_graphs > 1 ? num_graphs : -1)
+    gdata = normalize_graphdata(gdata, default_name = :u, n = num_graphs, glob=true)
 
-    GNNGraph(graph,
+    return GNNGraph(graph,
              num_nodes, num_edges, num_graphs,
              graph_indicator,
              ndata, edata, gdata)
@@ -203,7 +201,7 @@ function GNNGraph(g::GNNGraph; ndata = g.ndata, edata = g.edata, gdata = g.gdata
     ndata = normalize_graphdata(ndata, default_name = :x, n = g.num_nodes)
     edata = normalize_graphdata(edata, default_name = :e, n = g.num_edges,
                                 duplicate_if_needed = true)
-    gdata = normalize_graphdata(gdata, default_name = :u, n = g.num_graphs)
+    gdata = normalize_graphdata(gdata, default_name = :u, n = g.num_graphs, glob=true)
 
     if !isnothing(graph_type)
         if graph_type == :coo
