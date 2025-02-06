@@ -10,6 +10,7 @@ using MLUtils # this is needed by setdocmeta!
 import Graphs
 using Graphs: induced_subgraph
 
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
 
 DocMeta.setdocmeta!(GNNGraphs, :DocTestSetup, :(using GNNGraphs, MLUtils); recursive = true)
 

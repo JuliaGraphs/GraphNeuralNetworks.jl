@@ -12,6 +12,8 @@ using GraphNeuralNetworks
 using Flux, GNNGraphs, GNNlib, Graphs
 using DocumenterInterLinks
 
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
+
 DocMeta.setdocmeta!(GNNGraphs, :DocTestSetup, :(using GNNGraphs, MLUtils); recursive = true)
 DocMeta.setdocmeta!(GraphNeuralNetworks, :DocTestSetup, :(using GraphNeuralNetworks); recursive = true)
 
