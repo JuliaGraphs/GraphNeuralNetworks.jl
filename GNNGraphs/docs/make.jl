@@ -6,7 +6,6 @@ Pkg.instantiate()
 using Documenter
 using DocumenterInterLinks
 using GNNGraphs
-using MLUtils # this is needed by setdocmeta!
 import Graphs
 using Graphs: induced_subgraph
 

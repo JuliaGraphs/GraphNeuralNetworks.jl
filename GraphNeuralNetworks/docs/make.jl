@@ -11,7 +11,6 @@ using Documenter
 using GraphNeuralNetworks
 using Flux, GNNGraphs, GNNlib, Graphs
 using DocumenterInterLinks
-using MLUtils
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
 
