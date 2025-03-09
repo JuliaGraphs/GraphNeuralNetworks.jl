@@ -13,10 +13,21 @@
 # The TU Dortmund University has collected a wide range of different graph classification datasets, known as the [**TUDatasets**](https://chrsmrrs.github.io/datasets/), which are also accessible via MLDatasets.jl.
 # Let's import the necessary packages. Then we'll load and inspect one of the smaller ones, the **MUTAG dataset**:
 
-using Lux, GNNLux
-using MLDatasets, MLUtils
+using Lux
+using GNNLux
+using MLDatasets
+using MLUtils
 using LinearAlgebra, Random, Statistics
 using Zygote, Optimisers, OneHotArrays
+
+
+struct GlobalPool{F} <: GNNLayer
+    aggr::F
+end
+
+(l::GlobalPool)(g::GNNGraph, x::AbstractArray, ps, st) = GNNlib.global_pool(l, g, x), st
+
+(l::GlobalPool)(g::GNNGraph) = GNNGraph(g, gdata = l(g, node_features(g), ps, st))
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"  # don't ask for dataset download confirmation
 rng = Random.seed!(42); # for reproducibility
@@ -107,19 +118,20 @@ MLUtils.batch(vec_gs)
 
 # The final architecture for applying GNNs to the task of graph classification then looks as follows and allows for complete end-to-end training:
 
-function create_model(nin, nh, nout)
-    GNNChain(GCNConv(nin => nh, relu),
-             GCNConv(nh => nh, relu),
-             GCNConv(nh => nh),
+# Then use it in the model
+function create_model_graphconv(nin, nh, nout)
+    GNNChain(GraphConv(nin => nh, relu),
+             GraphConv(nh => nh, relu),
+             GraphConv(nh => nh),
              GlobalPool(mean),
              Dropout(0.5),
              Dense(nh, nout))
-end;
+end
 
 nin = 7
 nh = 64
 nout = 2
-model = create_model(nin, nh, nout)
+model = create_model_graphconv(nin, nh, nout)
 
 ps, st = LuxCore.initialparameters(rng, model), LuxCore.initialstates(rng, model);
 
@@ -191,11 +203,4 @@ model, ps, st = train_model!(model, ps, st);
 
 # This layer is implemented under the name `GraphConv` in GraphNeuralNetworks.jl.
 
-# As an exercise, you are invited to complete the following code to the extent that it makes use of `GraphConv` rather than `GCNConv`.
-# This should bring you close to **82% test accuracy**.
-
-# ## Conclusion
-
-# In this chapter, you have learned how to apply GNNs to the task of graph classification.
-# You have learned how graphs can be batched together for better GPU utilization, and how to apply readout layers for obtaining graph embeddings rather than node embeddings.
-
+# As an exercise, you are invited to complete the following code to the extent that it makes use of `

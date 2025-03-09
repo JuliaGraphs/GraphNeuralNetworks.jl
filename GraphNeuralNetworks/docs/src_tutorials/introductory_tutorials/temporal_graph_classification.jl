@@ -9,12 +9,17 @@
 #
 # We start by importing the necessary libraries. We use `GraphNeuralNetworks.jl`, `Flux.jl` and `MLDatasets.jl`, among others.
 
+## Comments Miguel for CLaudio:
+# 1. Create method to check the download datasets are download correctly, if not problems may arise. This happened to me when downloading TemporalBrains dataset.
+
+
 using Flux
 using GraphNeuralNetworks
 using Statistics, Random
 using LinearAlgebra
 using MLDatasets: TemporalBrains
-using CUDA # comment out if you don't have a CUDA GPU
+using DataDeps
+#using CUDA # comment out if you don't have a CUDA GPU
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"  # don't ask for dataset download confirmation
 Random.seed!(17); # for reproducibility
@@ -29,7 +34,7 @@ Random.seed!(17); # for reproducibility
 # Each temporal graph has a label representing gender ('M' for male and 'F' for female) and age group (22-25, 26-30, 31-35, and 36+).
 # The network's edge weights are binarized, and the threshold is set to 0.6 by default.
 
-brain_dataset = TemporalBrains()
+brain_dataset = MLDatasets.TemporalBrains()
 
 # After loading the dataset from the MLDatasets.jl package, we see that there are 1000 graphs and we need to convert them to the `TemporalSnapshotsGNNGraph` format.
 # So we create a function called `data_loader` that implements the latter and splits the dataset into the training set that will be used to train the model and the test set that will be used to test the performance of the model. Due to computational costs, we use only 250 out of the original 1000 graphs, 200 for training and 50 for testing.
@@ -82,6 +87,11 @@ struct GenderPredictionModel
 end
 
 Flux.@layer GenderPredictionModel
+
+function (l::GINConv)(g::TemporalSnapshotsGNNGraph, x::AbstractVector)
+    h = [l(g[i], x[i]) for i in 1:(g.num_snapshots)]
+    return h
+end
 
 function GenderPredictionModel(; nfeatures = 103, nhidden = 128, σ = relu)
     mlp = Chain(Dense(nfeatures => nhidden, σ), Dense(nhidden => nhidden, σ))
