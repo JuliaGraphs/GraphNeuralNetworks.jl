@@ -187,24 +187,6 @@ end
 # Train the model
 train_loader, test_loader = data_loader(brain_dataset)
 
-for iter in 1:5
-    for (g, y) in train_loader
-        
-        # Use Lux training step with our custom loss
-        _, loss, _, train_state = Lux.Training.single_train_step!(
-            AutoZygote(), 
-            custom_loss,
-            (g, g.ndata.x, y), 
-            train_state
-        )
-    end
-
-    report(iter)
-    
-    # Update the global variables with latest parameters and states
-    ps, st = train_state.parameters, train_state.states
-end
-
 function train(model, train_loader, test_loader    )
     train_state = Lux.Training.TrainState(model, ps, st, Adam(1e-2))
     function report(epoch)
