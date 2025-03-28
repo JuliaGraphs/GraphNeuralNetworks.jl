@@ -71,7 +71,7 @@ end
     test_gradients(layer_custom, g, x, rtol = RTOL_HIGH)
 
     # interplay with GNNChain
-    model = GNNChain(TGCN(in_channel => out_channel), Dense(out_channel, 1))
+    model = GNNChain(TGCN(in_channel => out_channel, gate_activation=relu), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
     test_gradients(model, g, x, rtol = RTOL_HIGH, atol = ATOL_LOW)

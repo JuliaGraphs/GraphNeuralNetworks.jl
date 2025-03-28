@@ -860,7 +860,7 @@ function Base.show(io::IO, cell::TGCNCell)
 end
 
 """
-    TGCN(args...; gate_activation = sigmoid, hidden_activation = tanh, kws...)
+    TGCN(args...; gate_activation = sigmoid, kws...)
 
 Construct a recurrent layer corresponding to the [`TGCNCell`](@ref) cell.
 
@@ -870,7 +870,6 @@ See [`GNNRecurrence`](@ref) for more details.
 # Additional Parameters
 
 - `gate_activation`: Activation function for the gate mechanisms. Default `sigmoid`.
-- `hidden_activation`: Activation function for the hidden state update. Default `tanh`.
 
 # Examples
 
@@ -885,7 +884,7 @@ julia> g = rand_graph(num_nodes, num_edges);
 
 julia> x = rand(Float32, d_in, timesteps, num_nodes);
 
-julia> layer = TGCN(d_in => d_out, hidden_activation = relu)
+julia> layer = TGCN(d_in => d_out, gate_activation = relu)
 GNNRecurrence(
   TGCNCell(2 => 3),                     # 126 parameters
 )                   # Total: 18 arrays, 126 parameters, 1.469 KiB.
