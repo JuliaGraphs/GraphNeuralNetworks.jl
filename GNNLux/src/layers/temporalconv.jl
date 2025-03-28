@@ -33,10 +33,21 @@ LuxCore.apply(m::GNNContainerLayer, g, x, ps, st) = m(g, x, ps, st)
     init_state::Function
 end
 
-function TGCNCell(ch::Pair{Int, Int}; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32, add_self_loops = false, use_edge_weight = true) 
+function TGCNCell(ch::Pair{Int, Int}; 
+                 use_bias = true, 
+                 init_weight = glorot_uniform, 
+                 init_state = zeros32, 
+                 init_bias = zeros32, 
+                 add_self_loops = false, 
+                 use_edge_weight = true,
+                 gate_activation = sigmoid) 
     in_dims, out_dims = ch
-    conv = GCNConv(ch, sigmoid; init_weight, init_bias, use_bias, add_self_loops, use_edge_weight)
-    gru = Lux.GRUCell(out_dims => out_dims; use_bias, init_weight = (init_weight, init_weight, init_weight), init_bias = (init_bias, init_bias, init_bias), init_state = init_state)
+    conv = GCNConv(ch, gate_activation; init_weight, init_bias, use_bias, add_self_loops, use_edge_weight)
+    gru = Lux.GRUCell(out_dims => out_dims; 
+                      use_bias, 
+                      init_weight = (init_weight, init_weight, init_weight), 
+                      init_bias = (init_bias, init_bias, init_bias), 
+                      init_state = init_state)
     return TGCNCell(in_dims, out_dims, conv, gru, init_state)
 end
 

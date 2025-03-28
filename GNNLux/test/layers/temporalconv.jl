@@ -56,4 +56,12 @@
         loss = (tx, ps) -> sum(sum(first(l(tg, tx, ps, st))))
         test_gradients(loss, tx, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
     end
+
+    @testset "TGCN with Custom Activations" begin
+        l = TGCN(3=>3, gate_activation = Lux.relu)
+        ps = LuxCore.initialparameters(rng, l)
+        st = LuxCore.initialstates(rng, l)
+        loss = (x, ps) -> sum(first(l(g, x, ps, st)))
+        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+    end
 end

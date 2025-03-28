@@ -826,14 +826,13 @@ Flux.@layer :noexpand TGCNCell
 
 function TGCNCell((in, out)::Pair{Int, Int}; 
                   gate_activation = sigmoid,
-                  hidden_activation = tanh,
                   kws...)
     conv_z = GNNChain(GCNConv(in => out, relu; kws...), GCNConv(out => out; kws...))
     dense_z = Dense(2*out => out, gate_activation)
     conv_r = GNNChain(GCNConv(in => out, relu; kws...), GCNConv(out => out; kws...))
     dense_r = Dense(2*out => out, gate_activation)
     conv_h = GNNChain(GCNConv(in => out, relu; kws...), GCNConv(out => out; kws...))
-    dense_h = Dense(2*out => out, hidden_activation)
+    dense_h = Dense(2*out => out, tanh)
     return TGCNCell(in, out, conv_z, dense_z, conv_r, dense_r, conv_h, dense_h)
 end
 
@@ -897,6 +896,6 @@ julia> size(y) # (d_out, timesteps, num_nodes)
 (3, 5, 5)
 ```
 """
-TGCN(args...; gate_activation = sigmoid, hidden_activation = tanh, kws...) = 
-    GNNRecurrence(TGCNCell(args...; gate_activation, hidden_activation, kws...))
+TGCN(args...; gate_activation = sigmoid, kws...) = 
+    GNNRecurrence(TGCNCell(args...; gate_activation, kws...))
 

@@ -59,7 +59,7 @@ end
     using .TemporalConvTestModule, .TestModule
     using Flux: relu, sigmoid
     layer_default = TGCN(in_channel => out_channel)
-    layer_custom = TGCN(in_channel => out_channel, gate_activation = relu, hidden_activation = relu)
+    layer_custom = TGCN(in_channel => out_channel, gate_activation = relu)
     x = rand(Float32, in_channel, timesteps, g.num_nodes)
     y_default = layer_default(g, x)
     y_custom = layer_custom(g, x)
