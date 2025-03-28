@@ -824,13 +824,16 @@ end
 
 Flux.@layer :noexpand TGCNCell
 
-function TGCNCell((in, out)::Pair{Int, Int}; kws...)
+function TGCNCell((in, out)::Pair{Int, Int}; 
+                  gate_activation = sigmoid,
+                  hidden_activation = tanh,
+                  kws...)
     conv_z = GNNChain(GCNConv(in => out, relu; kws...), GCNConv(out => out; kws...))
-    dense_z = Dense(2*out => out, sigmoid)
+    dense_z = Dense(2*out => out, gate_activation)
     conv_r = GNNChain(GCNConv(in => out, relu; kws...), GCNConv(out => out; kws...))
-    dense_r = Dense(2*out => out, sigmoid)
+    dense_r = Dense(2*out => out, gate_activation)
     conv_h = GNNChain(GCNConv(in => out, relu; kws...), GCNConv(out => out; kws...))
-    dense_h = Dense(2*out => out, tanh)
+    dense_h = Dense(2*out => out, hidden_activation)
     return TGCNCell(in, out, conv_z, dense_z, conv_r, dense_r, conv_h, dense_h)
 end
 
@@ -858,12 +861,17 @@ function Base.show(io::IO, cell::TGCNCell)
 end
 
 """
-    TGCN(args...; kws...)
+    TGCN(args...; gate_activation = sigmoid, hidden_activation = tanh, kws...)
 
 Construct a recurrent layer corresponding to the [`TGCNCell`](@ref) cell.
 
 The arguments are passed to the [`TGCNCell`](@ref) constructor.
 See [`GNNRecurrence`](@ref) for more details.
+
+# Additional Parameters
+
+- `gate_activation`: Activation function for the gate mechanisms. Default `sigmoid`.
+- `hidden_activation`: Activation function for the hidden state update. Default `tanh`.
 
 # Examples
 
@@ -878,7 +886,7 @@ julia> g = rand_graph(num_nodes, num_edges);
 
 julia> x = rand(Float32, d_in, timesteps, num_nodes);
 
-julia> layer = TGCN(d_in => d_out)
+julia> layer = TGCN(d_in => d_out, hidden_activation = relu)
 GNNRecurrence(
   TGCNCell(2 => 3),                     # 126 parameters
 )                   # Total: 18 arrays, 126 parameters, 1.469 KiB.
@@ -889,5 +897,6 @@ julia> size(y) # (d_out, timesteps, num_nodes)
 (3, 5, 5)
 ```
 """
-TGCN(args...; kws...) = GNNRecurrence(TGCNCell(args...; kws...))
+TGCN(args...; gate_activation = sigmoid, hidden_activation = tanh, kws...) = 
+    GNNRecurrence(TGCNCell(args...; gate_activation, hidden_activation, kws...))
 

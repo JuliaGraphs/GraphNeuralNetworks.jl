@@ -55,6 +55,28 @@ end
     test_gradients(model, g, x, rtol = RTOL_HIGH, atol = ATOL_LOW)
 end
 
+@testitem "TGCN with custom activations" setup=[TemporalConvTestModule, TestModule] begin
+    using .TemporalConvTestModule, .TestModule
+    using Flux: relu, sigmoid
+    layer_default = TGCN(in_channel => out_channel)
+    layer_custom = TGCN(in_channel => out_channel, gate_activation = relu, hidden_activation = relu)
+    x = rand(Float32, in_channel, timesteps, g.num_nodes)
+    y_default = layer_default(g, x)
+    y_custom = layer_custom(g, x)
+    @test layer_default isa GNNRecurrence
+    @test layer_custom isa GNNRecurrence
+    @test size(y_default) == size(y_custom)
+    # Outputs should be different due to different activations
+    @test y_default != y_custom
+    test_gradients(layer_custom, g, x, rtol = RTOL_HIGH)
+
+    # interplay with GNNChain
+    model = GNNChain(TGCN(in_channel => out_channel), Dense(out_channel, 1))
+    y = model(g, x)
+    @test size(y) == (1, timesteps, g.num_nodes)
+    test_gradients(model, g, x, rtol = RTOL_HIGH, atol = ATOL_LOW)
+end
+
 @testitem "GConvLSTMCell" setup=[TemporalConvTestModule, TestModule] begin
     using .TemporalConvTestModule, .TestModule
     cell = GConvLSTMCell(in_channel => out_channel, 2)
