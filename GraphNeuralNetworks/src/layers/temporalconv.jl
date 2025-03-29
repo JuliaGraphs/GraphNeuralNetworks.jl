@@ -874,6 +874,8 @@ See [`GNNRecurrence`](@ref) for more details.
 # Examples
 
 ```jldoctest
+julia> using Flux  # Ensure relu is available
+
 julia> num_nodes, num_edges = 5, 10;
 
 julia> d_in, d_out = 2, 3;
