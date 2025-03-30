@@ -59,7 +59,7 @@ function Base.show(io::IO, tgcn::TGCNCell)
 end
 
 """
-    TGCN(in => out; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32, add_self_loops = false, use_edge_weight = true, act = relu) 
+    TGCN(in => out; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32, add_self_loops = false, use_edge_weight = true, act = sigmoid) 
 
 Temporal Graph Convolutional Network (T-GCN) recurrent layer from the paper [T-GCN: A Temporal Graph Convolutional Network for Traffic Prediction](https://arxiv.org/pdf/1811.05320.pdf).
 
@@ -78,7 +78,7 @@ Performs a layer of GCNConv to model spatial dependencies, followed by a Gated R
                      If `add_self_loops=true` the new weights will be set to 1. 
                      This option is ignored if the `edge_weight` is explicitly provided in the forward pass.
                      Default `false`.
-- `act`: Activation function used in the GCNConv layer. Default `relu`.
+- `act`: Activation function used in the GCNConv layer. Default `sigmoid`.
 
 
 # Examples
@@ -93,11 +93,11 @@ rng = Random.default_rng()
 g = rand_graph(rng, 5, 10)
 x = rand(rng, Float32, 2, 5)
 
-# create TGCN layer with default activation (relu)
+# create TGCN layer with default activation (sigmoid)
 tgcn = TGCN(2 => 6)
 
 # create TGCN layer with custom activation
-tgcn_relu = TGCN(2 => 6, act = sigmoid)
+tgcn_relu = TGCN(2 => 6, act = relu)
 
 # setup layer
 ps, st = LuxCore.setup(rng, tgcn)
