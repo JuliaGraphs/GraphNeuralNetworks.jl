@@ -35,7 +35,7 @@ end
 
 function TGCNCell(ch::Pair{Int, Int}; use_bias = true, init_weight = glorot_uniform, 
                     init_state = zeros32, init_bias = zeros32, add_self_loops = false, 
-                    use_edge_weight = true, act = relu) 
+                    use_edge_weight = true, act = sigmoid) 
     in_dims, out_dims = ch
     conv = GCNConv(ch, act; init_weight, init_bias, use_bias, add_self_loops, use_edge_weight)
     gru = Lux.GRUCell(out_dims => out_dims; use_bias, init_weight = (init_weight, init_weight, init_weight), init_bias = (init_bias, init_bias, init_bias), init_state = init_state)
@@ -59,7 +59,7 @@ function Base.show(io::IO, tgcn::TGCNCell)
 end
 
 """
-    TGCN(in => out; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32, add_self_loops = false, use_edge_weight = true, act = sigmoid) 
+    TGCN(in => out; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32, add_self_loops = false, use_edge_weight = true, act = relu) 
 
 Temporal Graph Convolutional Network (T-GCN) recurrent layer from the paper [T-GCN: A Temporal Graph Convolutional Network for Traffic Prediction](https://arxiv.org/pdf/1811.05320.pdf).
 
