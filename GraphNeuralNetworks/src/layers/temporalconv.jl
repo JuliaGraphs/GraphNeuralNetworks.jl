@@ -758,7 +758,7 @@ EvolveGCNO(args...; kws...) = GNNRecurrence(EvolveGCNOCell(args...; kws...))
 
 
 """
-    TGCNCell(in => out; kws...)
+    TGCNCell(in => out; act = relu, kws...)
 
 Recurrent graph convolutional cell from the paper
 [T-GCN: A Temporal Graph Convolutional
@@ -824,12 +824,14 @@ end
 
 Flux.@layer :noexpand TGCNCell
 
-function TGCNCell((in, out)::Pair{Int, Int}; kws...)
-    conv_z = GNNChain(GCNConv(in => out, relu; kws...), GCNConv(out => out; kws...))
+function TGCNCell((in, out)::Pair{Int, Int}; 
+    act = relu,
+    kws...)
+    conv_z = GNNChain(GCNConv(in => out, act; kws...), GCNConv(out => out; kws...))
     dense_z = Dense(2*out => out, sigmoid)
-    conv_r = GNNChain(GCNConv(in => out, relu; kws...), GCNConv(out => out; kws...))
+    conv_r = GNNChain(GCNConv(in => out, act; kws...), GCNConv(out => out; kws...))
     dense_r = Dense(2*out => out, sigmoid)
-    conv_h = GNNChain(GCNConv(in => out, relu; kws...), GCNConv(out => out; kws...))
+    conv_h = GNNChain(GCNConv(in => out, act; kws...), GCNConv(out => out; kws...))
     dense_h = Dense(2*out => out, tanh)
     return TGCNCell(in, out, conv_z, dense_z, conv_r, dense_r, conv_h, dense_h)
 end
@@ -858,7 +860,7 @@ function Base.show(io::IO, cell::TGCNCell)
 end
 
 """
-    TGCN(args...; kws...)
+    TGCN(args...; act = relu, kws...)
 
 Construct a recurrent layer corresponding to the [`TGCNCell`](@ref) cell.
 
@@ -876,9 +878,14 @@ julia> timesteps = 5;
 
 julia> g = rand_graph(num_nodes, num_edges);
 
-julia> x = rand(Float32, d_in, timesteps, num_nodes);
+julia> x = rand(Float32, d_in, timesteps, g.num_nodes);
 
-julia> layer = TGCN(d_in => d_out)
+julia> layer = TGCN(d_in => d_out)  # Default activation (relu)
+GNNRecurrence(
+  TGCNCell(2 => 3),                     # 126 parameters
+)                   # Total: 18 arrays, 126 parameters, 1.469 KiB.
+
+julia> layer_tanh = TGCN(d_in => d_out, act = tanh)  # Custom activation
 GNNRecurrence(
   TGCNCell(2 => 3),                     # 126 parameters
 )                   # Total: 18 arrays, 126 parameters, 1.469 KiB.

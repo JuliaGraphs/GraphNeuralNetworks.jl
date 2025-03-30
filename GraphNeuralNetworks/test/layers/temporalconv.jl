@@ -25,6 +25,8 @@ end
 
 @testitem "TGCNCell" setup=[TemporalConvTestModule, TestModule] begin
     using .TemporalConvTestModule, .TestModule
+    
+    # Test with default activation function
     cell = GraphNeuralNetworks.TGCNCell(in_channel => out_channel)
     y, h = cell(g, g.x)
     @test y === h
@@ -33,10 +35,25 @@ end
     test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_HIGH)
     # with initial state
     test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_HIGH)
+    
+    # Test with custom activation function
+    custom_activation = tanh
+    cell_custom = GraphNeuralNetworks.TGCNCell(in_channel => out_channel, act = custom_activation)
+    y_custom, h_custom = cell_custom(g, g.x)
+    @test y_custom === h_custom
+    @test size(h_custom) == (out_channel, g.num_nodes)
+    # Test that outputs differ when using different activation functions
+    @test !isapprox(y, y_custom, rtol=RTOL_HIGH)
+    # with no initial state
+    test_gradients(cell_custom, g, g.x, loss=cell_loss, rtol=RTOL_HIGH)
+    # with initial state
+    test_gradients(cell_custom, g, g.x, h_custom, loss=cell_loss, rtol=RTOL_HIGH)
 end
 
 @testitem "TGCN" setup=[TemporalConvTestModule, TestModule] begin
     using .TemporalConvTestModule, .TestModule
+    
+    # Test with default activation function
     layer = TGCN(in_channel => out_channel)
     x = rand(Float32, in_channel, timesteps, g.num_nodes)
     state0 = rand(Float32, out_channel, g.num_nodes)
@@ -47,6 +64,19 @@ end
     test_gradients(layer, g, x, rtol = RTOL_HIGH)
     # with initial state
     test_gradients(layer, g, x, state0, rtol = RTOL_HIGH)
+
+    # Test with custom activation function
+    custom_activation = tanh
+    layer_custom = TGCN(in_channel => out_channel, act = custom_activation)
+    y_custom = layer_custom(g, x)
+    @test layer_custom isa GNNRecurrence
+    @test size(y_custom) == (out_channel, timesteps, g.num_nodes)
+    # Test that outputs differ when using different activation functions
+    @test !isapprox(y, y_custom, rtol = RTOL_HIGH)
+    # with no initial state
+    test_gradients(layer_custom, g, x, rtol = RTOL_HIGH)
+    # with initial state
+    test_gradients(layer_custom, g, x, state0, rtol = RTOL_HIGH)
 
     # interplay with GNNChain
     model = GNNChain(TGCN(in_channel => out_channel), Dense(out_channel, 1))
