@@ -867,9 +867,15 @@ Construct a recurrent layer corresponding to the [`TGCNCell`](@ref) cell.
 The arguments are passed to the [`TGCNCell`](@ref) constructor.
 See [`GNNRecurrence`](@ref) for more details.
 
+# Additional Parameters
+
+- `gate_activation`: Activation function for the gate mechanisms. Default `sigmoid`.
+
 # Examples
 
 ```jldoctest
+julia> using Flux  # Ensure relu is available
+
 julia> num_nodes, num_edges = 5, 10;
 
 julia> d_in, d_out = 2, 3;
@@ -896,5 +902,6 @@ julia> size(y) # (d_out, timesteps, num_nodes)
 (3, 5, 5)
 ```
 """
-TGCN(args...; kws...) = GNNRecurrence(TGCNCell(args...; kws...))
+TGCN(args...; act = relu, kws...) = 
+    GNNRecurrence(TGCNCell(args...; act, kws...))
 
