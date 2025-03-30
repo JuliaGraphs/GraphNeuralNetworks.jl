@@ -10,7 +10,7 @@
     tx = [x for _ in 1:5]
 
     @testset "TGCN" begin
-        # Test with default activation (relu)
+        # Test with default activation (sigmoid)
         l = TGCN(3=>3)
         ps = LuxCore.initialparameters(rng, l)
         st = LuxCore.initialstates(rng, l)
@@ -18,8 +18,8 @@
         loss = (x, ps) -> sum(first(l(g, x, ps, st)))
         test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
         
-        # Test with custom activation (sigmoid)
-        l_relu = TGCN(3=>3, act = sigmoid)
+        # Test with custom activation (relu)
+        l_relu = TGCN(3=>3, act = relu)
         ps_relu = LuxCore.initialparameters(rng, l_relu)
         st_relu = LuxCore.initialstates(rng, l_relu)
         y2, _ = l_relu(g, x, ps_relu, st_relu)

@@ -93,7 +93,7 @@ rng = Random.default_rng()
 g = rand_graph(rng, 5, 10)
 x = rand(rng, Float32, 2, 5)
 
-# create TGCN layer with default activation (sigmoid)
+# create TGCN layer 
 tgcn = TGCN(2 => 6)
 
 # create TGCN layer with custom activation

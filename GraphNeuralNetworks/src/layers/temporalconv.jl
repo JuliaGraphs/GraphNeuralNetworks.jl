@@ -869,12 +869,12 @@ See [`GNNRecurrence`](@ref) for more details.
 
 # Additional Parameters
 
-- `gate_activation`: Activation function for the gate mechanisms. Default `sigmoid`.
+- `act`: Activation function for the GCNConv layers. Default `relu`.
 
 # Examples
 
 ```jldoctest
-julia> using Flux  # Ensure relu is available
+julia> using Flux  # Ensure activation functions are available
 
 julia> num_nodes, num_edges = 5, 10;
 
