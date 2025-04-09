@@ -758,7 +758,7 @@ EvolveGCNO(args...; kws...) = GNNRecurrence(EvolveGCNOCell(args...; kws...))
 
 
 """
-    TGCNCell(in => out; act = relu, kws...)
+    TGCNCell(in => out, act = relu, kws...)
 
 Recurrent graph convolutional cell from the paper
 [T-GCN: A Temporal Graph Convolutional
@@ -860,16 +860,12 @@ function Base.show(io::IO, cell::TGCNCell)
 end
 
 """
-    TGCN(args...; act = relu, kws...)
+    TGCN(args...; kws...)
 
 Construct a recurrent layer corresponding to the [`TGCNCell`](@ref) cell.
 
 The arguments are passed to the [`TGCNCell`](@ref) constructor.
 See [`GNNRecurrence`](@ref) for more details.
-
-# Additional Parameters
-
-- `act`: Activation function for the GCNConv layers. Default `relu`.
 
 # Examples
 
@@ -902,6 +898,6 @@ julia> size(y) # (d_out, timesteps, num_nodes)
 (3, 5, 5)
 ```
 """
-TGCN(args...; act = relu, kws...) = 
-    GNNRecurrence(TGCNCell(args...; act, kws...))
+TGCN(args...; kws...) = 
+    GNNRecurrence(TGCNCell(args...; kws...))
 
