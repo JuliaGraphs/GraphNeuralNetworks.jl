@@ -41,7 +41,7 @@
         })
 
         Promise.all(promises).then(() => {
-            input.setAttribute('placeholder', 'Search...')
+            input.setAttribute('placeholder', 'Search everywhere...')
             successfullyLoadedIndex = true
         }).catch(() => {
             input.setAttribute('placeholder', 'Error loading search data...')
