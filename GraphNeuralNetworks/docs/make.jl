@@ -8,6 +8,7 @@ Pkg.develop([
 Pkg.instantiate()
 
 using Documenter
+using DemoCards: DemoCards
 using GraphNeuralNetworks
 using Flux, GNNGraphs, GNNlib, Graphs
 using DocumenterInterLinks
@@ -39,14 +40,25 @@ cp(joinpath(@__DIR__, "../../GNNGraphs/docs/src"),
 cp(joinpath(@__DIR__, "../../GNNlib/docs/src"),
    joinpath(@__DIR__, "src/GNNlib"), force=true)
 
+
+
+tutorials, tutorials_postprocess_cb, tutorials_assets = DemoCards.makedemos(joinpath(@__DIR__, "tutorials"))
+
+## UNCOMMENT TO DISABLE TUTORIALS AND SPEED UP DOCS BUILDING
+# tutorials, tutorials_postprocess_cb, tutorials_assets = [], _ -> nothing, nothing
+
+assets = []
+isnothing(tutorials_assets) || push!(assets, tutorials_assets)
+
 makedocs(;
     modules = [GraphNeuralNetworks, GNNGraphs, GNNlib],
     plugins = [interlinks],
     format = Documenter.HTML(; mathengine, 
                             prettyurls = get(ENV, "CI", nothing) == "true", 
-                            assets = [],
+                            assets,
                             size_threshold=nothing, 
-                            size_threshold_warn=2000000),
+                            size_threshold_warn=2000000,
+                            example_size_threshold=2000000),
     sitename = "GraphNeuralNetworks.jl",
     pages = [
 
@@ -58,26 +70,26 @@ makedocs(;
             "Models" => "guides/models.md",
             "Datasets" => "GNNGraphs/guides/datasets.md",
             "Heterogeneous Graphs" => "GNNGraphs/guides/heterograph.md",
-            "Temporal Graphs" => "GNNGraphs/guides/temporalgraph.md",
+            # "Temporal Graphs" => "GNNGraphs/guides/temporalgraph.md",
         ],
-
-        "Tutorials" => [
-            "Introductory tutorials" => [
-                "Hands on" => "tutorials/gnn_intro.md",
-                "Node classification" => "tutorials/node_classification.md", 
-                "Graph classification" => "tutorials/graph_classification.md"
-                ],
-            "Temporal graph neural networks" =>[
-                "Node autoregression" => "tutorials/traffic_prediction.md",
-                "Temporal graph classification" => "tutorials/temporal_graph_classification.md"
-            ],
-        ],
+        tutorials,
+        # "Tutorials" => [
+        #     "Introductory tutorials" => [
+        #         "Hands on" => "tutorials/beginner_tutorials/gnn_intro.md",
+        #         "Node classification" => "tutorials/beginner_tutorials/node_classification.md", 
+        #         "Graph classification" => "tutorials/beginner_tutorials/graph_classification.md"
+        #         ],
+            # "Temporal graph neural networks" =>[
+            #     "Node autoregression" => "tutorials/traffic_prediction.md",
+            #     "Temporal graph classification" => "tutorials/temporal_graph_classification.md"
+            # ],
+        # ],
 
         "API Reference" => [
             "Graphs (GNNGraphs.jl)" => [
                 "GNNGraph" => "GNNGraphs/api/gnngraph.md",
                 "GNNHeteroGraph" => "GNNGraphs/api/heterograph.md",
-                "TemporalSnapshotsGNNGraph" => "GNNGraphs/api/temporalgraph.md",
+                # "TemporalSnapshotsGNNGraph" => "GNNGraphs/api/temporalgraph.md",
                 "Datasets" => "GNNGraphs/api/datasets.md",
             ]
 
@@ -90,7 +102,7 @@ makedocs(;
                 "Basic layers" => "api/basic.md",
                 "Convolutional layers" => "api/conv.md",
                 "Pooling layers" => "api/pool.md",
-                "Temporal Convolutional layers" => "api/temporalconv.md",
+                # "Temporal Convolutional layers" => "api/temporalconv.md",
                 "Hetero Convolutional layers" => "api/heteroconv.md",
             ]
         ],
@@ -99,6 +111,7 @@ makedocs(;
     ],
 )
 
+tutorials_postprocess_cb()
 rm(joinpath(@__DIR__, "src/GNNGraphs"), force=true, recursive=true)
 rm(joinpath(@__DIR__, "src/GNNlib"), force=true, recursive=true)
 
