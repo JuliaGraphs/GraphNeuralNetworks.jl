@@ -1,3 +1,6 @@
+# Temporal Convolutional Layers for Graph Neural Networks
+# Implementations are found in GNNlib
+
 function scan(cell, g::GNNGraph, x::AbstractArray{T,3}, state) where {T}
     y = []
     for xt in eachslice(x, dims = 2)
@@ -241,17 +244,7 @@ function (cell::GConvGRUCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractVector)
 end
 
 function (cell::GConvGRUCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractMatrix)
-    # reset gate
-    r = cell.conv_x_r(g, x) .+ cell.conv_h_r(g, h)
-    r = Flux.sigmoid_fast(r)
-    # update gate
-    z = cell.conv_x_z(g, x) .+ cell.conv_h_z(g, h)
-    z = Flux.sigmoid_fast(z)
-    # new gate
-    h̃ = cell.conv_x_h(g, x) .+ cell.conv_h_h(g, r .* h)
-    h̃ = Flux.tanh_fast(h̃)
-    h = (1 .- z) .* h̃ .+ z .* h 
-    return h, h
+    return gconvgrucell_frwd(cell, g, x, h)
 end
 
 function Base.show(io::IO, cell::GConvGRUCell)
@@ -422,19 +415,7 @@ function (cell::GConvLSTMCell)(g::GNNGraph, x::AbstractMatrix, (h, c))
         c = repeat(c, 1, g.num_nodes)
     end
     @assert ndims(h) == 2 && ndims(c) == 2
-    # input gate
-    i = cell.conv_x_i(g, x) .+ cell.conv_h_i(g, h) .+ cell.w_i .* c .+ cell.b_i 
-    i = Flux.sigmoid_fast(i)
-    # forget gate
-    f = cell.conv_x_f(g, x) .+ cell.conv_h_f(g, h) .+ cell.w_f .* c .+ cell.b_f
-    f = Flux.sigmoid_fast(f)
-    # cell state
-    c = f .* c .+ i .* Flux.tanh_fast(cell.conv_x_c(g, x) .+ cell.conv_h_c(g, h) .+ cell.w_c .* c .+ cell.b_c)
-    # output gate
-    o = cell.conv_x_o(g, x) .+ cell.conv_h_o(g, h) .+ cell.w_o .* c .+ cell.b_o
-    o = Flux.sigmoid_fast(o)
-    h =  o .* Flux.tanh_fast(c)
-    return h, (h, c)
+    gconvlstmcell_frwd(cell, g, x, (h, c))
 end
 
 function Base.show(io::IO, cell::GConvLSTMCell)
@@ -563,16 +544,7 @@ function (cell::DCGRUCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractVector)
 end
 
 function (cell::DCGRUCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractMatrix)
-    h̃ = vcat(x, h)
-    z = cell.dconv_u(g, h̃)
-    z = NNlib.sigmoid_fast.(z)
-    r = cell.dconv_r(g, h̃)
-    r = NNlib.sigmoid_fast.(r)
-    ĥ = vcat(x, h .* r)
-    c = cell.dconv_c(g, ĥ)
-    c = NNlib.tanh_fast.(c)
-    h = z.* h + (1 .- z) .* c
-    return h, h
+    return dcgrucell_frwd(cell, g, x, h)
 end
 
 function Base.show(io::IO, cell::DCGRUCell)
@@ -700,9 +672,7 @@ end
 (cell::EvolveGCNOCell)(g::GNNGraph, x::AbstractMatrix) = cell(g, x, initialstates(cell))
 
 function (cell::EvolveGCNOCell)(g::GNNGraph, x::AbstractMatrix, state)
-    weight, state_lstm = cell.lstm(state.weight, state.lstm)
-    x = cell.conv(g, x, conv_weight = reshape(weight, (cell.out, cell.in)))
-    return x, (; weight, lstm = state_lstm)
+    return evolvegcno_frwd(cell, g, x, state.weight, state.lstm)
 end
 
 function Base.show(io::IO, egcno::EvolveGCNOCell)
@@ -845,14 +815,7 @@ function (cell::TGCNCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractVector)
 end
 
 function (cell::TGCNCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractMatrix)
-    z = cell.conv_z(g, x)
-    z = cell.dense_z(vcat(z, h))
-    r = cell.conv_r(g, x)
-    r = cell.dense_r(vcat(r, h))
-    h̃ = cell.conv_h(g, x)
-    h̃ = cell.dense_h(vcat(h̃, r .* h))
-    h = (1 .- z) .* h .+ z .* h̃
-    return h, h
+    return tgcncell_frwd(cell, g, x, h)
 end
 
 function Base.show(io::IO, cell::TGCNCell)
