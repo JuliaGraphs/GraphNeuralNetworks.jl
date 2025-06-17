@@ -41,11 +41,11 @@ cp(joinpath(@__DIR__, "../../GNNlib/docs/src"),
    joinpath(@__DIR__, "src/GNNlib"), force=true)
 
 
-
+## DEMO CARDS AUTOMATICALLY DETECTS TUTORIALS FROM FOLDER STRUCTURE
 tutorials, tutorials_postprocess_cb, tutorials_assets = DemoCards.makedemos(joinpath(@__DIR__, "tutorials"))
-
 ## UNCOMMENT TO DISABLE TUTORIALS AND SPEED UP DOCS BUILDING
-# tutorials, tutorials_postprocess_cb, tutorials_assets = [], _ -> nothing, nothing
+# tutorials, tutorials_postprocess_cb, tutorials_assets = 
+    # "Tutorials" => "index.md", () -> nothing, nothing
 
 assets = []
 isnothing(tutorials_assets) || push!(assets, tutorials_assets)
@@ -70,26 +70,14 @@ makedocs(;
             "Models" => "guides/models.md",
             "Datasets" => "GNNGraphs/guides/datasets.md",
             "Heterogeneous Graphs" => "GNNGraphs/guides/heterograph.md",
-            # "Temporal Graphs" => "GNNGraphs/guides/temporalgraph.md",
+            "Temporal Graphs" => "GNNGraphs/guides/temporalgraph.md",
         ],
         tutorials,
-        # "Tutorials" => [
-        #     "Introductory tutorials" => [
-        #         "Hands on" => "tutorials/beginner_tutorials/gnn_intro.md",
-        #         "Node classification" => "tutorials/beginner_tutorials/node_classification.md", 
-        #         "Graph classification" => "tutorials/beginner_tutorials/graph_classification.md"
-        #         ],
-            # "Temporal graph neural networks" =>[
-            #     "Node autoregression" => "tutorials/traffic_prediction.md",
-            #     "Temporal graph classification" => "tutorials/temporal_graph_classification.md"
-            # ],
-        # ],
-
         "API Reference" => [
             "Graphs (GNNGraphs.jl)" => [
                 "GNNGraph" => "GNNGraphs/api/gnngraph.md",
                 "GNNHeteroGraph" => "GNNGraphs/api/heterograph.md",
-                # "TemporalSnapshotsGNNGraph" => "GNNGraphs/api/temporalgraph.md",
+                "TemporalSnapshotsGNNGraph" => "GNNGraphs/api/temporalgraph.md",
                 "Datasets" => "GNNGraphs/api/datasets.md",
             ]
 
@@ -102,7 +90,7 @@ makedocs(;
                 "Basic layers" => "api/basic.md",
                 "Convolutional layers" => "api/conv.md",
                 "Pooling layers" => "api/pool.md",
-                # "Temporal Convolutional layers" => "api/temporalconv.md",
+                "Temporal Convolutional layers" => "api/temporalconv.md",
                 "Hetero Convolutional layers" => "api/heteroconv.md",
             ]
         ],

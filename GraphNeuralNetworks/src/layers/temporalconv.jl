@@ -174,7 +174,7 @@ where `h` is the updated hidden state of the GRU cell.
 ```jldoctest
 julia> using GraphNeuralNetworks, Flux
 
-julia> num_nodes, num_edges = 5, 10;
+julia> num_nodes, num_edges = 5, 20;
 
 julia> d_in, d_out = 2, 3;
 

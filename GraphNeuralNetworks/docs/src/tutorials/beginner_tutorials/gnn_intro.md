@@ -1,3 +1,10 @@
+```@meta
+EditURL = "/Users/carlo/.julia/dev/GraphNeuralNetworks/GraphNeuralNetworks/docs/tutorials/beginner_tutorials/gnn_intro.md"
+```
+
+
+
+
 # Hands-on introduction to Graph Neural Networks
 
 *This tutorial is a Julia adaptation of the Pytorch Geometric tutorials that can be found [here](https://pytorch-geometric.readthedocs.io/en/latest/notes/colabs.html).*
@@ -262,3 +269,10 @@ visualize_embeddings(emb_final, colors = labels)
 As one can see, our 3-layer GCN model manages to linearly separating the communities and classifying most of the nodes correctly.
 
 Furthermore, we did this all with a few lines of code, thanks to the GraphNeuralNetworks.jl which helped us out with data handling and GNN implementations.
+
+
+---
+
+*This page was generated using [DemoCards.jl](https://github.com/JuliaDocs/DemoCards.jl).*
+
+
