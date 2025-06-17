@@ -110,7 +110,7 @@ Since a `GNNGraph` is an `AbstractGraph` from the `Graphs.jl` library, it suppor
 
 ```@example intro
 # no axis ticks 
-p = GraphMakie.graphplot(g |> to_unidirected, node_size = 20, node_color = labels, arrow_show = false, axis = nothing)
+p = GraphMakie.graphplot(g |> to_unidirected, node_size = 20, node_color = labels, arrow_show = false)
 FileIO.save("assets/cover_gnn_intro.png", p) # hide
 p 
 ```
