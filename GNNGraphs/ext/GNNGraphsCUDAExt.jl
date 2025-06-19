@@ -21,13 +21,9 @@ GNNGraphs.dense_zeros_like(a::CUMAT_T, T::Type, sz = size(a)) = CUDA.zeros(T, sz
 
 GNNGraphs.iscuarray(x::AnyCuArray) = true
 
-function GNNGraphs.binarize(Mat::CUSPARSE.CuSparseMatrixCSC)
-    bin_vals = fill!(similar(nonzeros(Mat), Bool), true)
-    return CUSPARSE.CuSparseMatrixCSC(Mat.colPtr, rowvals(Mat), bin_vals, size(Mat))
-end
-function GNNGraphs.binarize(Mat::CUSPARSE.CuSparseMatrixCSC, T::DataType)
+function GNNGraphs.binarize(Mat::CUSPARSE.CuSparseMatrixCSC, T::DataType = Bool)
+    @debug "Binarizing sparse matrix of type $(typeof(Mat)) to type $(T)"
     bin_vals = fill!(similar(nonzeros(Mat)), one(T))
-    # Binarize a CuSparseMatrixCSC by setting all nonzero values to one(T)
     return CUSPARSE.CuSparseMatrixCSC(Mat.colPtr, rowvals(Mat), bin_vals, size(Mat))
 end
 

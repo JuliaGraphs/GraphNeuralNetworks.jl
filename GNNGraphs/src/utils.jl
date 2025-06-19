@@ -295,9 +295,7 @@ function _rand_edges(rng, (n1, n2), m)
     return s, t, val
 end
 
-binarize(x) = map(>(0), x)
-# here just to allow CUDA extension to overload this function with correct type casting
-binarize(x, T::DataType) = binarize(x)
+binarize(x, T::DataType = Bool) = ifelse.(x .> 0, one(T), zero(T))
 
 CRC.@non_differentiable binarize(x...)
 CRC.@non_differentiable edge_encoding(x...)
