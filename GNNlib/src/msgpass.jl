@@ -213,7 +213,7 @@ end
 ## COPY_XJ 
 
 function propagate(::typeof(copy_xj), g::GNNGraph, ::typeof(+), xi, xj::AbstractMatrix, e)
-    A = adjacency_matrix(g, weighted = false)
+    A = adjacency_matrix(g, eltype(xj); weighted = false)
     return xj * A
 end
 

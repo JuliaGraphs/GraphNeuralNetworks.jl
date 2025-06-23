@@ -7,14 +7,6 @@ using GNNGraphs: GNNGraph, COO_T, SPARSE_T
 
 ###### PROPAGATE SPECIALIZATIONS ####################
 
-## COPY_XJ 
-
-## avoid the fast path on gpu until we have better cuda support
-function GNNlib.propagate(::typeof(copy_xj), g::GNNGraph{<:Union{COO_T, SPARSE_T}}, ::typeof(+),
-        xi, xj::AnyCuMatrix, e)
-    propagate((xi, xj, e) -> copy_xj(xi, xj, e), g, +, xi, xj, e)
-end
-
 ## E_MUL_XJ 
 
 ## avoid the fast path on gpu until we have better cuda support
