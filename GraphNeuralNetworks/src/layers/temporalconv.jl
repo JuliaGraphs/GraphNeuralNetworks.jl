@@ -516,7 +516,7 @@ julia> size(y) # (d_out, num_nodes)
 (3, 5)
 ```
 """
-struct DCGRUCell
+struct DCGRUCell <: GNNLayer
     in::Int
     out::Int
     k::Int

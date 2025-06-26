@@ -10,6 +10,8 @@ abstract type GNNLayer <: AbstractLuxLayer end
 
 abstract type GNNContainerLayer{T} <: AbstractLuxContainerLayer{T} end
 
+const AbstractGNNLayer = Union{GNNLayer, GNNContainerLayer}
+
 """
     GNNChain(layers...)
     GNNChain(name = layer, ...)
@@ -104,3 +106,22 @@ _applylayer(l, g::GNNGraph, x, ps, st) = l(x), (;)
 _applylayer(l::AbstractLuxLayer, g::GNNGraph, x, ps, st) = l(x, ps, st)
 _applylayer(l::GNNLayer, g::GNNGraph, x, ps, st) = l(g, x, ps, st)
 _applylayer(l::GNNContainerLayer, g::GNNGraph, x, ps, st) = l(g, x, ps, st)
+
+
+# Facilitate using GNNlib functions with Lux layers
+# by returning a StatefulLuxLayer when accessing properties
+function Base.getproperty(l::StatefulLuxLayer{ST,<:AbstractGNNLayer}, name::Symbol) where ST
+    hasfield(typeof(l), name) && return getfield(l, name)
+    f = getproperty(l.model, name)
+    if f isa AbstractLuxLayer
+        stf = getproperty(Lux.get_state(l), name)
+        psf = getproperty(l.ps, name)
+        if ST === Static.True
+            return StatefulLuxLayer{true}(f, psf, stf)
+        else
+            return StatefulLuxLayer{false}(f, psf, stf)
+        end
+    else 
+        return f
+    end
+end
