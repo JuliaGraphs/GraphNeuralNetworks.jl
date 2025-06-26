@@ -63,9 +63,9 @@ export agnn_conv,
 include("layers/temporalconv.jl")
 export a3tgcn_conv,
        dcgrucell_frwd,
-       evolvegcnocell_frwd
-       gconv_grucell_frwd,
-       gconv_lstmcell_frwd,
+       evolvegcnocell_frwd,
+       gconvgrucell_frwd,
+       gconvlstmcell_frwd,
        tgcn_frwd
 
 include("layers/pool.jl")

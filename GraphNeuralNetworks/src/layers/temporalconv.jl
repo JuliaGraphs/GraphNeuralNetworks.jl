@@ -244,7 +244,7 @@ function (cell::GConvGRUCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractVector)
 end
 
 function (cell::GConvGRUCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractMatrix)
-    return gconvgrucell_frwd(cell, g, x, h)
+    return GNNlib.gconvgrucell_frwd(cell, g, x, h)
 end
 
 function Base.show(io::IO, cell::GConvGRUCell)
@@ -415,7 +415,7 @@ function (cell::GConvLSTMCell)(g::GNNGraph, x::AbstractMatrix, (h, c))
         c = repeat(c, 1, g.num_nodes)
     end
     @assert ndims(h) == 2 && ndims(c) == 2
-    gconvlstmcell_frwd(cell, g, x, (h, c))
+    return GNNlib.gconvlstmcell_frwd(cell, g, x, (h, c))
 end
 
 function Base.show(io::IO, cell::GConvLSTMCell)
@@ -544,7 +544,7 @@ function (cell::DCGRUCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractVector)
 end
 
 function (cell::DCGRUCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractMatrix)
-    return dcgrucell_frwd(cell, g, x, h)
+    return GNNlib.dcgrucell_frwd(cell, g, x, h)
 end
 
 function Base.show(io::IO, cell::DCGRUCell)
@@ -672,7 +672,7 @@ end
 (cell::EvolveGCNOCell)(g::GNNGraph, x::AbstractMatrix) = cell(g, x, initialstates(cell))
 
 function (cell::EvolveGCNOCell)(g::GNNGraph, x::AbstractMatrix, state)
-    return evolvegcno_frwd(cell, g, x, state.weight, state.lstm)
+    return GNNlib.evolvegcnocell_frwd(cell, g, x, state)
 end
 
 function Base.show(io::IO, egcno::EvolveGCNOCell)
@@ -815,7 +815,7 @@ function (cell::TGCNCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractVector)
 end
 
 function (cell::TGCNCell)(g::GNNGraph, x::AbstractMatrix, h::AbstractMatrix)
-    return tgcncell_frwd(cell, g, x, h)
+    return GNNlib.tgcncell_frwd(cell, g, x, h)
 end
 
 function Base.show(io::IO, cell::TGCNCell)
