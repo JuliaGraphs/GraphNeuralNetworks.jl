@@ -41,12 +41,12 @@ export AGNNConv,
        # TransformerConv
 
 include("layers/temporalconv.jl")
-export TGCN,
-       A3TGCN,
-       GConvGRU,
-       GConvLSTM,
-       DCGRU,
-       EvolveGCNO
+export GNNRecurrence,
+       GConvGRU, GConvGRUCell,
+       GConvLSTM, GConvLSTMCell,
+       DCGRU, DCGRUCell,
+       EvolveGCNO, EvolveGCNOCell,
+       TGCN, TGCNCell
 
 include("layers/pool.jl")
 export GlobalPool,
