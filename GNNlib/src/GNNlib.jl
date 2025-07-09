@@ -61,7 +61,12 @@ export agnn_conv,
        transformer_conv
 
 include("layers/temporalconv.jl")
-export tgcn_conv
+export a3tgcn_conv,
+       dcgrucell_frwd,
+       evolvegcnocell_frwd,
+       gconvgrucell_frwd,
+       gconvlstmcell_frwd,
+       tgcn_frwd
 
 include("layers/pool.jl")
 export global_pool,
