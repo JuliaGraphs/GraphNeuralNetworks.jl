@@ -233,7 +233,7 @@ end
 # for weighted convolution
 function propagate(::typeof(w_mul_xj), g::GNNGraph, ::typeof(+), xi, xj::AbstractMatrix,
                    e::Nothing)
-    A = adjacency_matrix(g, weighted = true)
+    A = adjacency_matrix(g, eltype(xj); weighted = true)
     return xj * A
 end
 

@@ -26,7 +26,7 @@ end
 ## W_MUL_XJ 
 
 ## avoid the fast path on gpu until we have better cuda support
-function GNNlib.propagate(::typeof(w_mul_xj), g::GNNGraph{<:Union{COO_T, SPARSE_T}}, ::typeof(+),
+function GNNlib.propagate(::typeof(w_mul_xj), g::GNNGraph{COO_T}, ::typeof(+),
         xi, xj::AnyCuMatrix, e::Nothing)
     propagate((xi, xj, e) -> w_mul_xj(xi, xj, e), g, +, xi, xj, e)
 end
