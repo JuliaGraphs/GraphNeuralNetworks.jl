@@ -421,20 +421,16 @@ function DCGRUCell(ch::Pair{Int, Int}, k::Int; use_bias = true, init_weight = gl
     return DCGRUCell(in_dims, out_dims, k, dconv_u, dconv_r, dconv_c, init_state)
 end
 
-function (l::DCGRUCell)(g, (x, h), ps, st)
-    if h === nothing
-        h = l.init_state(l.out_dims, g.num_nodes)
-    end
-    h̃ = vcat(x, h)
-    z, st_dconv_u = l.dconv_u(g, h̃, ps.dconv_u, st.dconv_u)
-    z = NNlib.sigmoid_fast.(z)
-    r, st_dconv_r = l.dconv_r(g, h̃, ps.dconv_r, st.dconv_r)
-    r = NNlib.sigmoid_fast.(r)
-    ĥ = vcat(x, h .* r)
-    c, st_dconv_c = l.dconv_c(g, ĥ, ps.dconv_c, st.dconv_c)
-    c = NNlib.tanh_fast.(c)
-    h = z.* h + (1 .- z).* c
-    return (h, h), (dconv_u = st_dconv_u, dconv_r = st_dconv_r, dconv_c = st_dconv_c)
+
+function (l::DCGRUCell)(g, x::AbstractMatrix, ps, st)
+    h = l.init_state(l.out_dims, g.num_nodes)
+    return l(g, (x, (h,)), ps, st)
+end
+
+function (l::DCGRUCell)(g, (x, (h,))::Tuple, ps, st)
+    m = StatefulLuxLayer{true}(l, ps, st)
+    h, _ = GNNlib.dcgrucell_frwd(m, g, x, h)
+    return (h, (h,)), _getstate(m)
 end
 
 function Base.show(io::IO, l::DCGRUCell)
