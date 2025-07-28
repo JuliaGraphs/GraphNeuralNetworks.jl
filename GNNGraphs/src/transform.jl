@@ -181,7 +181,7 @@ function remove_multi_edges(g::GNNGraph{<:COO_T}; aggr = +)
     return GNNGraph((s, t, w),
              g.num_nodes, num_edges, g.num_graphs,
              g.graph_indicator,
-             g.ndata, edata, g.gdata)
+             g.ndata, edata, g.gdata, true)
 end
 
 """
@@ -191,22 +191,7 @@ Return a new GNNGraph where all multiple edges between the same pair of nodes ar
 This method is only applicable to graphs of type `:coo`.
 """
 function coalesce_graph(g::GNNGraph{<:COO_T}, aggr = +)
-    # remove multi-edges first
-    g = remove_multi_edges(g, aggr = aggr)
-    # Order indices using sort_edge_index
-    s, t = edge_index(g)
-    w = get_edge_weight(g)
-    edata = g.edata
-    s, t, perm = sort_edge_index(s, t)
-
-    w = isnothing(w) ? nothing : getobs(w, perm)
-    edata = getobs(edata, perm)
-
-    # Create a new GNNGraph with the sorted indices and no multi edges
-    return GNNGraph((s, t, w),
-             g.num_nodes, length(s), g.num_graphs,
-             g.graph_indicator,
-             g.ndata, edata, g.gdata, true)
+    return remove_multi_edges(g, aggr = aggr)
 end
 
 """
