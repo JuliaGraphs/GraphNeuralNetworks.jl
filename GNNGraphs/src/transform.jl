@@ -185,6 +185,31 @@ function remove_multi_edges(g::GNNGraph{<:COO_T}; aggr = +)
 end
 
 """
+    coalesce_graph(g::GNNGraph)
+
+Return a new GNNGraph where all multiple edges between the same pair of nodes are merged (using aggr for edge weights and features), and the edge indices are sorted lexicographically (by source, then target).
+This method is only applicable to graphs of type `:coo`.
+"""
+function coalesce_graph(g::GNNGraph{<:COO_T}, aggr = +)
+    # remove multi-edges first
+    g = remove_multi_edges(g, aggr = aggr)
+    # Order indices using sort_edge_index
+    s, t = edge_index(g)
+    w = get_edge_weight(g)
+    edata = g.edata
+    s, t, perm = sort_edge_index(s, t)
+
+    w = isnothing(w) ? nothing : getobs(w, perm)
+    edata = getobs(edata, perm)
+
+    # Create a new GNNGraph with the sorted indices and no multi edges
+    return GNNGraph((s, t, w),
+             g.num_nodes, length(s), g.num_graphs,
+             g.graph_indicator,
+             g.ndata, edata, g.gdata, true)
+end
+
+"""
     remove_nodes(g::GNNGraph, nodes_to_remove::AbstractVector)
 
 Remove specified nodes, and their associated edges, from a GNNGraph. This operation reindexes the remaining nodes to maintain a continuous sequence of node indices, starting from 1. Similarly, edges are reindexed to account for the removal of edges connected to the removed nodes.

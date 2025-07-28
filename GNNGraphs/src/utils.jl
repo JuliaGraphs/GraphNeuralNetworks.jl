@@ -41,7 +41,7 @@ are sorted first according to the `ui` and then according to `vi`.
 function sort_edge_index(u, v)
     uv = collect(zip(u, v))
     p = sortperm(uv) # isless lexicographically defined for tuples
-    return u[p], v[p]
+    return (u = u[p], v = v[p], perm = p)
 end
 
 
