@@ -44,7 +44,7 @@ end
 Return a graph constructed from `g` where self-loops (edges from a node to itself)
 are removed. 
 
-See also [`add_self_loops`](@ref) and [`remove_multi_edges`](@ref).
+See also [`add_self_loops`](@ref) and [`coalesce`](@ref).
 """
 function remove_self_loops(g::GNNGraph{<:COO_T})
     s, t = edge_index(g)
@@ -146,15 +146,14 @@ function remove_edges(g::GNNGraph{<:COO_T}, p = 0.5)
 end
 
 """
-    remove_multi_edges(g::GNNGraph; aggr=+)
+    coalesce(g::GNNGraph; aggr=+)
 
-Remove multiple edges (also called parallel edges or repeated edges) from graph `g`.
-Possible edge features are aggregated according to `aggr`, that can take value 
-`+`,`min`, `max` or `mean`.
+Return a new GNNGraph where all multiple edges between the same pair of nodes are merged (using aggr for edge weights and features), and the edge indices are sorted lexicographically (by source, then target).
+This method is only applicable to graphs of type `:coo`.
 
-See also [`remove_self_loops`](@ref), [`has_multi_edges`](@ref), and [`to_bidirected`](@ref).
+`aggr` can take value `+`,`min`, `max` or `mean`.
 """
-function remove_multi_edges(g::GNNGraph{<:COO_T}; aggr = +)
+function Base.coalesce(g::GNNGraph{<:COO_T}; aggr = +)
     s, t = edge_index(g)
     w = get_edge_weight(g)
     edata = g.edata
@@ -182,16 +181,6 @@ function remove_multi_edges(g::GNNGraph{<:COO_T}; aggr = +)
              g.num_nodes, num_edges, g.num_graphs,
              g.graph_indicator,
              g.ndata, edata, g.gdata, true)
-end
-
-"""
-    coalesce_graph(g::GNNGraph)
-
-Return a new GNNGraph where all multiple edges between the same pair of nodes are merged (using aggr for edge weights and features), and the edge indices are sorted lexicographically (by source, then target).
-This method is only applicable to graphs of type `:coo`.
-"""
-function coalesce_graph(g::GNNGraph{<:COO_T}, aggr = +)
-    return remove_multi_edges(g, aggr = aggr)
 end
 
 """
@@ -451,7 +440,7 @@ end
     to_bidirected(g)
 
 Adds a reverse edge for each edge in the graph, then calls 
-[`remove_multi_edges`](@ref) with `mean` aggregation to simplify the graph. 
+[`coalesce`](@ref) with `mean` aggregation to simplify the graph. 
 
 See also [`is_bidirected`](@ref). 
 
@@ -515,7 +504,7 @@ function to_bidirected(g::GNNGraph{<:COO_T})
                  g.graph_indicator,
                  g.ndata, edata, g.gdata)
 
-    return remove_multi_edges(g; aggr = mean)
+    return coalesce(g; aggr = mean)
 end
 
 """
@@ -535,7 +524,7 @@ function to_unidirected(g::GNNGraph{<:COO_T})
                  g.graph_indicator,
                  g.ndata, g.edata, g.gdata)
 
-    return remove_multi_edges(g; aggr = mean)
+    return coalesce(g; aggr = mean)
 end
 
 function Graphs.SimpleGraph(g::GNNGraph)

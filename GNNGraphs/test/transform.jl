@@ -345,7 +345,7 @@ end
     end
 end
 
-@testitem "remove_multi_edges" setup=[GraphsTestModule] begin
+@testitem "coalesce" setup=[GraphsTestModule] begin
     using .GraphsTestModule
     for GRAPH_T in GRAPH_TYPES
         if GRAPH_T == :coo
@@ -353,14 +353,14 @@ end
             s, t = edge_index(g)
             g1 = add_edges(g, s[1:5], t[1:5])
             @test g1.num_edges == g.num_edges + 5
-            g2 = remove_multi_edges(g1, aggr = +)
+            g2 = coalesce(g1, aggr = +)
             @test g2.num_edges == g.num_edges
             @test sort_edge_index(edge_index(g2)) == sort_edge_index(edge_index(g))
 
             # Default aggregation is +
             g1 = GNNGraph(g1, edata = (e1 = ones(3, g1.num_edges), e2 = 2 * ones(g1.num_edges)))
             g1 = set_edge_weight(g1, 3 * ones(g1.num_edges))
-            g2 = remove_multi_edges(g1)
+            g2 = coalesce(g1)
             @test g2.num_edges == g.num_edges
             @test sort_edge_index(edge_index(g2)) == sort_edge_index(edge_index(g))
             @test count(g2.edata.e1[:, i] == 2 * ones(3) for i in 1:(g2.num_edges)) == 5

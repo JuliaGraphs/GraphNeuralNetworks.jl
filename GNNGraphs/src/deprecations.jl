@@ -11,3 +11,5 @@ function Base.getproperty(vds::Vector{DataStore}, s::Symbol)
         return [getdata(ds)[s] for ds in vds]
     end
 end
+
+@deprecate remove_multi_edges(g::GNNGraph{<:COO_T}; aggr = +) Base.coalesce(g; aggr = aggr)
