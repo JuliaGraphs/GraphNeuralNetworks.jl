@@ -103,6 +103,18 @@ Graphs.ne(g::GNNGraph) = g.num_edges
 Graphs.has_vertex(g::GNNGraph, i::Int) = 1 <= i <= g.num_nodes
 Graphs.vertices(g::GNNGraph) = 1:(g.num_nodes)
 
+"""
+    is_coalesced(g::GNNGraph) -> Bool
+
+Check whether the given `GNNGraph` `g` is coalesced (see [`coalesce`](@ref)). Only meaningful for COO graphs.
+
+# Arguments
+- `g::GNNGraph`: The graph to check.
+
+# Returns
+- `Bool`: Whether the graph is coalesced. If the graph is not of type COO, this function will always return `false`.
+"""
+is_coalesced(g::GNNGraph) = g.is_coalesced
 
 """
     neighbors(g::GNNGraph, i::Integer; dir=:out)
