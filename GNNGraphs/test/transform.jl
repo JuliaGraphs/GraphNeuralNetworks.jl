@@ -714,3 +714,51 @@ end
         end
     end
 end
+
+@testitem "graph transform ops set is_coalesced=false" setup=[GraphsTestModule] begin
+    using .GraphsTestModule
+    g = rand_graph(5, 10, graph_type=:coo)
+    g = coalesce(g)  # ensure the graph is coalesced to start with
+
+    # add_self_loops
+    g1 = add_self_loops(g)
+    @test g1.is_coalesced == false
+
+    # remove_self_loops
+    g2 = add_self_loops(g)  # ensure there are self-loops to remove
+    g2 = remove_self_loops(g2)
+    @test g2.is_coalesced == false
+
+    # remove_edges
+    g3 = remove_edges(g, [1])
+    @test g3.is_coalesced == false
+
+    # add_edges
+    g4 = add_edges(g, [1], [2])
+    @test g4.is_coalesced == false
+
+    # perturb_edges
+    g5 = perturb_edges(g, 0.5)
+    @test g5.is_coalesced == false
+
+    # remove_nodes
+    g6 = remove_nodes(g, [1])
+    @test g6.is_coalesced == false
+
+    # add_nodes
+    g7 = add_nodes(g, 2)
+    @test g7.is_coalesced == false
+
+    # rand_edge_split returns two graphs
+    g8a, g8b = rand_edge_split(g, 0.5)
+    @test g8a.is_coalesced == false
+    @test g8b.is_coalesced == false
+
+    # negative_sample
+    g9 = negative_sample(g, num_neg_edges=3)
+    @test g9.is_coalesced == false
+
+    # ppr_diffusion
+    g11 = ppr_diffusion(g)
+    @test g11.is_coalesced == false
+end
