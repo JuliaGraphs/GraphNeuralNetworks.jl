@@ -113,7 +113,7 @@ struct GNNGraph{T <: Union{COO_T, ADJMAT_T}} <: AbstractGNNGraph{T}
     ndata::DataStore
     edata::DataStore
     gdata::DataStore
-    is_coalesced::Bool # only for :coo, true if the graph is coalesced, i.e., indices ordered by row and no multi edges
+    is_coalesced::Bool # only for :coo, true if the graph is coalesced, i.e., no multi edges and indices ordered by target, then source
 end
 
 # GNNGraph constructor setting the is_coalesced field to false

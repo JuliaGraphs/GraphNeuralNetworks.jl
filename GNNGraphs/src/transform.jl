@@ -148,7 +148,7 @@ end
 """
     coalesce(g::GNNGraph; aggr=+)
 
-Return a new GNNGraph where all multiple edges between the same pair of nodes are merged (using aggr for edge weights and features), and the edge indices are sorted lexicographically (by source, then target).
+Return a new GNNGraph where all multiple edges between the same pair of nodes are merged (using aggr for edge weights and features), and the edge indices are sorted lexicographically (by target, then by source).
 This method is only applicable to graphs of type `:coo`.
 
 `aggr` can take value `+`,`min`, `max` or `mean`.
@@ -158,7 +158,8 @@ function Base.coalesce(g::GNNGraph{<:COO_T}; aggr = +)
     w = get_edge_weight(g)
     edata = g.edata
     num_edges = g.num_edges
-    idxs, idxmax = edge_encoding(s, t, g.num_nodes)
+    # order by target first and then source as a workaround of CUDA.jl issue: https://github.com/JuliaGPU/CUDA.jl/issues/2820
+    idxs, idxmax = edge_encoding(t, s, g.num_nodes)
 
     perm = sortperm(idxs)
     idxs = idxs[perm]

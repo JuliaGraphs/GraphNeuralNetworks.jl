@@ -157,7 +157,7 @@ function test_gradients(
 end
 
 
-function generate_test_graphs(graph_type)
+function generate_test_graphs(graph_type; do_coalesce=false)
     adj1 = [0 1 0 1
             1 0 1 0
             0 1 0 1
@@ -175,12 +175,18 @@ function generate_test_graphs(graph_type)
     g_single_vertex = GNNGraph(adj_single_vertex,
                                 ndata = rand(Float32, D_IN, 4);
                                 graph_type)
+    
+    if graph_type == :coo && do_coalesce
+        g1 = coalesce(g1)
+        g_single_vertex = coalesce(g_single_vertex)
+    end
 
     return (g1, g_single_vertex)
 end
 
 GRAPH_TYPES = [:coo, :dense, :sparse]
 TEST_GRAPHS = [generate_test_graphs(:coo)...,
+               generate_test_graphs(:coo, do_coalesce=true)...,
                generate_test_graphs(:dense)...,
                generate_test_graphs(:sparse)...]
 
