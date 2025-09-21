@@ -30,7 +30,7 @@ pkg> add GraphNeuralNetworks
 
 Let's give a brief overview of the package by solving a graph regression problem with synthetic data. 
 
-Other usage examples can be found in the [examples](https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/tree/master/GraphNeuralNetworks/examples) folder, in the [notebooks](https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/tree/master/GraphNeuralNetworks/notebooks) folder, and in the [tutorials](https://juliagraphs.org/GraphNeuralNetworks.jl/tutorials/) section of the documentation.
+Other usage examples can be found in the [examples](https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/tree/master/GraphNeuralNetworks/examples) folder, in the [notebooks](https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/tree/master/GraphNeuralNetworks/notebooks) folder, and in the [tutorials](https://juliagraphs.org/GraphNeuralNetworks.jl/docs/GraphNeuralNetworks.jl/dev/tutorials/gnn_intro/) section of the documentation.
 
 ### Data preparation
 

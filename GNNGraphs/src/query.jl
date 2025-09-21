@@ -235,7 +235,7 @@ The argument `fmt` can be used to specify the desired format of the returned mat
 - `:sparse`: return a sparse matrix (default for COO graphs).
 - `:dense`: return a dense matrix (default for adjacency matrix graphs).
 """
-function Graphs.adjacency_matrix(g::GNNGraph{<:COO_T}, T::DataType = eltype(g); dir = :out,
+function Graphs.adjacency_matrix(g::GNNGraph, T::DataType = eltype(g); dir = :out,
                                  weighted = true, fmt = nothing)
     if fmt === nothing
         if g.graph isa COO_T
