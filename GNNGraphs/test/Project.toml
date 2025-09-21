@@ -2,7 +2,6 @@
 FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
 Functors = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
 GNNGraphs = "aed8fd31-079b-4b5a-b342-a13352159b8c"
-GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MLDataDevices = "7e8f7934-dd98-4c1a-8fe8-92b47a384d40"
@@ -20,6 +19,3 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
-
-[compat]
-GPUArraysCore = "0.1"

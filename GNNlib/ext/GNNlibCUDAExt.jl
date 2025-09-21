@@ -15,7 +15,14 @@ const CUDA_COO_T = Tuple{T, T, V} where {T <: AnyCuArray{<:Integer}, V <: Union{
 ## avoid the fast path on gpu until we have better cuda support
 function GNNlib.propagate(::typeof(copy_xj), g::GNNGraph{<:COO_T}, ::typeof(+),
         xi, xj::AnyCuMatrix, e)
-    A = _adjacency_matrix(g, eltype(xj); weighted = false)
+
+    if !g.is_coalesced
+        # Revisit after 
+        # https://github.com/JuliaGPU/CUDA.jl/issues/1113
+        A = adjacency_matrix(g, eltype(xj); weighted=false, fmt=:dense)
+    else
+        A = adjacency_matrix(g, eltype(xj); weighted=false, fmt=:sparse)
+    end
 
     return xj * A
 end
@@ -46,22 +53,5 @@ end
 # compute_degree(A) = Diagonal(1f0 ./ vec(sum(A; dims=2)))
 
 # Flux.Zygote.@nograd compute_degree
-
-## CUSTOM ADJACENCY_MATRIX IMPLEMENTATION FOR CUDA COO GRAPHS, returning dense matrix when not coalesced, more efficient 
-
-function _adjacency_matrix(g::GNNGraph{<:CUDA_COO_T}, T::DataType = eltype(g); dir = :out,
-                                 weighted = true)
-    if !g.is_coalesced
-        # Revisit after 
-        # https://github.com/JuliaGPU/CUDA.jl/issues/1113
-        A, n, m = to_dense(g.graph, T; num_nodes = g.num_nodes, weighted) # if not coalesced, construction of sparse matrix is slow
-    else
-        A, n, m = to_sparse(g.graph, T; num_nodes = g.num_nodes, weighted, is_coalesced = true)
-    end
-    @assert size(A) == (n, n)
-    return dir == :out ? A : A'
-end
-
-@non_differentiable _adjacency_matrix(x...)
 
 end #module

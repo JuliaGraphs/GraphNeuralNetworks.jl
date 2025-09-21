@@ -218,7 +218,7 @@ end
 adjacency_list(g::GNNGraph; dir = :out) = adjacency_list(g, 1:(g.num_nodes); dir)
 
 """
-    adjacency_matrix(g::GNNGraph, T=eltype(g); dir=:out, weighted=true)
+    adjacency_matrix(g::GNNGraph, T=eltype(g); dir=:out, weighted=true, fmt=nothing)
 
 Return the adjacency matrix `A` for the graph `g`. 
 
@@ -227,29 +227,39 @@ If `dir=:in` instead, `A[i,j] > 0` denotes the presence of an edge from node `j`
 
 User may specify the eltype `T` of the returned matrix. 
 
-If `weighted=true`, the `A` will contain the edge weights if any, otherwise the elements of `A` will be either 0 or 1.
+If `weighted=true`, the matrix `A` will contain the edge weights if any, otherwise the elements of `A`.
+If the graph does not contain edge weights, or if `weighted=false`, the adjacency matrix will contain only 0s and 1s.
+
+The argument `fmt` can be used to specify the desired format of the returned matrix. Possible values are:
+- `nothing`: return the matrix in the same format as the underlying graph representation.
+- `:sparse`: return a sparse matrix (default for COO graphs).
+- `:dense`: return a dense matrix (default for adjacency matrix graphs).
 """
 function Graphs.adjacency_matrix(g::GNNGraph{<:COO_T}, T::DataType = eltype(g); dir = :out,
-                                 weighted = true)
-    A, n, m = to_sparse(g.graph, T; num_nodes = g.num_nodes, weighted)
+                                 weighted = true, fmt = nothing)
+    if fmt === nothing
+        if g.graph isa COO_T
+            fmt = :sparse
+        elseif g.graph isa SPARSE_T
+            fmt = :sparse
+        else
+            fmt = :dense
+        end
+    end
+    @assert fmt ∈ [:sparse, :dense]
+    if fmt == :sparse
+        A, n, m = to_sparse(g.graph, T; num_nodes = g.num_nodes, weighted)
+    else
+        A, n, m = to_dense(g.graph, T; num_nodes = g.num_nodes, weighted)
+    end
     @assert size(A) == (n, n)
     return dir == :out ? A : A'
 end
 
-function Graphs.adjacency_matrix(g::GNNGraph{<:ADJMAT_T}, T::DataType = eltype(g);
-                                 dir = :out, weighted = true)
-    @assert dir ∈ [:in, :out]
-    A = g.graph
-    if !weighted
-        A = binarize(A, T)
-    end
-    A = T != eltype(A) ? T.(A) : A
-    return dir == :out ? A : A'
-end
 
 function CRC.rrule(::typeof(adjacency_matrix), g::G, T::DataType; 
-            dir = :out, weighted = true) where {G <: GNNGraph{<:ADJMAT_T}}
-    A = adjacency_matrix(g, T; dir, weighted)
+            dir=:out, weighted=true, fmt=nothing) where {G <: GNNGraph{<:ADJMAT_T}}
+    A = adjacency_matrix(g, T; dir, weighted, fmt)
     if !weighted
         function adjacency_matrix_pullback_noweight(Δ)
             return (CRC.NoTangent(), CRC.ZeroTangent(), CRC.NoTangent())  
@@ -266,8 +276,8 @@ function CRC.rrule(::typeof(adjacency_matrix), g::G, T::DataType;
 end
 
 function CRC.rrule(::typeof(adjacency_matrix), g::G, T::DataType; 
-            dir = :out, weighted = true) where {G <: GNNGraph{<:COO_T}}
-    A = adjacency_matrix(g, T; dir, weighted)
+            dir=:out, weighted=true, fmt=nothing) where {G <: GNNGraph{<:COO_T}}
+    A = adjacency_matrix(g, T; dir, weighted, fmt)
     w = get_edge_weight(g)
     if !weighted || w === nothing
         function adjacency_matrix_pullback_noweight(Δ)
