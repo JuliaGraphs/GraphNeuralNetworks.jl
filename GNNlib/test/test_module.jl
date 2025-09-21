@@ -6,7 +6,7 @@ using Pkg
 # tried to put this in __init__ but is not executed for some reason
 
 ## Uncomment below to change the default test settings
-# ENV["GNN_TEST_CUDA"] = "true"
+ENV["GNN_TEST_CUDA"] = "true"
 # ENV["GNN_TEST_AMDGPU"] = "true"
 # ENV["GNN_TEST_Metal"] = "true"
 

@@ -137,7 +137,7 @@ function to_dense(A::ADJMAT_T, T = nothing; dir = :out, num_nodes = nothing,
         A = T.(A)
     end
     if !weighted
-        A = map(x -> ifelse(x > 0, T(1), T(0)), A)
+        A = binarize(A, T)
     end
     return A, num_nodes, num_edges
 end
