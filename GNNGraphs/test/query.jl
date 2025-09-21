@@ -271,7 +271,8 @@ end
             end[1]
 
             @test gw == [1, 1, 1]
-
+        end
+        
         @testset  "fmt" begin
             Asparse = adjacency_matrix(g, weighted = false, fmt = :sparse)
             @test Asparse isa AbstractSparseMatrix 
