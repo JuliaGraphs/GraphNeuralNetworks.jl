@@ -13,7 +13,7 @@ using TestItemRunner
 
 ## Uncomment below and in test_module.jl to change the default test settings
 # ENV["GNN_TEST_CPU"] = "false"
-ENV["GNN_TEST_CUDA"] = "true"
+# ENV["GNN_TEST_CUDA"] = "true"
 # ENV["GNN_TEST_AMDGPU"] = "true"
 # ENV["GNN_TEST_Metal"] = "true"
 
