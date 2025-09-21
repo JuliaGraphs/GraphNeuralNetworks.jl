@@ -3,7 +3,7 @@ module GNNlibCUDAExt
 using CUDA
 using Random, Statistics, LinearAlgebra
 using GNNlib: GNNlib, propagate, copy_xj, e_mul_xj, w_mul_xj
-using GNNGraphs: GNNGraph, COO_T, SPARSE_T, to_dense, to_sparse
+using GNNGraphs: GNNGraph, COO_T, SPARSE_T, to_dense, to_sparse, adjacency_matrix
 using ChainRulesCore: @non_differentiable
 
 const CUDA_COO_T = Tuple{T, T, V} where {T <: AnyCuArray{<:Integer}, V <: Union{Nothing, AnyCuArray}}
