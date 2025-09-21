@@ -14,9 +14,9 @@ Among its features:
 * [Examples](https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/tree/master/GraphNeuralNetworks/examples) of node, edge, and graph level machine learning tasks. 
 * Heterogeneous and temporal graphs.
 
-The package is part of a larger ecosystem of packages that includes [GNNlib.jl](https://juliagraphs.org/GraphNeuralNetworks.jl/gnnlib), [GNNGraphs.jl](https://juliagraphs.org/GraphNeuralNetworks.jl/gnngraphs), and [GNNLux.jl](https://juliagraphs.org/GraphNeuralNetworks.jl/gnnlux). 
+The package is part of a larger ecosystem of packages that includes [GNNlib.jl](https://juliagraphs.org/GraphNeuralNetworks.jl/docs/GNNlib.jl/stable/), [GNNGraphs.jl](https://juliagraphs.org/GraphNeuralNetworks.jl/docs/GNNGraphs.jl/stable/), and [GNNLux.jl](https://juliagraphs.org/GraphNeuralNetworks.jl/docs/GNNLux.jl/stable/). 
 
-GraphNeuralNetworks.jl is the fronted package for Flux.jl users. [Lux.jl](https://lux.csail.mit.edu/stable/) users instead, can rely on [GNNLux.jl](https://juliagraphs.org/GraphNeuralNetworks.jl/gnnlux/)
+GraphNeuralNetworks.jl is the fronted package for Flux.jl users. [Lux.jl](https://lux.csail.mit.edu/stable/) users instead, can rely on [GNNLux.jl](https://juliagraphs.org/GraphNeuralNetworks.jl/docs/GNNLux.jl/stable/).
 
 ## Installation
 
