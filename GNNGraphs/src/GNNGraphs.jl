@@ -55,6 +55,7 @@ export adjacency_list,
        normalized_laplacian,
        scaled_laplacian,
        laplacian_lambda_max,
+       is_coalesced,
 # from Graphs.jl
        adjacency_matrix,
        degree,
