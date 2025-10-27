@@ -37,7 +37,6 @@ Private = false
 
 ```@docs; canonical = true
 Graphs.neighbors(::GNNGraph, ::Integer)
-GNNGraphs.is_coalesced(::GNNGraph)
 ```
 
 ## Transform
