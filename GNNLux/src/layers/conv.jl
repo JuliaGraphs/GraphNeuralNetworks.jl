@@ -1,8 +1,8 @@
 _getbias(ps) = hasproperty(ps, :bias) ? getproperty(ps, :bias) : false
 _getstate(st, name) = hasproperty(st, name) ? getproperty(st, name) : NamedTuple()
-_getstate(s::StatefulLuxLayer{true}) = s.st
+_getstate(s::StatefulLuxLayer{Val{true}}) = s.st
 _getstate(s::StatefulLuxLayer{Static.True}) = s.st
-_getstate(s::StatefulLuxLayer{false}) = s.st_any
+_getstate(s::StatefulLuxLayer{Val{false}}) = s.st_any
 _getstate(s::StatefulLuxLayer{Static.False}) = s.st_any
 
 @doc raw"""
