@@ -3,6 +3,9 @@ uuid = "e8545f4d-a905-48ac-a8c4-ca114b98986d"
 authors = ["Carlo Lucibello and contributors"]
 version = "0.2.0-DEV"
 
+[workspace]
+projects = ["test", "docs"]
+
 [deps]
 ConcreteStructs = "2569d6c7-a4a2-43d3-a901-331e8e4be471"
 GNNGraphs = "aed8fd31-079b-4b5a-b342-a13352159b8c"
