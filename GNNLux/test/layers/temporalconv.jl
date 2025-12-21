@@ -1,6 +1,6 @@
 @testitem "layers/temporalconv" setup=[TestModuleLux] begin
     using .TestModuleLux
-    using LuxTestUtils: test_gradients, AutoReverseDiff, AutoTracker, AutoForwardDiff, AutoEnzyme
+    using LuxTestUtils: test_gradients, AutoTracker, AutoForwardDiff, AutoEnzyme
 
     rng = StableRNG(1234)
     g = rand_graph(rng, 10, 40)
@@ -16,7 +16,7 @@
         st = LuxCore.initialstates(rng, l)
         y1, _ = l(g, x, ps, st)
         loss = (x, ps) -> sum(first(l(g, x, ps, st)))
-        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
         
         # Test with custom activation (relu)
         l_relu = TGCN(3=>3, act = relu)
@@ -28,7 +28,7 @@
         @test !isapprox(y1, y2, rtol=1.0f-2)
         
         loss_relu = (x, ps) -> sum(first(l_relu(g, x, ps, st_relu)))
-        test_gradients(loss_relu, x, ps_relu; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+        test_gradients(loss_relu, x, ps_relu; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
     end
 
     @testset "A3TGCN" begin
@@ -36,7 +36,7 @@
         ps = LuxCore.initialparameters(rng, l)
         st = LuxCore.initialstates(rng, l)
         loss = (x, ps) -> sum(first(l(g, x, ps, st)))
-        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
     end
 
     @testset "GConvGRU" begin
@@ -44,7 +44,7 @@
         ps = LuxCore.initialparameters(rng, l)
         st = LuxCore.initialstates(rng, l)
         loss = (x, ps) -> sum(first(l(g, x, ps, st)))
-        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
     end
 
     @testset "GConvLSTM" begin
@@ -52,7 +52,7 @@
         ps = LuxCore.initialparameters(rng, l)
         st = LuxCore.initialstates(rng, l)
         loss = (x, ps) -> sum(first(l(g, x, ps, st)))
-        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
     end
 
     @testset "DCGRU" begin
@@ -60,7 +60,7 @@
         ps = LuxCore.initialparameters(rng, l)
         st = LuxCore.initialstates(rng, l)
         loss = (x, ps) -> sum(first(l(g, x, ps, st)))
-        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+        test_gradients(loss, x, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
     end
 
     @testset "EvolveGCNO" begin
@@ -68,6 +68,6 @@
         ps = LuxCore.initialparameters(rng, l)
         st = LuxCore.initialstates(rng, l)
         loss = (tx, ps) -> sum(sum(first(l(tg, tx, ps, st))))
-        test_gradients(loss, tx, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+        test_gradients(loss, tx, ps; atol=1.0f-2, rtol=1.0f-2, skip_backends=[AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
     end
 end
