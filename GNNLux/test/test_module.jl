@@ -71,7 +71,7 @@ function test_lux_layer(rng::AbstractRNG, l, g::GNNGraph, x;
     else
         loss = (x, ps) -> sum(first(l(g, x, ps, st)))
     end
-    test_gradients(loss, x, ps; atol, rtol, skip_backends=[AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+    test_gradients(loss, x, ps; atol, rtol, skip_backends=[AutoForwardDiff(), AutoEnzyme()])
 end
 
 end
