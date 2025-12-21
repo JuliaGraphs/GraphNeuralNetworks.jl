@@ -3,19 +3,12 @@ steps:
     plugins:
       - JuliaCI/julia#v1:
           version: "1"
+      - JuliaCI/julia-test#v1:
+            project: "GraphNeuralNetworks"
       - JuliaCI/julia-coverage#v1:
           dirs:
             - GraphNeuralNetworks/src
-    command: |
-      julia --color=yes --depwarn=yes --project=GraphNeuralNetworks/test -e '
-        import Pkg
-        dev_pkgs = Pkg.PackageSpec[]
-        for pkg in ("GNNGraphs", "GNNlib", "GraphNeuralNetworks")
-          push!(dev_pkgs, Pkg.PackageSpec(path=pkg));
-        end
-        Pkg.develop(dev_pkgs)
-        Pkg.add(["CUDA", "cuDNN"])
-        Pkg.test("GraphNeuralNetworks")'
+            - GraphNeuralNetworks/ext
     agents:
       queue: "juliagpu"
       cuda: "*"
@@ -28,19 +21,12 @@ steps:
     plugins:
       - JuliaCI/julia#v1:
           version: "1"
+      - JuliaCI/julia-test#v1:
+            project: "GraphNeuralNetworks"
       - JuliaCI/julia-coverage#v1:
           dirs:
             - GraphNeuralNetworks/src
-    command: |
-      julia --color=yes --depwarn=yes --project=GraphNeuralNetworks/test -e '
-        import Pkg
-        dev_pkgs = Pkg.PackageSpec[]
-        for pkg in ("GNNGraphs", "GNNlib", "GraphNeuralNetworks")
-          push!(dev_pkgs, Pkg.PackageSpec(path=pkg));
-        end
-        Pkg.develop(dev_pkgs)
-        Pkg.add(["AMDGPU"])
-        Pkg.test("GraphNeuralNetworks")'
+            - GraphNeuralNetworks/ext
     agents:
       queue: "juliagpu"
       rocm: "*"
@@ -54,19 +40,12 @@ steps:
     plugins:
       - JuliaCI/julia#v1:
           version: "1"
+      - JuliaCI/julia-test#v1:
+            project: "GNNlib"
       - JuliaCI/julia-coverage#v1:
           dirs:
             - GNNlib/src
-    command: |
-      julia --color=yes --depwarn=yes --project=GNNlib/test -e '
-        import Pkg
-        dev_pkgs = Pkg.PackageSpec[]
-        for pkg in ("GNNGraphs", "GNNlib")
-          push!(dev_pkgs, Pkg.PackageSpec(path=pkg));
-        end
-        Pkg.develop(dev_pkgs)
-        Pkg.add(["CUDA", "cuDNN"])
-        Pkg.test("GNNlib")'
+            - GNNlib/ext
     agents:
       queue: "juliagpu"
       cuda: "*"
@@ -79,19 +58,12 @@ steps:
     plugins:
       - JuliaCI/julia#v1:
           version: "1"
+      - JuliaCI/julia-test#v1:
+            project: "GNNlib"
       - JuliaCI/julia-coverage#v1:
           dirs:
             - GNNlib/src
-    command: |
-      julia --color=yes --depwarn=yes --project=GNNlib/test -e '
-        import Pkg
-        dev_pkgs = Pkg.PackageSpec[]
-        for pkg in ("GNNGraphs", "GNNlib")
-          push!(dev_pkgs, Pkg.PackageSpec(path=pkg));
-        end
-        Pkg.develop(dev_pkgs)
-        Pkg.add(["AMDGPU"])
-        Pkg.test("GNNlib")'
+            - GNNlib/ext
     agents:
       queue: "juliagpu"
       rocm: "*"
@@ -105,19 +77,13 @@ steps:
     plugins:
       - JuliaCI/julia#v1:
           version: "1"
+      - JuliaCI/julia-test#v1:
+            project: "GNNGraphs"
       - JuliaCI/julia-coverage#v1:
+          codecov: true
           dirs:
             - GNNGraphs/src
-    command: |
-      julia --color=yes --depwarn=yes --project=GNNGraphs/test -e '
-        import Pkg
-        dev_pkgs = Pkg.PackageSpec[]
-        for pkg in ("GNNGraphs",)
-          push!(dev_pkgs, Pkg.PackageSpec(path=pkg));
-        end
-        Pkg.develop(dev_pkgs)
-        Pkg.add(["CUDA", "cuDNN"])
-        Pkg.test("GNNGraphs")'
+            - GNNGraphs/ext
     agents:
       queue: "juliagpu"
       cuda: "*"
@@ -130,19 +96,12 @@ steps:
     plugins:
       - JuliaCI/julia#v1:
           version: "1"
+      - JuliaCI/julia-test#v1:
+            project: "GNNGraphs"
       - JuliaCI/julia-coverage#v1:
           dirs:
             - GNNGraphs/src
-    command: |
-      julia --color=yes --depwarn=yes --project=GNNGraphs/test -e '
-        import Pkg
-        dev_pkgs = Pkg.PackageSpec[]
-        for pkg in ("GNNGraphs",)
-          push!(dev_pkgs, Pkg.PackageSpec(path=pkg));
-        end
-        Pkg.develop(dev_pkgs)
-        Pkg.add(["AMDGPU"])
-        Pkg.test("GNNGraphs")'
+            - GNNGraphs/ext
     agents:
       queue: "juliagpu"
       rocm: "*"
