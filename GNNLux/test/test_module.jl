@@ -32,7 +32,7 @@ using Reexport: @reexport
 @reexport using StableRNGs
 @reexport using Random, Statistics
 
-using LuxTestUtils: test_gradients, AutoReverseDiff, AutoTracker, AutoForwardDiff, AutoEnzyme
+using LuxTestUtils: test_gradients, AutoTracker, AutoForwardDiff, AutoEnzyme
 
 export test_lux_layer
 
@@ -71,7 +71,7 @@ function test_lux_layer(rng::AbstractRNG, l, g::GNNGraph, x;
     else
         loss = (x, ps) -> sum(first(l(g, x, ps, st)))
     end
-    test_gradients(loss, x, ps; atol, rtol, skip_backends=[AutoReverseDiff(), AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
+    test_gradients(loss, x, ps; atol, rtol, skip_backends=[AutoTracker(), AutoForwardDiff(), AutoEnzyme()])
 end
 
 end
