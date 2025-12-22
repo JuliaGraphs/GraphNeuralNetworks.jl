@@ -1,2 +1,3 @@
 [workspace]
-projects = ["GNNGraphs", "GNNlib", "GraphNeuralNetworks", "GNNLux"]
+projects = ["docs", "GNNGraphs", "GNNlib", "GraphNeuralNetworks", "GNNLux"]
+
