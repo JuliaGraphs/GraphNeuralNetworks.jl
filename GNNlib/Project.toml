@@ -3,6 +3,9 @@ uuid = "a6a84749-d869-43f8-aacc-be26a1996e48"
 authors = ["Carlo Lucibello and contributors"]
 version = "1.0.1"
 
+[workspace]
+projects = ["test", "docs", "../GNNGraphs"]
+
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"

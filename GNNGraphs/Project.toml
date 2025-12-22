@@ -1,7 +1,10 @@
 name = "GNNGraphs"
 uuid = "aed8fd31-079b-4b5a-b342-a13352159b8c"
-authors = ["Carlo Lucibello and contributors"]
 version = "1.4.2"
+authors = ["Carlo Lucibello and contributors"]
+
+[workspace]
+projects = ["test", "docs"]
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
@@ -10,7 +13,6 @@ Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MLDataDevices = "7e8f7934-dd98-4c1a-8fe8-92b47a384d40"
-MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
 MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
 NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
 NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
@@ -35,7 +37,6 @@ Graphs = "1.4"
 KrylovKit = "0.8, 0.9"
 LinearAlgebra = "1"
 MLDataDevices = "1.0"
-MLDatasets = "0.7.18"
 MLUtils = "0.4"
 NNlib = "0.9"
 NearestNeighbors = "0.4"

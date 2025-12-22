@@ -168,7 +168,8 @@ end
 
     @testset "copy_xj +" begin
         for g in TEST_GRAPHS
-            broken = get_graph_type(g) == :sparse && gpu_backend() == "AMDGPU"
+            # broken = get_graph_type(g) == :sparse
+            broken = false
             f(g, x) = propagate(copy_xj, g, +, xj = x)
             @test test_gradients(
                 f, g, g.x; test_gpu=true, test_grad_f=false, compare_finite_diff=false
@@ -178,7 +179,8 @@ end
 
     @testset "copy_xj mean" begin
         for g in TEST_GRAPHS
-            broken = get_graph_type(g) == :sparse && gpu_backend() == "AMDGPU"
+            # broken = get_graph_type(g) == :sparse
+            broken = false
             f(g, x) = propagate(copy_xj, g, mean, xj = x)
             @test test_gradients(
                 f, g, g.x; test_gpu=true, test_grad_f=false, compare_finite_diff=false
@@ -188,7 +190,8 @@ end
 
     @testset "e_mul_xj +" begin
         for g in TEST_GRAPHS
-            broken = get_graph_type(g) == :sparse && gpu_backend() == "AMDGPU"
+            # broken = get_graph_type(g) == :sparse
+            broken = false
             e = rand(Float32, size(g.x, 1), g.num_edges)
             f(g, x, e) = propagate(e_mul_xj, g, +; xj = x, e)
             @test test_gradients(

@@ -34,8 +34,8 @@ julia> rng = Random.default_rng();
 julia> m = GNNChain(GCNConv(2 => 5, relu), Dense(5 => 4))
 GNNChain(
     layers = NamedTuple(
-        layer_1 = GCNConv(2 => 5, relu),  # 15 parameters
-        layer_2 = Dense(5 => 4),        # 24 parameters
+        layer_1 = GCNConv(2 => 5, relu),          # 15 parameters
+        layer_2 = Dense(5 => 4),                  # 24 parameters
     ),
 )         # Total: 39 parameters,
           #        plus 0 states.

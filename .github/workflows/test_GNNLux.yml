@@ -15,7 +15,7 @@ jobs:
       matrix:
         version:
           - '1.10' # Replace this with the minimum Julia version that your package supports.
-          # - '1' #  '1' will automatically expand to the latest stable 1.x release of Julia.
+          - '1' #  '1' will automatically expand to the latest stable 1.x release of Julia.
           # - 'pre'
         os:
           - ubuntu-latest

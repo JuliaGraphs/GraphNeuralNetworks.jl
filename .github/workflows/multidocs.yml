@@ -20,14 +20,18 @@ jobs:
           version: '1'
       - uses: julia-actions/cache@v2
       # Build individual docs
-      - run: julia GNNGraphs/docs/make.jl
-      - run: julia GNNlib/docs/make.jl
-      - run: julia GNNLux/docs/make.jl
-      - run: julia GraphNeuralNetworks/docs/make.jl
+      - run: julia --project=GNNGraphs/docs/ -e 'using Pkg; Pkg.instantiate()'
+      - run: julia --color=yes --project=GNNGraphs/docs/ GNNGraphs/docs/make.jl
+      - run: julia --project=GNNlib/docs/ -e 'using Pkg; Pkg.instantiate()'
+      - run: julia --color=yes --project=GNNlib/docs/ GNNlib/docs/make.jl
+      - run: julia --project=GNNLux/docs/ -e 'using Pkg; Pkg.instantiate()'
+      - run: julia --color=yes --project=GNNLux/docs/ GNNLux/docs/make.jl
+      - run: julia --project=GraphNeuralNetworks/docs/ -e 'using Pkg; Pkg.instantiate()'
+      - run: julia --color=yes --project=GraphNeuralNetworks/docs/ GraphNeuralNetworks/docs/make.jl
       # Compile multi docs
       - name: MultiDocs
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           julia --project=docs/ -e 'using Pkg; Pkg.instantiate()'
-          julia --project=docs/ docs/make-multi.jl
+          julia --color=yes --project=docs/ docs/make-multi.jl

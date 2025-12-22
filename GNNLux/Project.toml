@@ -1,7 +1,10 @@
 name = "GNNLux"
 uuid = "e8545f4d-a905-48ac-a8c4-ca114b98986d"
-authors = ["Carlo Lucibello and contributors"]
 version = "0.2.0-DEV"
+authors = ["Carlo Lucibello and contributors"]
+
+[workspace]
+projects = ["test", "docs"]
 
 [deps]
 ConcreteStructs = "2569d6c7-a4a2-43d3-a901-331e8e4be471"
@@ -14,6 +17,10 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[sources]
+GNNGraphs = {path = "../GNNGraphs"}
+GNNlib = {path = "../GNNlib"}
 
 [compat]
 ConcreteStructs = "0.2.3"

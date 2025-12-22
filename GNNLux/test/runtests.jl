@@ -1,11 +1,3 @@
-## The test environment is instantiated as follows:
-# using Pkg
-# Pkg.activate(@__DIR__)
-# Pkg.develop(path=joinpath(@__DIR__, "..", "..", "GNNGraphs"))
-# Pkg.develop(path=joinpath(@__DIR__, "..", "..", "GNNlib"))
-# Pkg.develop(path=joinpath(@__DIR__, ".."))
-# Pkg.instantiate()
-
 using TestItemRunner
 
 ## See https://www.julia-vscode.org/docs/stable/userguide/testitems/

@@ -2,15 +2,32 @@
 
 
 ## Development Enviroment
-GraphNeuralNetworks.jl is package hosted in a monorepo that contains multiple packages. 
-The GraphNeuralNetworks.jl package depends on GNNGraphs.jl and GNNlib.jl, also hosted in the same monorepo.
-In order 
+GraphNeuralNetworks.jl is a collection of packages hosted on a single GitHub repository.
+These packages are `GraphNeuralNetworks.jl` (a package with the same name as the whole project), `GNNGraphs.jl`, `GNNlib.jl`, and `GNNLux.jl`.
 
-```julia
-pkg> activate .
-
-pkg> dev ./GNNGraphs
+The dependencies between these packages are as follows:
+```mermaid
+graph TD;
+    GNNGraphs --> GNNlib;
+    GNNlib --> GraphNeuralNetworks;
+    GNNGraphs --> GraphNeuralNetworks;
+    GNNlib --> GNNLux;
+    GNNGraphs --> GNNLux;
 ```
+
+Thanks to [workspaces](https://pkgdocs.julialang.org/v1/toml-files/#The-%5Bworkspace%5D-section) introduced in julia 1.12, developing multiple packages in a monorepo is straightforward.
+
+Clone the repository with 
+```
+git clone https://github.com/JuliaGraphs/GraphNeuralNetworks.jl
+```
+
+Then activate any of the packages you want to develop, for example `GraphNeuralNetworks`:
+```
+cd GraphNeuralNetworks
+julia --project=.
+```
+Dependencies in the monorepo will be automatically available in `dev` mode, so you can start editing the code of any of the packages and test your changes immediately.
 
 ## Add a New Layer 
 
