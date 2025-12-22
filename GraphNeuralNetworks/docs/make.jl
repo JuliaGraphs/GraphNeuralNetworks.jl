@@ -1,12 +1,3 @@
-using Pkg
-Pkg.activate(@__DIR__)
-Pkg.develop([
-    PackageSpec(path=joinpath(@__DIR__, "..", "..", "GNNGraphs")), 
-    PackageSpec(path=joinpath(@__DIR__, "..", "..", "GNNlib")), 
-    PackageSpec(path=joinpath(@__DIR__, "..")),
-])
-Pkg.instantiate()
-
 using Documenter
 using DemoCards: DemoCards
 using GraphNeuralNetworks

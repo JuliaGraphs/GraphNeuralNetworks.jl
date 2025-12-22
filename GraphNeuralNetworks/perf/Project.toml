@@ -7,3 +7,8 @@ GNNlib = "a6a84749-d869-43f8-aacc-be26a1996e48"
 GraphNeuralNetworks = "cffab07f-9bc2-4db1-8861-388f63bf7694"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+
+[sources]
+GNNGraphs = {path = "../../GNNGraphs"}
+GNNlib = {path = "../../GNNlib"}
+GraphNeuralNetworks = {path = ".."}

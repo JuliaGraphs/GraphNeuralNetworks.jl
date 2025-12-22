@@ -1,10 +1,3 @@
-# # Activate the perf environment
-# using Pkg
-# Pkg.activate(@__DIR__)
-# Pkg.develop(path=joinpath(@__DIR__, "..", "..", "GNNGraphs"))
-# Pkg.develop(path=joinpath(@__DIR__, "..", "..", "GNNlib"))
-# Pkg.develop(path=joinpath(@__DIR__, ".."))
-# Pkg.instantiate()
 using SparseArrays
 using GraphNeuralNetworks
 using BenchmarkTools

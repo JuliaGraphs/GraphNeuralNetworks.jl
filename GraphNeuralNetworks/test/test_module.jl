@@ -2,11 +2,6 @@
 
 using Pkg
 
-## Uncomment below to change the default test settings
-# ENV["GNN_TEST_CUDA"] = "true"
-# ENV["GNN_TEST_AMDGPU"] = "true"
-# ENV["GNN_TEST_Metal"] = "true"
-
 to_test(backend) = get(ENV, "GNN_TEST_$(backend)", "false") == "true"
 has_dependecies(pkgs) = all(pkg -> haskey(Pkg.project().dependencies, pkg), pkgs)
 deps_dict = Dict(:CUDA => ["CUDA", "cuDNN"], :AMDGPU => ["AMDGPU"], :Metal => ["Metal"])
