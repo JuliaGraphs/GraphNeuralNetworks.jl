@@ -112,7 +112,7 @@ end
                 @test get_device(mat_gpu)isa AbstractGPUDevice
                 @test Array(mat_gpu) == mat
             end
-        end
+        end 
 
         @testset "scaled_laplacian" begin 
             if TEST_GPU && !(dev isa MetalDevice) && GRAPH_T != :sparse && GRAPH_T != :coo

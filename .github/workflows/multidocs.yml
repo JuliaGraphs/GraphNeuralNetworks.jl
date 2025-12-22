@@ -20,10 +20,10 @@ jobs:
           version: '1'
       - uses: julia-actions/cache@v2
       # Build individual docs
-      - run: julia --color=yes GNNGraphs/docs/make.jl
-      - run: julia --color=yes GNNlib/docs/make.jl
-      - run: julia --color=yes GNNLux/docs/make.jl
-      - run: julia --color=yes GraphNeuralNetworks/docs/make.jl
+      - run: julia --color=yes --project=GNNGraphs/docs/ GNNGraphs/docs/make.jl
+      - run: julia --color=yes --project=GNNlib/docs/ GNNlib/docs/make.jl
+      - run: julia --color=yes --project=GNNLux/docs/ GNNLux/docs/make.jl
+      - run: julia --color=yes --project=GraphNeuralNetworks/docs/ GraphNeuralNetworks/docs/make.jl
       # Compile multi docs
       - name: MultiDocs
         run: |
