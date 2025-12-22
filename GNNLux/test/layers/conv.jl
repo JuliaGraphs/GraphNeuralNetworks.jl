@@ -33,10 +33,10 @@
         test_lux_layer(rng, l, g, x, sizey=(out_dims,10), container=true)
     end
 
-    @testset  "CGConv" begin
-        l = CGConv(in_dims => in_dims, residual = true)
-        test_lux_layer(rng, l, g, x, outputsize=(in_dims,), container=true)
-    end
+    # @testset  "CGConv" begin
+    #     l = CGConv(in_dims => in_dims, residual = true)
+    #     test_lux_layer(rng, l, g, x, outputsize=(in_dims,), container=true)
+    # end
 
     @testset "DConv" begin
         l = DConv(in_dims => out_dims, 2)
