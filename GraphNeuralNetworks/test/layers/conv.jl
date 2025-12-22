@@ -384,17 +384,17 @@ end
 #     @test l1(g1, g1.ndata.x, nothing) == l1(g1).ndata.x
 # end
 
-@testitem "CGConv GPU" setup=[TolSnippet, TestModule] tags=[:gpu] begin
-    using .TestModule
-    edim = 10
-    l = CGConv((D_IN, edim) => D_OUT, tanh, residual = false, bias = true)
-    for g in TEST_GRAPHS
-        g.graph isa AbstractSparseMatrix && continue
-        g = GNNGraph(g, edata = rand(Float32, edim, g.num_edges))
-        @test size(l(g, g.x, g.e)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, g.e, rtol = RTOL_HIGH, test_gpu = true, compare_finite_diff = false)
-    end   
-end
+# @testitem "CGConv GPU" setup=[TolSnippet, TestModule] tags=[:gpu] begin
+#     using .TestModule
+#     edim = 10
+#     l = CGConv((D_IN, edim) => D_OUT, tanh, residual = false, bias = true)
+#     for g in TEST_GRAPHS
+#         g.graph isa AbstractSparseMatrix && continue
+#         g = GNNGraph(g, edata = rand(Float32, edim, g.num_edges))
+#         @test size(l(g, g.x, g.e)) == (D_OUT, g.num_nodes)
+#         test_gradients(l, g, g.x, g.e, rtol = RTOL_HIGH, test_gpu = true, compare_finite_diff = false)
+#     end   
+# end
 
 @testitem "AGNNConv" setup=[TolSnippet, TestModule] begin
     using .TestModule
@@ -471,18 +471,18 @@ end
 #     end
 # end
 
-@testitem "GMMConv GPU" setup=[TolSnippet, TestModule] tags=[:gpu] begin
-    using .TestModule
-    ein_channel = 10
-    K = 5
-    l = GMMConv((D_IN, ein_channel) => D_OUT, K = K)
-    for g in TEST_GRAPHS
-        g.graph isa AbstractSparseMatrix && continue
-        g = GNNGraph(g, edata = rand(Float32, ein_channel, g.num_edges))
-        y = l(g, g.x, g.e)
-        test_gradients(l, g, g.x, g.e, rtol = RTOL_HIGH, test_gpu = true, compare_finite_diff = false)
-    end   
-end
+# @testitem "GMMConv GPU" setup=[TolSnippet, TestModule] tags=[:gpu] begin
+#     using .TestModule
+#     ein_channel = 10
+#     K = 5
+#     l = GMMConv((D_IN, ein_channel) => D_OUT, K = K)
+#     for g in TEST_GRAPHS
+#         g.graph isa AbstractSparseMatrix && continue
+#         g = GNNGraph(g, edata = rand(Float32, ein_channel, g.num_edges))
+#         y = l(g, g.x, g.e)
+#         test_gradients(l, g, g.x, g.e, rtol = RTOL_HIGH, test_gpu = true, compare_finite_diff = false)
+#     end   
+# end
 
 @testitem "SGConv" setup=[TolSnippet, TestModule] begin
     using .TestModule

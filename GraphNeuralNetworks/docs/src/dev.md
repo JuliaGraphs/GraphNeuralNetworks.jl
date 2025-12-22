@@ -74,22 +74,13 @@ Each PR should update the version number in the Porject.toml file of each involv
 the compat bounds, e.g. GraphNeuralNetworks might require a newer version of GNNGraphs.
 
 ## Generate Documentation Locally
-For generating the documentation locally
-```
-cd docs
-julia
-```
-```julia
-(@v1.10) pkg> activate .
-  Activating project at `~/.julia/dev/GraphNeuralNetworks/docs`
+Each package has its own documentation folder, e.g. `GNNGraphs/docs`. To generate the docs locally, run the following command from the root of the repository:
 
-(docs) pkg> dev ../ ../GNNGraphs/
-   Resolving package versions...
-  No Changes to `~/.julia/dev/GraphNeuralNetworks/docs/Project.toml`
-  No Changes to `~/.julia/dev/GraphNeuralNetworks/docs/Manifest.toml`
-
-julia> include("make.jl")
 ```
+# example for GNNGraphs
+julia --project=GNNGraphs/docs GNNGraphs/docs/make.jl
+```
+
 ## Benchmarking
 
 You can benchmark the effect on performance of your commits using the script `perf/perf.jl`.
