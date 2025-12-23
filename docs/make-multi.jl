@@ -33,7 +33,11 @@ MultiDocumenter.make(
     docs;
     # search_engine = false, # https://github.com/JuliaComputing/MultiDocumenter.jl/issues/82
     brand_image = MultiDocumenter.BrandImage("", "logo.svg"),
-    rootpath = "/GraphNeuralNetworks.jl/"
+    rootpath = "/GraphNeuralNetworks.jl/",
+    search_engine = MultiDocumenter.SearchConfig(
+        index_versions = ["dev"],
+        engine = MultiDocumenter.FlexSearch
+    )
 )
 
 # Copy after make since make cleans the directory
