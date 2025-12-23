@@ -20,7 +20,7 @@
     color: #999;
     background-color: unset;
     height: 28px;
-    font-family: Glober;
+    font-family: inherit;
     width: 20em;
     font-size: 14px;
     padding: 0 8px;
@@ -62,7 +62,7 @@
     border-radius: 6px;
     padding: .4rem;
     list-style-type: none;
-    z-index: 10;
+    z-index: 100;
     right: 0;
     max-height: max(50vh, 250px);
     overflow-y: auto;
@@ -117,4 +117,17 @@
         width: calc(100% - 7.5rem);
         margin: 10px 2em 4.5em 0;
     }
+}
+
+/* vitepress */
+#app header.VPNav {
+    top: var(--vp-layout-top-height, var(--navbar-height, 0px));
+}
+
+#app aside.VPSidebar {
+    top: var(--navbar-height, initial);
+}
+
+#app .layout .VPLocalNav {
+    top: var(--navbar-height, initial);
 }
