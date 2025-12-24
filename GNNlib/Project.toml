@@ -1,7 +1,7 @@
 name = "GNNlib"
 uuid = "a6a84749-d869-43f8-aacc-be26a1996e48"
 authors = ["Carlo Lucibello and contributors"]
-version = "1.0.1"
+version = "1.1.0"
 
 [workspace]
 projects = ["test", "docs", "../GNNGraphs"]
