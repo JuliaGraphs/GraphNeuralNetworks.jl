@@ -3,6 +3,7 @@ using DemoCards: DemoCards
 using GraphNeuralNetworks
 using Flux, GNNGraphs, GNNlib, Graphs
 using DocumenterInterLinks
+using DocumenterMermaid
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
 

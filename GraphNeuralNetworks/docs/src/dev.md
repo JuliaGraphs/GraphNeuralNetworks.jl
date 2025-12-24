@@ -70,26 +70,21 @@ end
 ```
 
 ## Versions and Tagging
-Each PR should update the version number in the Porject.toml file of each involved package if needed by semnatic versioning. For instance, when adding new features GNNGraphs could move from "1.17.5" to "1.18.0-DEV". The "DEV" will be removed when the package is tagged and released. Pay also attention to updating
-the compat bounds, e.g. GraphNeuralNetworks might require a newer version of GNNGraphs.
+Each PR should update the version number in the Porject.toml file of each involved package as needed by semnatic versioning. For instance, when adding new features GNNGraphs could move from "1.17.5" to "1.18.0-DEV". The "DEV" will be removed when the package is tagged and released. Pay also attention to updating the compat bounds, e.g. GraphNeuralNetworks might require a newer version of GNNGraphs.
+
+In order to tag a new release, you can use `JuliaRegistrator`'s comments as follows:
+```
+@JuliaRegistrator register subdir=GNNGraphs
+```
 
 ## Generate Documentation Locally
-For generating the documentation locally
-```
-cd docs
-julia
-```
-```julia
-(@v1.10) pkg> activate .
-  Activating project at `~/.julia/dev/GraphNeuralNetworks/docs`
 
-(docs) pkg> dev ../ ../GNNGraphs/
-   Resolving package versions...
-  No Changes to `~/.julia/dev/GraphNeuralNetworks/docs/Project.toml`
-  No Changes to `~/.julia/dev/GraphNeuralNetworks/docs/Manifest.toml`
+To generate the documentation of an individual package locally, you can run the `make.jl` script located in the `docs` folder of each package. For example, to generate the documentation of `GNNGraphs.jl`, run:
 
-julia> include("make.jl")
 ```
+julia --project=GNNGraphs/docs GNNGraphs/docs/make.jl
+```
+
 ## Benchmarking
 
 You can benchmark the effect on performance of your commits using the script `perf/perf.jl`.
@@ -125,7 +120,7 @@ julia> @load "perf_pr_20210803_mymachine.jld2"
 julia> compare(dfpr, dfmaster)
 ```
 
-## Caching tutorials
+<!-- ## Caching tutorials
 
 Tutorials in GraphNeuralNetworks.jl are written in Pluto and rendered using [DemoCards.jl](https://github.com/JuliaDocs/DemoCards.jl) and [PlutoStaticHTML.jl](https://github.com/rikhuijzer/PlutoStaticHTML.jl). Rendering a Pluto notebook is time and resource-consuming, especially in a CI environment. So we use the [caching functionality](https://huijzer.xyz/PlutoStaticHTML.jl/dev/#Caching) provided by PlutoStaticHTML.jl to reduce CI time.
 
@@ -146,4 +141,4 @@ git add docs/pluto_output # add generated cache
 
 Check the [documenter CI logs](https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/actions/workflows/docs.yml) to ensure that it used the local cache:
 
-![](https://user-images.githubusercontent.com/55111154/210061301-c84b7274-9e66-46fd-b272-d45b1c681d00.png)
+![](https://user-images.githubusercontent.com/55111154/210061301-c84b7274-9e66-46fd-b272-d45b1c681d00.png) -->
