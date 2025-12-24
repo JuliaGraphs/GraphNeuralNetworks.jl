@@ -28,6 +28,17 @@ function reduce_nodes(aggr, indicator::AbstractVector, x)
 end
 
 """
+    reduce_nodes(aggr, node_type, g, x)
+
+Return the graph-wise aggregation of the node features `x` on type `node_type`
+given a heterogeneous graph `g`. The aggregation operator `aggr` can be `+`,
+`mean`, `max`, or `min`.
+"""
+function reduce_nodes(aggr, node_type, g::GNNHeteroGraph, x)
+    return NNlib.scatter(aggr, x[node_type], graph_indicator(g, node_type))
+end
+
+"""
     reduce_edges(aggr, g, e)
 
 For a batched graph `g`, return the graph-wise aggregation of the edge
