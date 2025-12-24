@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="250px"
+   height="250px"
+   viewBox="0 0 250 250"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="logo_transparent.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+   style="background-color: none;"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs5" />
+  <sodipodi:namedview
+     id="namedview5"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.944"
+     inkscape:cx="125"
+     inkscape:cy="124.47034"
+     inkscape:window-width="1512"
+     inkscape:window-height="916"
+     inkscape:window-x="0"
+     inkscape:window-y="38"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg5" />
+  <title
+     id="title1">V9</title>
+  <g
+     id="V9"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd">
+    <g
+       id="logo"
+       transform="translate(26.000000, 39.000000)">
+      <g
+         id="green_part"
+         style="opacity:1">
+        <g
+           id="blue_part"
+           transform="translate(0.000000, 62.000000)">
+          <line
+             x1="107.5"
+             y1="28.5"
+             x2="30.5"
+             y2="20.5"
+             id="Edge"
+             stroke="#4063D8"
+             stroke-width="2"
+             stroke-linecap="square" />
+          <circle
+             id="Node"
+             fill="#4063D8"
+             cx="20"
+             cy="20"
+             r="20" />
+        </g>
+        <line
+           x1="107.5"
+           y1="90.5"
+           x2="131.5"
+           y2="18.5"
+           id="line1"
+           stroke="#389726"
+           stroke-width="2"
+           stroke-linecap="square" />
+        <circle
+           id="circle1"
+           fill="#389726"
+           cx="132.5"
+           cy="17.5"
+           r="17.5" />
+      </g>
+      <g
+         id="purple_part"
+         transform="translate(105.961380, 90.324532)">
+        <circle
+           id="circle"
+           fill="#9558B2"
+           cx="55.5386203"
+           cy="65.175468"
+           r="17.5" />
+        <circle
+           id="circle2"
+           fill="#9558B2"
+           cx="83.0386203"
+           cy="25.675468"
+           r="10" />
+        <line
+           x1="0.0386203322"
+           y1="0.675468002"
+           x2="53.0386203"
+           y2="62.675468"
+           id="line2"
+           stroke="#9558B2"
+           stroke-width="2"
+           stroke-linecap="square" />
+        <line
+           x1="58.0386203"
+           y1="62.675468"
+           x2="79.0386203"
+           y2="31.675468"
+           id="line3"
+           stroke="#9558B2"
+           stroke-width="2"
+           stroke-linecap="square"
+           stroke-dasharray="2,5" />
+      </g>
+      <g
+         id="red_part"
+         transform="translate(62.000000, 65.000000)">
+        <circle
+           id="center_Red_Node"
+           fill="#CB3C33"
+           cx="45"
+           cy="25"
+           r="25" />
+        <line
+           x1="45.5"
+           y1="25.5"
+           x2="14.5"
+           y2="78.5"
+           id="line4"
+           stroke="#CB3B33"
+           stroke-width="2"
+           fill="#CB3C33"
+           stroke-linecap="square"
+           stroke-dasharray="3,6" />
+        <circle
+           id="small_Red_Node"
+           fill="#CB3C32"
+           cx="10"
+           cy="84"
+           r="10" />
+      </g>
+    </g>
+    <polygon
+       id="Rectangle"
+       stroke="#4063D8"
+       fill="#4063D8"
+       transform="translate(85.995740, 124.606386) rotate(6.000000) translate(-85.995740, -124.606386) "
+       points="81.9957396 120.606386 89.9957396 124.606386 81.9957396 128.606386 85.9957396 124.606386" />
+    <polygon
+       id="polygon4"
+       stroke="#9558B2"
+       fill="#9558B2"
+       transform="translate(163.781126, 167.154719) rotate(-130.000000) translate(-163.781126, -167.154719) "
+       points="159.781126 163.154719 167.781126 167.154719 159.781126 171.154719 163.781126 167.154719" />
+    <polygon
+       id="polygon5"
+       stroke="#389726"
+       fill="#389726"
+       transform="translate(147.406047, 87.870936) rotate(-252.000000) translate(-147.406047, -87.870936) "
+       points="143.406047 83.8709357 151.406047 87.8709357 143.406047 91.8709357 147.406047 87.8709357" />
+  </g>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>V9</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>
