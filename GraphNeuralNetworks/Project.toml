@@ -1,7 +1,7 @@
 name = "GraphNeuralNetworks"
 uuid = "cffab07f-9bc2-4db1-8861-388f63bf7694"
 authors = ["Carlo Lucibello and contributors"]
-version = "1.0.0"
+version = "1.1.0"
 
 [workspace]
 projects = ["test", "docs"]
