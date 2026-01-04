@@ -91,7 +91,7 @@ function softmax_edge_neighbors(g::AbstractGNNGraph, e)
     end
     s, t = edge_index(g)
     if isempty(t)
-        return zero(eltype(e))
+        return zeros_like(e, eltype(e), (size(e)[1:end-1]..., 0))
     end
     max_ = gather(scatter(max, e, t), t)
     num = exp.(e .- max_)
