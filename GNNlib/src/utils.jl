@@ -90,6 +90,9 @@ function softmax_edge_neighbors(g::AbstractGNNGraph, e)
         @assert size(e)[end] == g.num_edges
     end
     s, t = edge_index(g)
+    if isempty(t)
+        return zero(eltype(e))
+    end
     max_ = gather(scatter(max, e, t), t)
     num = exp.(e .- max_)
     den = gather(scatter(+, num, t), t)
