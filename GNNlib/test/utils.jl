@@ -19,6 +19,17 @@
         @test r2 == r
     end
 
+    @testset "reduce_nodes" begin
+        g = rand_bipartite_heterograph((5, 10), 20)
+        x = (
+            A = [Float32(i) for j = 1:1, i = 1:g.num_nodes[:A]],
+            B = [Float32(0) for j = 1:2, _ = 1:g.num_nodes[:B]],
+        )
+        expected = sum(i for i = 1:g.num_nodes[:A])
+        result = reduce_nodes(+, :A, g, x)
+        @test result == [expected;;]
+    end
+
     @testset "reduce_edges" begin
         r = reduce_edges(mean, g, e)
         @test size(r) == (De, g.num_graphs)
