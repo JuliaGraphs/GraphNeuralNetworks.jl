@@ -1,0 +1,125 @@
+<!DOCTYPE html><HTML lang="en"><head><script charset="utf-8" src="../../../../../assets/default/multidoc_injector.js" type="text/javascript"></script><script charset="utf-8" type="text/javascript">window.MULTIDOCUMENTER_ROOT_PATH = '/GraphNeuralNetworks.jl/'</script><script charset="utf-8" src="../../../../../assets/default/flexsearch.bundle.js" type="text/javascript"></script><script charset="utf-8" src="../../../../../assets/default/flexsearch_integration.js" type="text/javascript"></script><meta charset="UTF-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Temporal Graphs · GNNGraphs.jl</title><meta content="Temporal Graphs · GNNGraphs.jl" name="title"/><meta content="Temporal Graphs · GNNGraphs.jl" property="og:title"/><meta content="Temporal Graphs · GNNGraphs.jl" property="twitter:title"/><meta content="Documentation for GNNGraphs.jl." name="description"/><meta content="Documentation for GNNGraphs.jl." property="og:description"/><meta content="Documentation for GNNGraphs.jl." property="twitter:description"/><script data-outdated-warner="" src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script data-main="../../assets/documenter.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" data-theme-name="catppuccin-mocha" href="../../assets/themes/catppuccin-mocha.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="catppuccin-macchiato" href="../../assets/themes/catppuccin-macchiato.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="catppuccin-frappe" href="../../assets/themes/catppuccin-frappe.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="catppuccin-latte" href="../../assets/themes/catppuccin-latte.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="documenter-dark" data-theme-primary-dark="" href="../../assets/themes/documenter-dark.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" data-theme-name="documenter-light" data-theme-primary="" href="../../assets/themes/documenter-light.css" rel="stylesheet" type="text/css"/><script src="../../assets/themeswap.js"></script><link href="../../../../../assets/default/multidoc.css" rel="stylesheet" type="text/css"/><link href="../../../../../assets/default/flexsearch.css" rel="stylesheet" type="text/css"/></head><body><nav id="multi-page-nav"><a class="brand" href="../../../../.."><img alt="home" src="../../../../../logo.svg"/></a><div class="hidden-on-mobile" id="nav-items"><a class="nav-link nav-item" href="../../../../GraphNeuralNetworks.jl/">GraphNeuralNetworks.jl</a><a class="nav-link nav-item" href="../../../../GNNLux.jl/">GNNLux.jl</a><a class="nav-link active nav-item" href="../../../">GNNGraphs.jl</a><a class="nav-link nav-item" href="../../../../GNNlib.jl/">GNNlib.jl</a><div class="search nav-item"><input id="search-input" placeholder="Search everywhere..."/><ul class="suggestions hidden" id="search-result-container"></ul><div class="search-keybinding">/</div></div></div><button id="multidoc-toggler"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg></button></nav><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">GNNGraphs.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Guides</span><ul><li><a class="tocitem" href="../gnngraph/">Graphs</a></li><li><a class="tocitem" href="../heterograph/">Heterogeneous Graphs</a></li><li class="is-active"><a class="tocitem" href="">Temporal Graphs</a><ul class="internal"><li><a class="tocitem" href="#Creating-a-TemporalSnapshotsGNNGraph"><span>Creating a TemporalSnapshotsGNNGraph</span></a></li><li><a class="tocitem" href="#Indexing"><span>Indexing</span></a></li><li><a class="tocitem" href="#Iteration-and-Broadcasting"><span>Iteration and Broadcasting</span></a></li><li><a class="tocitem" href="#Basic-Queries"><span>Basic Queries</span></a></li><li><a class="tocitem" href="#Data-Features"><span>Data Features</span></a></li></ul></li><li><a class="tocitem" href="../datasets/">Datasets</a></li></ul></li><li><span class="tocitem">API Reference</span><ul><li><a class="tocitem" href="../../api/gnngraph/">GNNGraph</a></li><li><a class="tocitem" href="../../api/heterograph/">GNNHeteroGraph</a></li><li><a class="tocitem" href="../../api/temporalgraph/">TemporalSnapshotsGNNGraph</a></li><li><a class="tocitem" href="../../api/datasets/">Datasets</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" href="#" id="documenter-sidebar-button"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Guides</a></li><li class="is-active"><a href="">Temporal Graphs</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="">Temporal Graphs</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/blob/master/GNNGraphs/docs/src/guides/temporalgraph.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" href="#" id="documenter-settings-button" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" href="javascript:;" id="documenter-article-toggle-button" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Temporal-Graphs"><a class="docs-heading-anchor" href="#Temporal-Graphs">Temporal Graphs</a><a id="Temporal-Graphs-1"></a><a class="docs-heading-anchor-permalink" href="#Temporal-Graphs" title="Permalink"></a></h1><p>Temporal graphs are graphs with time-varying topologies and features. In GNNGraphs.jl, they are represented by the <a href="../../api/temporalgraph/#TemporalSnapshotsGNNGraph"><code>TemporalSnapshotsGNNGraph</code></a> type.</p><h2 id="Creating-a-TemporalSnapshotsGNNGraph"><a class="docs-heading-anchor" href="#Creating-a-TemporalSnapshotsGNNGraph">Creating a TemporalSnapshotsGNNGraph</a><a id="Creating-a-TemporalSnapshotsGNNGraph-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-a-TemporalSnapshotsGNNGraph" title="Permalink"></a></h2><p>A temporal graph can be created by passing a list of snapshots to the constructor. Each snapshot is a <a href="../../api/gnngraph/#GNNGraph"><code>GNNGraph</code></a>. </p><pre><code class="language-julia-repl hljs">julia&gt; using GNNGraphs
+
+julia&gt; snapshots = [rand_graph(10, 20) for i in 1:5];
+
+julia&gt; tg = TemporalSnapshotsGNNGraph(snapshots)
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10, 10, 10, 10]
+  num_edges: [20, 20, 20, 20, 20]
+  num_snapshots: 5</code></pre><p>A new temporal graph can be created by adding or removing snapshots to an existing temporal graph. </p><pre><code class="language-julia-repl hljs">julia&gt; new_tg = add_snapshot(tg, 3, rand_graph(10, 16)) # add a new snapshot at time 3
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10, 10, 10, 10, 10]
+  num_edges: [20, 20, 16, 20, 20, 20]
+  num_snapshots: 6</code></pre><pre><code class="language-julia-repl hljs">julia&gt; snapshots = [rand_graph(10,20), rand_graph(10,14), rand_graph(10,22)];
+
+julia&gt; tg = TemporalSnapshotsGNNGraph(snapshots)
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10, 10]
+  num_edges: [20, 14, 22]
+  num_snapshots: 3
+
+julia&gt; new_tg = remove_snapshot(tg, 2) # remove snapshot at time 2
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10]
+  num_edges: [20, 22]
+  num_snapshots: 2</code></pre><p>See <a href="../../api/temporalgraph/#GNNGraphs.rand_temporal_radius_graph"><code>rand_temporal_radius_graph</code></a> and <a href="../../api/temporalgraph/#GNNGraphs.rand_temporal_hyperbolic_graph"><code>rand_temporal_hyperbolic_graph</code></a> for generating random temporal graphs. </p><pre><code class="language-julia hljs">julia&gt; tg = rand_temporal_radius_graph(10, 3, 0.1, 0.5)
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10, 10]
+  num_edges: [32, 30, 34]
+  num_snapshots: 3</code></pre><h2 id="Indexing"><a class="docs-heading-anchor" href="#Indexing">Indexing</a><a id="Indexing-1"></a><a class="docs-heading-anchor-permalink" href="#Indexing" title="Permalink"></a></h2><p>Snapshots in a temporal graph can be accessed using indexing:</p><pre><code class="language-julia-repl hljs">julia&gt; snapshots = [rand_graph(10, 20), rand_graph(10, 14), rand_graph(10, 22)];
+
+julia&gt; tg = TemporalSnapshotsGNNGraph(snapshots)
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10, 10]
+  num_edges: [20, 14, 22]
+  num_snapshots: 3
+
+julia&gt; tg[1] # first snapshot
+GNNGraph:
+  num_nodes: 10
+  num_edges: 20
+
+julia&gt; tg[2:3] # snapshots 2 and 3
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10]
+  num_edges: [14, 22]
+  num_snapshots: 2</code></pre><p>A snapshot can be modified by assigning a new snapshot to the temporal graph:</p><pre><code class="language-julia-repl hljs">julia&gt; tg[1] = rand_graph(10, 16) # replace first snapshot
+GNNGraph:
+  num_nodes: 10
+  num_edges: 16</code></pre><h2 id="Iteration-and-Broadcasting"><a class="docs-heading-anchor" href="#Iteration-and-Broadcasting">Iteration and Broadcasting</a><a id="Iteration-and-Broadcasting-1"></a><a class="docs-heading-anchor-permalink" href="#Iteration-and-Broadcasting" title="Permalink"></a></h2><p>Iteration and broadcasting over a temporal graph is similar to that of a vector of snapshots:</p><pre><code class="language-julia-repl hljs">julia&gt; snapshots = [rand_graph(10, 20), rand_graph(10, 14), rand_graph(10, 22)];
+
+julia&gt; tg = TemporalSnapshotsGNNGraph(snapshots);
+
+julia&gt; [g for g in tg] # iterate over snapshots
+3-element Vector{GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}}:
+ GNNGraph(10, 20) with no data
+ GNNGraph(10, 14) with no data
+ GNNGraph(10, 22) with no data
+
+julia&gt; f(g) = g isa GNNGraph;
+
+julia&gt; f.(tg) # broadcast over snapshots
+3-element BitVector:
+ 1
+ 1
+ 1</code></pre><h2 id="Basic-Queries"><a class="docs-heading-anchor" href="#Basic-Queries">Basic Queries</a><a id="Basic-Queries-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Queries" title="Permalink"></a></h2><p>Basic queries are similar to those for <a href="../../api/gnngraph/#GNNGraph"><code>GNNGraph</code></a>s:</p><pre><code class="language-julia-repl hljs">julia&gt; snapshots = [rand_graph(10,20), rand_graph(12,14), rand_graph(14,22)];
+
+julia&gt; tg = TemporalSnapshotsGNNGraph(snapshots)
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 12, 14]
+  num_edges: [20, 14, 22]
+  num_snapshots: 3
+
+julia&gt; tg.num_nodes         # number of nodes in each snapshot
+3-element Vector{Int64}:
+ 10
+ 12
+ 14
+
+julia&gt; tg.num_edges         # number of edges in each snapshot
+3-element Vector{Int64}:
+ 20
+ 14
+ 22
+
+julia&gt; tg.num_snapshots     # number of snapshots
+3
+
+julia&gt; tg.snapshots         # list of snapshots
+3-element Vector{GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}}:
+ GNNGraph(10, 20) with no data
+ GNNGraph(12, 14) with no data
+ GNNGraph(14, 22) with no data
+
+julia&gt; tg.snapshots[1]      # first snapshot, same as tg[1]
+GNNGraph:
+  num_nodes: 10
+  num_edges: 20</code></pre><h2 id="Data-Features"><a class="docs-heading-anchor" href="#Data-Features">Data Features</a><a id="Data-Features-1"></a><a class="docs-heading-anchor-permalink" href="#Data-Features" title="Permalink"></a></h2><p>A temporal graph can store global feature for the entire time series in the <code>tgdata</code> field. Also, each snapshot can store node, edge, and graph features in the <code>ndata</code>, <code>edata</code>, and <code>gdata</code> fields, respectively. </p><pre><code class="language-julia-repl hljs">julia&gt; snapshots = [rand_graph(10, 20; ndata = rand(Float32, 3, 10)), 
+                    rand_graph(10, 14; ndata = rand(Float32, 4, 10)), 
+                    rand_graph(10, 22; ndata = rand(Float32, 5, 10))]; # node features at construction time
+
+julia&gt; tg = TemporalSnapshotsGNNGraph(snapshots);
+
+julia&gt; tg.tgdata.y = rand(Float32, 3, 1); # add global features after construction
+
+julia&gt; tg
+TemporalSnapshotsGNNGraph:
+  num_nodes: [10, 10, 10]
+  num_edges: [20, 14, 22]
+  num_snapshots: 3
+  tgdata:
+    y = 3×1 Matrix{Float32}
+
+julia&gt; tg.ndata # vector of DataStore containing node features for each snapshot
+3-element Vector{DataStore}:
+ DataStore(10) with 1 element:
+  x = 3×10 Matrix{Float32}
+ DataStore(10) with 1 element:
+  x = 4×10 Matrix{Float32}
+ DataStore(10) with 1 element:
+  x = 5×10 Matrix{Float32}
+
+julia&gt; [ds.x for ds in tg.ndata]; # vector containing the x feature of each snapshot
+
+julia&gt; [g.x for g in tg.snapshots]; # same vector as above, now accessing 
+                                   # the x feature directly from the snapshots</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../heterograph/">« Heterogeneous Graphs</a><a class="docs-footer-nextpage" href="../datasets/">Datasets »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label></p><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div><p></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 24 December 2025 17:29">Wednesday 24 December 2025</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></HTML>
