@@ -139,11 +139,12 @@ function gat_conv(l, g::AbstractGNNGraph, x, e::Union{Nothing, AbstractMatrix} =
     α = dropout(α, l.dropout)
     β = α .* m.Wxj
     x = aggregate_neighbors(g, +, β)
+    width = size(x, 1)
 
     if !l.concat
         x = mean(x, dims = 2)
     end
-    x = reshape(x, :, size(x, 3))  # return a matrix
+    x = reshape(x, width, size(x, 3))  # return a matrix
     x = l.σ.(x .+ l.bias)
 
     return x
