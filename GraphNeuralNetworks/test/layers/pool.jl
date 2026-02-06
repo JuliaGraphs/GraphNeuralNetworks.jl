@@ -80,7 +80,7 @@ end
         g = batch([rand_graph(10, 40, graph_type = GRAPH_T) for _ in 1:5])
         g = GNNGraph(g, ndata = rand(Float32, n_in, g.num_nodes))
         l = Set2Set(n_in, n_iters, n_layers)
-        y = l(g, node_features(g))
+        y = l(g, g.ndata.x)
         @test size(y) == (2 * n_in, g.num_graphs)
         
         ## TODO the numerical gradient seems to be 3 times smaller than zygote one

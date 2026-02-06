@@ -9,7 +9,7 @@ abstract type GNNLayer end
 
 # Forward pass with graph-only input.
 # To be specialized by layers also needing edge features as input (e.g. NNConv). 
-(l::GNNLayer)(g::GNNGraph) = GNNGraph(g, ndata = l(g, node_features(g)))
+(l::GNNLayer)(g::GNNGraph) = GNNGraph(g, ndata = l(g, g.ndata.x))
 
 """
     WithGraph(model, g::GNNGraph; traingraph=false) 
@@ -144,12 +144,12 @@ _applylayer(l, g::GNNGraph, x) = l(x)
 _applylayer(l::GNNLayer, g::GNNGraph, x) = l(g, x)
 
 # input from graph
-_applylayer(l, g::GNNGraph) = GNNGraph(g, ndata = l(node_features(g)))
+_applylayer(l, g::GNNGraph) = GNNGraph(g, ndata = l(g.ndata.x))
 _applylayer(l::GNNLayer, g::GNNGraph) = l(g)
 
 # # Handle Flux.Parallel
 function _applylayer(l::Parallel, g::GNNGraph)
-    GNNGraph(g, ndata = _applylayer(l, g, node_features(g)))
+    GNNGraph(g, ndata = _applylayer(l, g, g.ndata.x))
 end
 
 function _applylayer(l::Parallel, g::GNNGraph, x::AbstractArray)

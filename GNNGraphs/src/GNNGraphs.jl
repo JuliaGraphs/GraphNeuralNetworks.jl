@@ -24,10 +24,7 @@ include("abstracttypes.jl")
 export AbstractGNNGraph
 
 include("gnngraph.jl")
-export GNNGraph,
-       node_features,
-       edge_features,
-       graph_features
+export GNNGraph
 
 include("gnnheterograph/gnnheterograph.jl")
 export GNNHeteroGraph,

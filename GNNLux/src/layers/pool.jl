@@ -39,7 +39,7 @@ end
 
 (l::GlobalPool)(g::GNNGraph, x::AbstractArray, ps, st) = GNNlib.global_pool(l, g, x), st
 
-(l::GlobalPool)(g::GNNGraph) = GNNGraph(g, gdata = l(g, node_features(g), ps, st))
+(l::GlobalPool)(g::GNNGraph) = GNNGraph(g, gdata = l(g, g.ndata.x, ps, st))
 
 @doc raw"""
     GlobalAttentionPool(fgate, ffeat=identity)
@@ -106,7 +106,7 @@ function (l::GlobalAttentionPool)(g, x, ps, st)
     return GNNlib.global_attention_pool(m, g, x), st
 end
 
-(l::GlobalAttentionPool)(g::GNNGraph) = GNNGraph(g, gdata = l(g, node_features(g), ps, st))
+(l::GlobalAttentionPool)(g::GNNGraph) = GNNGraph(g, gdata = l(g, g.ndata.x, ps, st))
 
 """
     TopKPool(adj, k, in_channel)

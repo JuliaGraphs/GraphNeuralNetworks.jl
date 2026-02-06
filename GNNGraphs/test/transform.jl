@@ -43,7 +43,7 @@ end
         s, t = edge_index(g123)
         @test s == [edge_index(g1)[1]; 10 .+ edge_index(g2)[1]; 14 .+ edge_index(g3)[1]]
         @test t == [edge_index(g1)[2]; 10 .+ edge_index(g2)[2]; 14 .+ edge_index(g3)[2]]
-        @test node_features(g123)[:, 11:14] ≈ node_features(g2)
+        @test g123.ndata.x[:, 11:14] ≈ g2.ndata.x
 
         # scalar graph features
         g1 = GNNGraph(g1, gdata = rand())
@@ -106,7 +106,7 @@ end
         s, t = edge_index(g2b)
         @test s == edge_index(g2)[1]
         @test t == edge_index(g2)[2]
-        @test node_features(g2b) ≈ node_features(g2)
+        @test g2b.ndata.x ≈ g2.ndata.x
 
         g2c = getgraph(g, 2)
         @test g2c isa GNNGraph{typeof(g.graph)}

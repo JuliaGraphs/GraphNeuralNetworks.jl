@@ -535,38 +535,6 @@ function graph_indicator(g::GNNGraph; edges = false)
     end
 end
 
-
-
-function node_features(g::GNNGraph)
-    if isempty(g.ndata)
-        return nothing
-    elseif length(g.ndata) > 1
-        @error "Multiple feature arrays, access directly through `g.ndata`"
-    else
-        return first(values(g.ndata))
-    end
-end
-
-function edge_features(g::GNNGraph)
-    if isempty(g.edata)
-        return nothing
-    elseif length(g.edata) > 1
-        @error "Multiple feature arrays, access directly through `g.edata`"
-    else
-        return first(values(g.edata))
-    end
-end
-
-function graph_features(g::GNNGraph)
-    if isempty(g.gdata)
-        return nothing
-    elseif length(g.gdata) > 1
-        @error "Multiple feature arrays, access directly through `g.gdata`"
-    else
-        return first(values(g.gdata))
-    end
-end
-
 """
     is_bidirected(g::GNNGraph)
 

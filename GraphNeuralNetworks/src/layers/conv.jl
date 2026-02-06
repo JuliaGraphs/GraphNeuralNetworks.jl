@@ -341,7 +341,7 @@ function GATConv(ch::Pair{NTuple{2, Int}, Int}, σ = identity;
     GATConv(dense_x, dense_e, b, a, σ, negative_slope, ch, heads, concat, add_self_loops, dropout)
 end
 
-(l::GATConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, node_features(g), edge_features(g)))
+(l::GATConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, g.ndata.x, g.edata.e))
 
 (l::GATConv)(g, x, e = nothing) = GNNlib.gat_conv(l, g, x, e)
 
@@ -461,7 +461,7 @@ function GATv2Conv(ch::Pair{NTuple{2, Int}, Int},
               add_self_loops, dropout)
 end
 
-(l::GATv2Conv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, node_features(g), edge_features(g)))
+(l::GATv2Conv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, g.ndata.x, g.edata.e))
 
 (l::GATv2Conv)(g, x, e=nothing) = GNNlib.gatv2_conv(l, g, x, e)
 
@@ -718,7 +718,7 @@ end
 
 (l::NNConv)(g, x, e) = GNNlib.nn_conv(l, g, x, e)
 
-(l::NNConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, node_features(g), edge_features(g)))
+(l::NNConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, g.ndata.x, g.edata.e))
 
 function Base.show(io::IO, l::NNConv)
     out, in = size(l.weight)
@@ -933,7 +933,7 @@ end
 (l::CGConv)(g, x, e = nothing) = GNNlib.cg_conv(l, g, x, e)
 
 
-(l::CGConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, node_features(g), edge_features(g)))
+(l::CGConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, g.ndata.x, g.edata.e))
 
 function Base.show(io::IO, l::CGConv)
     print(io, "CGConv($(l.ch)")
@@ -1054,7 +1054,7 @@ function MEGNetConv(ch::Pair{Int, Int}; aggr = mean)
 end
 
 function (l::MEGNetConv)(g::GNNGraph)
-    x, e = l(g, node_features(g), edge_features(g))
+    x, e = l(g, g.ndata.x, g.edata.e)
     return GNNGraph(g, ndata = x, edata = e)
 end
 
@@ -1137,7 +1137,7 @@ end
 
 (l::GMMConv)(g::GNNGraph, x, e) = GNNlib.gmm_conv(l, g, x, e)
 
-(l::GMMConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, node_features(g), edge_features(g)))
+(l::GMMConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, g.ndata.x, g.edata.e))
 
 function Base.show(io::IO, l::GMMConv)
     (nin, ein), out = l.ch
@@ -1538,7 +1538,7 @@ end
 (l::TransformerConv)(g, x, e = nothing) = GNNlib.transformer_conv(l, g, x, e)
 
 function (l::TransformerConv)(g::GNNGraph)
-    GNNGraph(g, ndata = l(g, node_features(g), edge_features(g)))
+    GNNGraph(g, ndata = l(g, g.ndata.x, g.edata.e))
 end
 
 function Base.show(io::IO, l::TransformerConv)
