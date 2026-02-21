@@ -37,12 +37,12 @@ Both **GraphNeuralNetworks.jl** and **GNNLux.jl** support the following features
 
 All packages are registered in the General registry, making them easy to install via the Julia package manager.
 
-For **Flux** users, run:
+For **Flux** users, run
 ```julia
 pkg> add GraphNeuralNetworks
 ```
 
-For **Lux** users, run:
+For **Lux** users, run
 ```julia
 pkg> add GNNLux
 ```
