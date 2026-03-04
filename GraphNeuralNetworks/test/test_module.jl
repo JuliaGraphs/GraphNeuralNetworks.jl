@@ -29,6 +29,11 @@ using ChainRulesTestUtils, FiniteDifferences
 using Zygote: Zygote
 using SparseArrays
 
+# Mooncake.jl requires Julia >= 1.12
+const TEST_MOONCAKE = VERSION >= v"1.12"
+if TEST_MOONCAKE
+    import Mooncake
+end
 
 # from Base
 export mean, randn, SparseArrays, AbstractSparseMatrix
@@ -45,7 +50,7 @@ export random_regular_graph, erdos_renyi
 # from this module
 export D_IN, D_OUT, GRAPH_TYPES, TEST_GRAPHS,
        test_gradients, finitediff_withgradient, 
-       check_equal_leaves, gpu_backend
+       check_equal_leaves, gpu_backend, TEST_MOONCAKE
 
 
 const D_IN = 3
@@ -82,12 +87,13 @@ function test_gradients(
             test_grad_f = true,
             test_grad_x = true,
             compare_finite_diff = true,
+            test_mooncake = false,
             loss = (f, g, xs...) -> mean(f(g, xs...)),
             )
 
-    if !test_gpu && !compare_finite_diff
-        error("You should either compare finite diff vs CPU AD \
-               or CPU AD vs GPU AD.")
+    if !test_gpu && !compare_finite_diff && !test_mooncake
+        error("You should either compare finite diff vs CPU AD, \
+               CPU AD vs GPU AD, or test Mooncake AD.")
     end
 
     ## Let's make sure first that the forward pass works.
@@ -116,6 +122,17 @@ function test_gradients(
             check_equal_leaves(g, g_fd; rtol, atol)
         end
 
+        if test_mooncake
+            # Mooncake gradient with respect to input, compared against Zygote.
+            loss_mc_x = (xs...) -> loss(f, graph, xs...)
+            _cache_x = Base.invokelatest(Mooncake.prepare_gradient_cache, loss_mc_x, xs...)
+            y_mc, g_mc = Base.invokelatest(Mooncake.value_and_gradient!!, _cache_x, loss_mc_x, xs...)
+            @assert isapprox(y, y_mc; rtol, atol)
+            for i in eachindex(xs)
+                @assert isapprox(g[i], g_mc[i+1]; rtol, atol)
+            end
+        end
+
         if test_gpu
             # Zygote gradient with respect to input on GPU.
             y_gpu, g_gpu = Zygote.withgradient((xs...) -> loss(f_gpu, graph_gpu, xs...), xs_gpu...)
@@ -137,6 +154,17 @@ function test_gradients(
             g_fd = (re(g_fd[1]),)
             @assert isapprox(y, y_fd; rtol, atol)
             check_equal_leaves(g, g_fd; rtol, atol)
+        end
+
+        if test_mooncake
+            # Mooncake gradient with respect to f, compared against Zygote.
+            ps_mc, re_mc = Flux.destructure(f)
+            loss_mc_f = ps -> loss(re_mc(ps), graph, xs...)
+            _cache_f = Base.invokelatest(Mooncake.prepare_gradient_cache, loss_mc_f, ps_mc)
+            y_mc, g_mc = Base.invokelatest(Mooncake.value_and_gradient!!, _cache_f, loss_mc_f, ps_mc)
+            @assert isapprox(y, y_mc; rtol, atol)
+            g_mc_f = (re_mc(g_mc[2]),)
+            check_equal_leaves(g, g_mc_f; rtol, atol)
         end
 
         if test_gpu
