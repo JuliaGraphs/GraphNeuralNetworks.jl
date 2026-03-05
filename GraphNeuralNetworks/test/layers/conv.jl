@@ -10,20 +10,20 @@ end
         l = GCNConv(D_IN => D_OUT)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
         end
 
         l = GCNConv(D_IN => D_OUT, tanh, bias = false)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
         end
 
         l = GCNConv(D_IN => D_OUT, add_self_loops = false)
         for g in TEST_GRAPHS
             has_isolated_nodes(g) && continue
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
         end
     end
 
@@ -49,7 +49,7 @@ end
         l = GCNConv(1 => 1, add_self_loops = false, use_edge_weight = true)
         @test gradient(w -> sum(l(g, x, w)), w)[1] isa AbstractVector{Float32}   # redundant test but more explicit
         @test size(l(g, x, w)) == (1, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 
     @testset "conv_weight" begin
@@ -86,6 +86,7 @@ end
     for g in TEST_GRAPHS
         g = add_self_loops(g)
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
+        # Note: test_mooncake not enabled for ChebConv (Mooncake backward pass error)
         test_gradients(l, g, g.x, rtol = RTOL_LOW)
     end
 
@@ -124,13 +125,13 @@ end
     l = GraphConv(D_IN => D_OUT)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 
     l = GraphConv(D_IN => D_OUT, tanh, bias = false, aggr = mean)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 
     @testset "bias=false" begin
@@ -157,7 +158,7 @@ end
         l = GATConv(D_IN => D_OUT; heads, concat, dropout=0)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (concat ? heads * D_OUT : D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_LOW)
+            test_gradients(l, g, g.x, rtol = RTOL_LOW, test_mooncake = TEST_MOONCAKE)
         end
     end
 
@@ -166,7 +167,7 @@ end
         l = GATConv((D_IN, ein) => D_OUT, add_self_loops = false, dropout=0)
         g = GNNGraph(TEST_GRAPHS[1], edata = rand(Float32, ein, TEST_GRAPHS[1].num_edges))
         @test size(l(g, g.x, g.e)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW)
+        test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW, test_mooncake = TEST_MOONCAKE)
     end
 
     @testset "num params" begin
@@ -197,6 +198,7 @@ end
         l = GATv2Conv(D_IN => D_OUT, tanh; heads, concat, dropout=0)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (concat ? heads * D_OUT : D_OUT, g.num_nodes)
+            # Mooncake backward pass error for this layer on CI
             test_gradients(l, g, g.x, rtol = RTOL_LOW, atol=ATOL_LOW)
         end
     end
@@ -206,6 +208,7 @@ end
         l = GATv2Conv((D_IN, ein) => D_OUT, add_self_loops = false, dropout=0)
         g = GNNGraph(TEST_GRAPHS[1], edata = rand(Float32, ein, TEST_GRAPHS[1].num_edges))
         @test size(l(g, g.x, g.e)) == (D_OUT, g.num_nodes)
+        # Mooncake backward pass error for this layer on CI
         test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW, atol=ATOL_LOW)
     end
 
@@ -239,7 +242,7 @@ end
 
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 end
 
@@ -260,7 +263,7 @@ end
     l = EdgeConv(Dense(2 * D_IN, D_OUT), aggr = +)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 end
 
@@ -281,7 +284,7 @@ end
     l = GINConv(nn, 0.01, aggr = mean)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 
     @test !in(:eps, Flux.trainable(l))
@@ -307,7 +310,7 @@ end
     for g in TEST_GRAPHS
         g = GNNGraph(g, edata = rand(Float32, edim, g.num_edges))
         @test size(l(g, g.x, g.e)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, g.e, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, g.e, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 end
 
@@ -332,7 +335,7 @@ end
     l = SAGEConv(D_IN => D_OUT, tanh, bias = false, aggr = +)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 end
 
@@ -351,7 +354,7 @@ end
     l = ResGatedGraphConv(D_IN => D_OUT, tanh, bias = true)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 end
 
@@ -411,7 +414,7 @@ end
     Flux.trainable(l) == (; β = [1f0])
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_IN, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     end
 end
 
@@ -437,7 +440,7 @@ end
             y = l(g, x, e)
             return mean(y[1]) + sum(y[2])
         end
-        test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW; loss)
+        test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW; loss, test_mooncake = TEST_MOONCAKE)
     end
 end
 
@@ -491,13 +494,13 @@ end
         l = SGConv(D_IN => D_OUT, k, add_self_loops = true)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
         end
 
         l = SGConv(D_IN => D_OUT, k, add_self_loops = true)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
         end
     end
 end
@@ -520,13 +523,13 @@ end
         l = TAGConv(D_IN => D_OUT, k, add_self_loops = true)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
         end
 
         l = TAGConv(D_IN => D_OUT, k, add_self_loops = true)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
         end
     end
 end
@@ -565,6 +568,7 @@ end
     ein = 2
     heads = 3
     # used like in Kool et al., 2019
+    # Mooncake backward pass error for this layer on CI
     l = TransformerConv(D_IN * heads => D_IN; heads, add_self_loops = true,
                         root_weight = false, ff_channels = 10, skip_connection = true,
                         batch_norm = false)
@@ -616,6 +620,7 @@ end
         l = DConv(D_IN => D_OUT, k)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
+            # Note: test_mooncake not enabled for DConv (Mooncake backward pass error)
             test_gradients(l, g, g.x, rtol = RTOL_HIGH)
         end
     end
