@@ -125,6 +125,7 @@ function test_gradients(
         if test_mooncake
             # Mooncake gradient with respect to input, compared against Zygote.
             loss_mc_x = (xs...) -> loss(f, graph, xs...)
+            # TODO error without `invokelatest` when using TestItemRunner
             _cache_x = Base.invokelatest(Mooncake.prepare_gradient_cache, loss_mc_x, xs...)
             y_mc, g_mc = Base.invokelatest(Mooncake.value_and_gradient!!, _cache_x, loss_mc_x, xs...)
             @assert isapprox(y, y_mc; rtol, atol)
