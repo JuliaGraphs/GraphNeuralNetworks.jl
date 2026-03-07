@@ -123,15 +123,13 @@ function test_gradients(
         end
 
         if test_mooncake
-            # Mooncake gradient with respect to input, compared against Zygote.
+            # Mooncake gradient with respect to input via Flux integration, compared against Zygote.
             loss_mc_x = (xs...) -> loss(f, graph, xs...)
-            # TODO error without `invokelatest` when using TestItemRunner
-            _cache_x = Base.invokelatest(Mooncake.prepare_gradient_cache, loss_mc_x, xs...)
-            y_mc, g_mc = Base.invokelatest(Mooncake.value_and_gradient!!, _cache_x, loss_mc_x, xs...)
+            result = Flux.withgradient(loss_mc_x, Flux.AutoMooncake(), xs...)
+            y_mc = result.val  # Extract value from NamedTuple
+            g_mc = result.grad  # Extract gradients tuple
             @assert isapprox(y, y_mc; rtol, atol)
-            for i in eachindex(xs)
-                @assert isapprox(g[i], g_mc[i+1]; rtol, atol)
-            end
+            check_equal_leaves(g, g_mc; rtol, atol)
         end
 
         if test_gpu
@@ -158,14 +156,12 @@ function test_gradients(
         end
 
         if test_mooncake
-            # Mooncake gradient with respect to f, compared against Zygote.
-            ps_mc, re_mc = Flux.destructure(f)
-            loss_mc_f = ps -> loss(re_mc(ps), graph, xs...)
-            _cache_f = Base.invokelatest(Mooncake.prepare_gradient_cache, loss_mc_f, ps_mc)
-            y_mc, g_mc = Base.invokelatest(Mooncake.value_and_gradient!!, _cache_f, loss_mc_f, ps_mc)
+            # Mooncake gradient with respect to f via Flux integration, compared against Zygote.
+            result = Flux.withgradient(f -> loss(f, graph, xs...), Flux.AutoMooncake(), f)
+            y_mc = result.val  # Extract value from NamedTuple
+            g_mc_result = result.grad  # Extract gradients tuple
             @assert isapprox(y, y_mc; rtol, atol)
-            g_mc_f = (re_mc(g_mc[2]),)
-            check_equal_leaves(g, g_mc_f; rtol, atol)
+            check_equal_leaves(g, g_mc_result; rtol, atol)
         end
 
         if test_gpu

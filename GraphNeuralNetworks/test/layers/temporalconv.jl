@@ -32,9 +32,9 @@ end
     @test y === h
     @test size(h) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_HIGH)
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     # with initial state
-    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_HIGH)
+    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     
     # Test with custom activation function
     custom_activation = tanh
@@ -45,9 +45,9 @@ end
     # Test that outputs differ when using different activation functions
     @test !isapprox(y, y_custom, rtol=RTOL_HIGH)
     # with no initial state
-    test_gradients(cell_custom, g, g.x, loss=cell_loss, rtol=RTOL_HIGH)
+    test_gradients(cell_custom, g, g.x, loss=cell_loss, rtol=RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     # with initial state
-    test_gradients(cell_custom, g, g.x, h_custom, loss=cell_loss, rtol=RTOL_HIGH)
+    test_gradients(cell_custom, g, g.x, h_custom, loss=cell_loss, rtol=RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
 end
 
 @testitem "TGCN" setup=[TemporalConvTestModule, TestModule] begin
@@ -61,9 +61,9 @@ end
     @test layer isa GNNRecurrence
     @test size(y) == (out_channel, timesteps, g.num_nodes)
     # with no initial state
-    test_gradients(layer, g, x, rtol = RTOL_HIGH)
+    test_gradients(layer, g, x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     # with initial state
-    test_gradients(layer, g, x, state0, rtol = RTOL_HIGH)
+    test_gradients(layer, g, x, state0, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
 
     # Test with custom activation function
     custom_activation = tanh
@@ -74,15 +74,15 @@ end
     # Test that outputs differ when using different activation functions
     @test !isapprox(y, y_custom, rtol = RTOL_HIGH)
     # with no initial state
-    test_gradients(layer_custom, g, x, rtol = RTOL_HIGH)
+    test_gradients(layer_custom, g, x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
     # with initial state
-    test_gradients(layer_custom, g, x, state0, rtol = RTOL_HIGH)
+    test_gradients(layer_custom, g, x, state0, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
 
     # interplay with GNNChain
     model = GNNChain(TGCN(in_channel => out_channel), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol = RTOL_HIGH, atol = ATOL_LOW)
+    test_gradients(model, g, x, rtol = RTOL_HIGH, atol = ATOL_LOW, test_mooncake = TEST_MOONCAKE)
 end
 
 @testitem "GConvLSTMCell" setup=[TemporalConvTestModule, TestModule] begin
@@ -93,9 +93,9 @@ end
     @test size(h) == (out_channel, g.num_nodes)
     @test size(c) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
     # with initial state
-    test_gradients(cell, g, g.x, (h, c), loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(cell, g, g.x, (h, c), loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
 end
 
 @testitem "GConvLSTM" setup=[TemporalConvTestModule, TestModule] begin
@@ -107,15 +107,15 @@ end
     y = layer(g, x)
     @test size(y) == (out_channel, timesteps, g.num_nodes)
     # with no initial state
-    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
     # with initial state
-    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
 
     # interplay with GNNChain
     model = GNNChain(GConvLSTM(in_channel => out_channel, 2), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW)
+    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, test_mooncake = false)
 end
 
 @testitem "GConvGRUCell" setup=[TemporalConvTestModule, TestModule] begin
@@ -125,9 +125,9 @@ end
     @test y === h
     @test size(h) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
     # with initial state
-    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
 end
 
 
@@ -140,15 +140,15 @@ end
     y = layer(g, x)
     @test size(y) == (out_channel, timesteps, g.num_nodes)
     # with no initial state
-    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
     # with initial state
-    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
 
     # interplay with GNNChain
     model = GNNChain(GConvGRU(in_channel => out_channel, 2), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW)
+    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, test_mooncake = false)
 end
 
 @testitem "DCGRUCell" setup=[TemporalConvTestModule, TestModule] begin
@@ -158,9 +158,9 @@ end
     @test y === h
     @test size(h) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
     # with initial state
-    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
 end
 
 @testitem "DCGRU" setup=[TemporalConvTestModule, TestModule] begin
@@ -172,15 +172,15 @@ end
     y = layer(g, x)
     @test size(y) == (out_channel, timesteps, g.num_nodes)
     # with no initial state
-    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
     # with initial state
-    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
 
     # interplay with GNNChain
     model = GNNChain(DCGRU(in_channel => out_channel, 2), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW)
+    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, test_mooncake = false)
 end
 
 @testitem "EvolveGCNOCell" setup=[TemporalConvTestModule, TestModule] begin
@@ -189,9 +189,9 @@ end
     y, state = cell(g, g.x)
     @test size(y) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
     # with initial state
-    test_gradients(cell, g, g.x, state, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(cell, g, g.x, state, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = false)
 end
 
 @testitem "EvolveGCNO" setup=[TemporalConvTestModule, TestModule] begin
@@ -203,15 +203,15 @@ end
     y = layer(g, x)
     @test size(y) == (out_channel, timesteps, g.num_nodes)
     # with no initial state
-    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = TEST_MOONCAKE)
     # with initial state
-    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = TEST_MOONCAKE)
 
     # interplay with GNNChain
     model = GNNChain(EvolveGCNO(in_channel => out_channel), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol=RTOL_LOW, atol=ATOL_LOW)
+    test_gradients(model, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, test_mooncake = TEST_MOONCAKE)
 end
 
 # @testitem "GINConv" setup=[TemporalConvTestModule, TestModule] begin
