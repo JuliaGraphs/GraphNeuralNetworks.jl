@@ -18,7 +18,7 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1.12.2' # set to '1' after 1.12.4 release, see https://github.com/JuliaLang/Pkg.jl/pull/4568
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       # Build individual docs
       - run: julia --project=GNNGraphs/docs/ -e 'using Pkg; Pkg.instantiate()'
       - run: julia --color=yes --project=GNNGraphs/docs/ GNNGraphs/docs/make.jl
