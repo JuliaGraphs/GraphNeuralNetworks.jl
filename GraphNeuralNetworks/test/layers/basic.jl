@@ -18,7 +18,7 @@
 
         Flux.testmode!(gnn)
 
-        test_gradients(gnn, g, x, rtol = 1e-5)
+        test_gradients(gnn, g, x, rtol = 1e-5, test_mooncake = false)
 
         @testset "constructor with names" begin
             m = GNNChain(GCNConv(din => d),
@@ -53,7 +53,7 @@
 
             Flux.trainmode!(gnn)
 
-            test_gradients(gnn, g, x, rtol = 1e-4, atol=1e-4)
+            test_gradients(gnn, g, x, rtol = 1e-4, atol=1e-4, test_mooncake = false)
         end
     end
 

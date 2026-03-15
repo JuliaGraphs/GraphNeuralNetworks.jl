@@ -19,7 +19,7 @@
         @test u[:, [1]] ≈ sum(g.ndata.x[:, 1:n], dims = 2)
         @test p(g).gdata.u == u
 
-        test_gradients(p, g, g.x, rtol = 1e-5)
+        test_gradients(p, g, g.x, rtol = 1e-5, test_mooncake = TEST_MOONCAKE)
     end
 end
 
@@ -42,7 +42,7 @@ end
                         for i in 1:ng])
 
         @test size(p(g, g.x)) == (chout, ng)
-        test_gradients(p, g, g.x, rtol = 1e-5)
+        test_gradients(p, g, g.x, rtol = 1e-5, test_mooncake = TEST_MOONCAKE)
     end
 end
 

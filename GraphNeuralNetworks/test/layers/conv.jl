@@ -86,8 +86,7 @@ end
     for g in TEST_GRAPHS
         g = add_self_loops(g)
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        # Note: test_mooncake not enabled for ChebConv (Mooncake backward pass error)
-        test_gradients(l, g, g.x, rtol = RTOL_LOW)
+        test_gradients(l, g, g.x, rtol = RTOL_LOW, test_mooncake = false)
     end
 
     @testset "bias=false" begin
@@ -198,8 +197,7 @@ end
         l = GATv2Conv(D_IN => D_OUT, tanh; heads, concat, dropout=0)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (concat ? heads * D_OUT : D_OUT, g.num_nodes)
-            # Mooncake backward pass error for this layer on CI
-            test_gradients(l, g, g.x, rtol = RTOL_LOW, atol=ATOL_LOW)
+            test_gradients(l, g, g.x, rtol = RTOL_LOW, atol=ATOL_LOW, test_mooncake = TEST_MOONCAKE)
         end
     end
 
@@ -208,8 +206,7 @@ end
         l = GATv2Conv((D_IN, ein) => D_OUT, add_self_loops = false, dropout=0)
         g = GNNGraph(TEST_GRAPHS[1], edata = rand(Float32, ein, TEST_GRAPHS[1].num_edges))
         @test size(l(g, g.x, g.e)) == (D_OUT, g.num_nodes)
-        # Mooncake backward pass error for this layer on CI
-        test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW, atol=ATOL_LOW)
+        test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW, atol=ATOL_LOW, test_mooncake = TEST_MOONCAKE)
     end
 
     @testset "num params" begin
@@ -568,7 +565,6 @@ end
     ein = 2
     heads = 3
     # used like in Kool et al., 2019
-    # Mooncake backward pass error for this layer on CI
     l = TransformerConv(D_IN * heads => D_IN; heads, add_self_loops = true,
                         root_weight = false, ff_channels = 10, skip_connection = true,
                         batch_norm = false)
@@ -576,7 +572,7 @@ end
     for g in TEST_GRAPHS
         g = GNNGraph(g, ndata = rand(Float32, D_IN * heads, g.num_nodes))
         @test size(l(g, g.x)) == (D_IN * heads, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_LOW)
+        test_gradients(l, g, g.x, rtol = RTOL_LOW, test_mooncake = TEST_MOONCAKE)
     end
     # used like in Shi et al., 2021 
     l = TransformerConv((D_IN, ein) => D_IN; heads, gating = true,
@@ -584,7 +580,7 @@ end
     for g in TEST_GRAPHS
         g = GNNGraph(g, edata = rand(Float32, ein, g.num_edges))
         @test size(l(g, g.x, g.e)) == (D_IN * heads, g.num_nodes)
-        test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW)
+        test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW, test_mooncake = TEST_MOONCAKE)
     end
     # test averaging heads
     l = TransformerConv(D_IN => D_IN; heads, concat = false,
@@ -592,7 +588,7 @@ end
                         root_weight = false)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_IN, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_LOW)
+        test_gradients(l, g, g.x, rtol = RTOL_LOW, test_mooncake = TEST_MOONCAKE)
     end
 end
 
@@ -620,8 +616,7 @@ end
         l = DConv(D_IN => D_OUT, k)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            # Note: test_mooncake not enabled for DConv (Mooncake backward pass error)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = false)
         end
     end
 end
