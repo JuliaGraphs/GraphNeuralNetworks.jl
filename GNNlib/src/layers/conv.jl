@@ -378,7 +378,7 @@ function gmm_conv(l, g::GNNGraph, x::AbstractMatrix, e::AbstractMatrix)
     w = reshape(e, (ein, 1, num_edges))
     mu = reshape(l.mu, (ein, l.K, 1))
 
-    w = @. ((w - mu)^2) / 2
+    w = @. -((w - mu)^2) / 2
     w = w .* reshape(l.sigma_inv .^ 2, (ein, l.K, 1))
     w = exp.(sum(w, dims = 1)) # (1, K, num_edge) 
 
