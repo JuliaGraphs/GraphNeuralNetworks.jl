@@ -157,7 +157,7 @@ function test_gradients(
             # Mooncake gradient with respect to f via Flux integration, compared against Zygote.
             y_mc, g_mc = Flux.withgradient(f -> loss(f, graph, xs...), Flux.AutoMooncake(), f)
             @assert isapprox(y, y_mc; rtol, atol)
-            check_equal_leaves(g, g_mc_result; rtol, atol)
+            check_equal_leaves(g, g_mc; rtol, atol)
         end
 
         if test_gpu
