@@ -4,6 +4,8 @@
 # the implementation of a single layer, 
 # but it is done for GraphNeuralNetworks.jl and GNNLux.jl to be able to share the same code.
 
+using Flux, GraphNeuralNetworks, AutoStructs
+
 @doc raw"""
     GCNConv(in => out, σ=identity; [bias, init, add_self_loops, use_edge_weight])
 
@@ -999,7 +1001,9 @@ function AGNNConv(; init_beta = 1.0f0, add_self_loops = true, trainable = true)
     AGNNConv([init_beta], add_self_loops, trainable)
 end
 
-(l::AGNNConv)(g, x) = GNNlib.agnn_conv(l, g, x)
+function (l::AGNNConv)(g::AbstractGNNGraph, x)
+    return GNNlib.agnn_conv(g, x, l.β[1]; self_loops=l.add_self_loops)
+end
 
 @doc raw"""
     MEGNetConv(ϕe, ϕv; aggr=mean)

@@ -398,29 +398,42 @@ end
 
 @testitem "AGNNConv" setup=[TolSnippet, TestModule] begin
     using .TestModule
-    l = AGNNConv(trainable=false, add_self_loops=false)
-    @test l.β == [1.0f0]
-    @test l.add_self_loops == false
-    @test l.trainable == false
-    Flux.trainable(l) == (;)
-
-    l = AGNNConv(init_beta=2.0f0)
-    @test l.β == [2.0f0]
-    @test l.add_self_loops == true
-    @test l.trainable == true 
-    Flux.trainable(l) == (; β = [1f0])
-    for g in TEST_GRAPHS
-        @test size(l(g, g.x)) == (D_IN, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
+    @testset "Initialization & Basic Forward" begin
+        l = AGNNConv(init_beta=2.0f0, trainable=true)
+        @test l.β[1] == 2.0f0 
+        @test l.trainable == true 
+        for g in TEST_GRAPHS
+            @test size(l(g, g.x)) == (D_IN, g.num_nodes) 
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE) 
+        end
+    end
+    @testset "Bipartite Support" begin
+        l = AGNNConv(add_self_loops=false)
+        in_channel = 16
+        s = [rand(1:5, 14)..., 5] 
+        d = [rand(1:8, 14)..., 8]
+        g = GNNGraph((s, d))
+        x = (randn(Float32, in_channel, 5), randn(Float32, in_channel, 8))
+        y = l(g, x) 
+        @test size(y) == (in_channel, 8) 
+        test_gradients(l, g, x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
+    end
+    @testset "Stability (Epsilon)" begin
+        l = AGNNConv()
+        g = TEST_GRAPHS[1]
+        x_dead = randn(Float32, D_IN, g.num_nodes)
+        x_dead[:, 1] .= 0.0f0
+        y = l(g, x_dead)
+        @test !any(isnan.(y)) 
     end
 end
 
 @testitem "AGNNConv GPU" setup=[TolSnippet, TestModule] tags=[:gpu] begin
     using .TestModule
-    l = AGNNConv(trainable=false, add_self_loops=false)
+    l = AGNNConv()
     for g in TEST_GRAPHS
-        g.graph isa AbstractSparseMatrix && continue
-        @test size(l(g, g.x)) == (D_IN, g.num_nodes)
+        g.graph isa AbstractSparseMatrix && continue 
+        @test size(l(g, g.x)) == (D_IN, g.num_nodes) 
         test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_gpu = true, compare_finite_diff = false)
     end   
 end

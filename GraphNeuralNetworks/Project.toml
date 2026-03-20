@@ -1,12 +1,10 @@
 name = "GraphNeuralNetworks"
 uuid = "cffab07f-9bc2-4db1-8861-388f63bf7694"
 authors = ["Carlo Lucibello and contributors"]
-version = "1.1.0"
-
-[workspace]
-projects = ["test", "docs"]
+version = "1.2.0-DEV"
 
 [deps]
+AutoStructs = "2e0df379-9877-4907-ab94-cd881f8d985b"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 ConcreteStructs = "2569d6c7-a4a2-43d3-a901-331e8e4be471"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
@@ -21,6 +19,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+AutoStructs = "0.1.1"
 ChainRulesCore = "1"
 ConcreteStructs = "0.2.3"
 Flux = "0.16.0"
@@ -34,3 +33,6 @@ Random = "1"
 Reexport = "1"
 Statistics = "1"
 julia = "1.10"
+
+[workspace]
+projects = ["test", "docs"]
