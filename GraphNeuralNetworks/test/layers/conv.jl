@@ -422,7 +422,14 @@ end
         g.graph isa AbstractSparseMatrix && continue
         @test size(l(g, g.x)) == (D_IN, g.num_nodes)
         test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_gpu = true, compare_finite_diff = false)
-    end   
+    end
+    l_bip = AGNNConv(add_self_loops=false)
+    s = [1, 1, 2, 3]
+    t = [1, 2, 1, 2]
+    g = GNNGraph((s, t)) |> gpu
+    x = (randn(Float32, D_IN, 3) |> gpu, randn(Float32, D_IN, 2) |> gpu)
+    y = l_bip(g, x)
+    @test size(y) == (D_IN, 2)
 end
 
 @testitem "MEGNetConv" setup=[TolSnippet, TestModule] begin
