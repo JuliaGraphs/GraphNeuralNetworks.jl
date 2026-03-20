@@ -336,26 +336,22 @@ end
 
 function agnn_conv(g::AbstractGNNGraph, x, β; self_loops=true)
     
-    if self_loops && !(g.num_nodes isa Integer)
+    if self_loops && (!(g isa GNNHeteroGraph) || all(et -> et[1] == et[3], g.etypes))
         g = add_self_loops(g)
     end
 
     xj, xi = expand_srcdst(g, x)
-    T = eltype(xj)
-    ϵ = T(1e-9)
-
-    xi_norm = xi ./ sqrt.(sum(abs2, xi, dims=1) .+ ϵ)
-    xj_norm = xj ./ sqrt.(sum(abs2, xj, dims=1) .+ ϵ)
-
-    s, d = edge_index(g)
     
-    cos_dist = sum(xi_norm[:, d] .* xj_norm[:, s], dims=1)
+    xi_norm = xi ./ sqrt.(sum(abs2, xi, dims=1) .+ eps(eltype(xi)))
+    xj_norm = xj ./ sqrt.(sum(abs2, xj, dims=1) .+ eps(eltype(xj)))
 
+    cos_dist = apply_edges(xi_dot_xj, g, xi=xi_norm, xj=xj_norm)
+    
     α = softmax_edge_neighbors(g, β .* cos_dist)
 
-    m = α .* xj[:, s]
-    
-    return GNNlib.aggregate_neighbors(g, +, m)
+    return propagate(g, +; xj=xj, e=α) do xi_i, xj_j, α_e
+        α_e .* xj_j
+    end
 end
 
 ####################### MegNetConv ######################################

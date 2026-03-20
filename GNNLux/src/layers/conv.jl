@@ -422,8 +422,7 @@ function Base.show(io::IO, l::AGNNConv)
 end
 
 function (l::AGNNConv)(g::AbstractGNNGraph, x, ps, st)
-    β = l.trainable ? ps.β : l.init_beta
-    m = (;  β, l.add_self_loops)
+    β = l.trainable ? ps.β[1] : l.init_beta[1]  
     return GNNlib.agnn_conv(g, x, β; self_loops=l.add_self_loops), st
 end
 

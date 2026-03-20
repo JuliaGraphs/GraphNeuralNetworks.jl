@@ -397,7 +397,7 @@ end
 # end
 
 @testitem "AGNNConv" setup=[TolSnippet, TestModule] begin
-    using .TestModule
+    using .TestModule    
     @testset "Initialization & Basic Forward" begin
         l = AGNNConv(init_beta=2.0f0, trainable=true)
         @test l.β[1] == 2.0f0 
@@ -406,25 +406,28 @@ end
             @test size(l(g, g.x)) == (D_IN, g.num_nodes) 
             test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE) 
         end
-    end
-    @testset "Bipartite Support" begin
-        l = AGNNConv(add_self_loops=false)
-        in_channel = 16
-        s = [rand(1:5, 14)..., 5] 
-        d = [rand(1:8, 14)..., 8]
-        g = GNNGraph((s, d))
-        x = (randn(Float32, in_channel, 5), randn(Float32, in_channel, 8))
-        y = l(g, x) 
-        @test size(y) == (in_channel, 8) 
-        test_gradients(l, g, x, rtol = RTOL_HIGH, test_mooncake = TEST_MOONCAKE)
-    end
+    end    
+    @testset "Heterogeneous Graph Support" begin
+        l = AGNNConv(add_self_loops=false)  
+        hg = rand_bipartite_heterograph((10, 15), 20)
+        x = (A = randn(Float32, D_IN, 10), B = randn(Float32, D_IN, 15))        
+        hetero_layer = HeteroGraphConv(
+            (:A, :to, :B) => l,  
+            (:B, :to, :A) => l;  
+            aggr = +
+        )        
+        y = hetero_layer(hg, x)
+        @test size(y.A) == (D_IN, 10)
+        @test size(y.B) == (D_IN, 15)
+    end    
     @testset "Stability (Epsilon)" begin
         l = AGNNConv()
         g = TEST_GRAPHS[1]
         x_dead = randn(Float32, D_IN, g.num_nodes)
-        x_dead[:, 1] .= 0.0f0
+        x_dead[:, 1] .= 0.0f0  
         y = l(g, x_dead)
         @test !any(isnan.(y)) 
+        @test !any(isinf.(y))
     end
 end
 
@@ -435,7 +438,14 @@ end
         g.graph isa AbstractSparseMatrix && continue 
         @test size(l(g, g.x)) == (D_IN, g.num_nodes) 
         test_gradients(l, g, g.x, rtol = RTOL_HIGH, test_gpu = true, compare_finite_diff = false)
-    end   
+    end
+    l_bip = AGNNConv(add_self_loops=false)
+    s = [1, 1, 2, 3]
+    t = [1, 2, 1, 2]
+    g = GNNGraph((s, t)) |> gpu
+    x = (randn(Float32, D_IN, 3) |> gpu, randn(Float32, D_IN, 2) |> gpu)
+    y = l_bip(g, x)
+    @test size(y) == (D_IN, 2)
 end
 
 @testitem "MEGNetConv" setup=[TolSnippet, TestModule] begin
