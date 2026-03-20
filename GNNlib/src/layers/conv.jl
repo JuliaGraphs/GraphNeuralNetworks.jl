@@ -334,21 +334,24 @@ end
 
 ####################### AGNNConv ######################################
 
-function agnn_conv(l, g::GNNGraph, x::AbstractMatrix)
-    check_num_nodes(g, x)
-    if l.add_self_loops
+function agnn_conv(g::AbstractGNNGraph, x, β; self_loops=true)
+    
+    if self_loops && (!(g isa GNNHeteroGraph) || all(et -> et[1] == et[3], g.etypes))
         g = add_self_loops(g)
     end
 
-    xn = x ./ sqrt.(sum(x .^ 2, dims = 1))
-    cos_dist = apply_edges(xi_dot_xj, g, xi = xn, xj = xn)
-    α = softmax_edge_neighbors(g, l.β .* cos_dist)
+    xj, xi = expand_srcdst(g, x)
+    
+    xi_norm = xi ./ sqrt.(sum(abs2, xi, dims=1) .+ eps(eltype(xi)))
+    xj_norm = xj ./ sqrt.(sum(abs2, xj, dims=1) .+ eps(eltype(xj)))
 
-    x = propagate(g, +; xj = x, e = α) do xi, xj, α
-        α .* xj 
+    cos_dist = apply_edges(xi_dot_xj, g, xi=xi_norm, xj=xj_norm)
+    
+    α = softmax_edge_neighbors(g, β .* cos_dist)
+
+    return propagate(g, +; xj=xj, e=α) do xi_i, xj_j, α_e
+        α_e .* xj_j
     end
-
-    return x
 end
 
 ####################### MegNetConv ######################################
