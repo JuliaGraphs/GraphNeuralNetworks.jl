@@ -58,7 +58,7 @@ function sample_nbrs(loader::NeighborLoader, node::Int, layer::Int)
         return Int[]
     else
         num_samples = min(loader.num_neighbors[layer], length(neighbors))  # Limit to required samples for this layer
-        return rand(neighbors, num_samples)  # Randomly sample neighbors
+        return StatsBase.sample(neighbors, num_samples; replace = false)  # Randomly sample distinct neighbors
     end
 end
 
