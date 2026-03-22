@@ -421,7 +421,7 @@ function Base.show(io::IO, l::AGNNConv)
     print(io, ")")
 end
 
-function (l::AGNNConv)(g, x::AbstractMatrix, ps, st)
+function (l::AGNNConv)(g, x, ps, st)
     β = l.trainable ? ps.β : l.init_beta
     m = (;  β, l.add_self_loops)
     return GNNlib.agnn_conv(m, g, x), st
