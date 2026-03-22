@@ -215,19 +215,28 @@ end
 
 ####################### GatedGraphConv ######################################
 
-function gated_graph_conv(l, g::GNNGraph, x::AbstractMatrix)
+function gated_graph_conv(l, g::AbstractGNNGraph, x)
     check_num_nodes(g, x)
-    m, n = size(x)
+    xj, xi = expand_srcdst(g, x)
+
+    h = xi
+    m, n = size(h)
     @assert m <= l.dims "number of input features must be less or equal to output features."
     if m < l.dims
-        xpad = zeros_like(x, (l.dims - m, n))
-        x = vcat(x, xpad)
+        xpad = zeros_like(h, (l.dims - m, n))
+        h = vcat(h, xpad)
     end
-    h = x
+
+    mj, nj = size(xj)
+    if mj < l.dims
+        xpad = zeros_like(xj, (l.dims - mj, nj))
+        xj = vcat(xj, xpad)
+    end
+
     for i in 1:(l.num_layers)
-        m = view(l.weight, :, :, i) * h
-        m = propagate(copy_xj, g, l.aggr; xj = m)
-        _, h = l.gru(m, h)
+        msg = view(l.weight, :, :, i) * xj
+        msg = propagate(copy_xj, g, l.aggr; xj = msg)
+        _, h = l.gru(msg, h)
     end
     return h
 end
