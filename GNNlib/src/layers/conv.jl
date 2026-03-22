@@ -343,7 +343,11 @@ function agnn_conv(l, g::AbstractGNNGraph, x)
     xj, xi = expand_srcdst(g, x)
 
     xi_n = xi ./ sqrt.(sum(xi .^ 2, dims = 1))
-    xj_n = xj ./ sqrt.(sum(xj .^ 2, dims = 1))
+    if xj !== xi
+        xj_n = xj ./ sqrt.(sum(xj .^ 2, dims = 1))
+    else
+        xj_n = xi_n
+    end
     cos_dist = apply_edges(xi_dot_xj, g, xi = xi_n, xj = xj_n)
     α = softmax_edge_neighbors(g, l.β .* cos_dist)
 
@@ -353,14 +357,6 @@ function agnn_conv(l, g::AbstractGNNGraph, x)
 
     return x
 end
-
-"""
-    _has_same_node_types(g::GNNHeteroGraph)
-
-Return true if all edge types in the heterogeneous graph have the same source and
-target node types (i.e., no bipartite relations).
-"""
-_has_same_node_types(g::GNNHeteroGraph) = all(et -> et[1] == et[3], g.etypes)
 
 ####################### MegNetConv ######################################
 
