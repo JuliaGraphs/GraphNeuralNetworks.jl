@@ -795,18 +795,14 @@ function _unbatch_nodemasks(graph_indicator, num_graphs)
 end
 
 function _unbatch_edgemasks(s, t, num_graphs, cumnum_nodes)
-    edgemasks = []
-    for i in 1:(num_graphs - 1)
-        lastedgeid = findfirst(s) do x
-            x > cumnum_nodes[i + 1] && x <= cumnum_nodes[i + 2]
-        end
-        firstedgeid = i == 1 ? 1 : last(edgemasks[i - 1]) + 1
-        # if nothing make empty range
-        lastedgeid = lastedgeid === nothing ? firstedgeid - 1 : lastedgeid - 1
+    edgemasks = [Int[] for _ in 1:num_graphs]
 
-        push!(edgemasks, firstedgeid:lastedgeid)
+    for (eid, src) in enumerate(s)
+        graph_idx = searchsortedfirst(cumnum_nodes, src) - 1
+        @assert 1 <= graph_idx <= num_graphs
+        push!(edgemasks[graph_idx], eid)
     end
-    push!(edgemasks, (last(edgemasks[end]) + 1):length(s))
+
     return edgemasks
 end
 
