@@ -227,10 +227,14 @@ function gated_graph_conv(l, g::AbstractGNNGraph, x)
         h = vcat(h, xpad)
     end
 
-    mj, nj = size(xj)
-    if mj < l.dims
-        xpad = zeros_like(xj, (l.dims - mj, nj))
-        xj = vcat(xj, xpad)
+    if xj !== xi
+        mj, nj = size(xj)
+        if mj < l.dims
+            xpad = zeros_like(xj, (l.dims - mj, nj))
+            xj = vcat(xj, xpad)
+        end
+    else
+        xj = h  
     end
 
     for i in 1:(l.num_layers)
