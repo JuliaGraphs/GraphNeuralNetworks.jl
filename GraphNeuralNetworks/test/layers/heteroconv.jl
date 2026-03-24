@@ -155,7 +155,22 @@
         x = (A = rand(Float32, 4,2), B = rand(Float32, 4, 3))
         layers = HeteroGraphConv( (:A, :to, :B) => GCNConv(4 => 2, tanh),
                                     (:B, :to, :A) => GCNConv(4 => 2, tanh));
-        y = layers(g, x); 
+        y = layers(g, x);
         @test size(y.A) == (2,2) && size(y.B) == (2,3)
+    end
+
+    @testset "NNConv" begin
+        nA, nB = 2, 3
+        nedges = 6
+        g = rand_bipartite_heterograph((nA, nB), nedges;
+            edata = Dict((:A, :to, :B) => (e = rand(Float32, 5, nedges),),
+                        (:B, :to, :A) => (e = rand(Float32, 5, nedges),))
+        )
+        x = (A = rand(Float32, 4, nA), B = rand(Float32, 4, nB))
+        nn = Dense(5 => 4 * 2)
+        layers = HeteroGraphConv((:A, :to, :B) => NNConv(4 => 2, nn, tanh),
+                                 (:B, :to, :A) => NNConv(4 => 2, nn, tanh))
+        y = layers(g, x)
+        @test size(y.A) == (2, nA) && size(y.B) == (2, nB)
     end
 end

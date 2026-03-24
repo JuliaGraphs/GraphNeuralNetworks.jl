@@ -89,3 +89,13 @@ function graph_indicator(g::GNNHeteroGraph, node_t::Symbol)
     end
     return gi
 end
+
+edge_features(g::GNNHeteroGraph, edge_t::EType) = begin
+    ds == g.edata[edge_t]
+    isempty(ds) ? nothing : first(values(ds))
+end
+
+edge_features(g::GNNHeteroGraph) = begin
+    ds = only(values(g.edata))
+    isempty(ds) ? nothing : first(values(ds))
+end
