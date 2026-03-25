@@ -1446,7 +1446,9 @@ function LuxCore.parameterlength(l::GMMConv)
     return n
 end
 
-function (l::GMMConv)(g::GNNGraph, x, e, ps, st)
+(l::GMMConv)(g, x, ps, st) = l(g, x, edge_features(g), ps, st)
+
+function (l::GMMConv)(g::AbstractGNNGraph, x, e, ps, st)
     dense_x = StatefulLuxLayer{true}(l.dense_x, ps.dense_x, _getstate(st, :dense_x))
     m = (; ps.mu, ps.sigma_inv, dense_x, l.σ, l.ch, l.K, l.residual, bias = _getbias(ps))
     return GNNlib.gmm_conv(m, g, x, e), st
