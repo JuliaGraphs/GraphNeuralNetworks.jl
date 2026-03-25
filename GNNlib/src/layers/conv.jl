@@ -369,7 +369,7 @@ end
 
 ####################### GMMConv ######################################
 
-function gmm_conv(l, g::AbstractGNNGraph, x, e::AbstractMatrix)
+function gmm_conv(l, g::AbstractGNNGraph, x, e)
     (nin, ein), out = l.ch #Notational Simplicity
 
     num_edges = g.num_edges isa Integer ? g.num_edges : only(values(g.num_edges))
