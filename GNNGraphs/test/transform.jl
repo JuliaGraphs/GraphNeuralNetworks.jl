@@ -376,6 +376,20 @@ end
             @test size(get_edge_weight(g2)) == (g2.num_edges,)
             @test size(g2.edata.e1) == (3, g2.num_edges)
             @test size(g2.edata.e2) == (g2.num_edges,)
+        else
+            A = [1 1 0
+                 0 1 1
+                 1 0 0]
+            A_no_loops = [0 1 0
+                          0 0 1
+                          1 0 0]
+            g = GNNGraph(A; graph_type = GRAPH_T)
+            g2 = remove_self_loops(g)
+
+            @test Matrix(adjacency_matrix(g)) == A
+            @test Matrix(adjacency_matrix(g2)) == A_no_loops
+            @test g2.num_edges == count(!iszero, A_no_loops)
+            @test g.graph !== g2.graph
         end 
     end
 end
