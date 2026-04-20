@@ -15,7 +15,7 @@ jobs:
       DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
     steps:
       - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@v2
+      - uses: julia-actions/setup-julia@v3
         with:
           version: '1.12.2' # set to '1' after 1.12.4 release, see https://github.com/JuliaLang/Pkg.jl/pull/4568
       - uses: julia-actions/cache@v3
