@@ -4,7 +4,7 @@ const ADJLIST_T = AbstractVector{T} where {T <: AbstractVector{<:Integer}}
 const ADJMAT_T = AbstractMatrix
 const SPARSE_T = AbstractSparseMatrix # subset of ADJMAT_T
 
-const AVecI = AbstractVector{<:Integer}
+const AVec = AbstractVector
 
 # All concrete graph types should be subtypes of AbstractGNNGraph{T}.
 # GNNGraph and GNNHeteroGraph are the two concrete types.

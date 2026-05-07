@@ -109,7 +109,7 @@ struct GNNGraph{T <: Union{COO_T, ADJMAT_T}} <: AbstractGNNGraph{T}
     num_nodes::Int
     num_edges::Int
     num_graphs::Int
-    graph_indicator::Union{Nothing, AVecI}       # vector of ints or nothing
+    graph_indicator::Union{Nothing, AVec}       # vector of ints or nothing
     ndata::DataStore
     edata::DataStore
     gdata::DataStore
@@ -121,7 +121,7 @@ function GNNGraph(graph::T,
                   num_nodes::Int,
                   num_edges::Int,
                   num_graphs::Int,
-                  graph_indicator::Union{Nothing, AVecI},
+                  graph_indicator::Union{Nothing, AVec},
                   ndata::DataStore,
                   edata::DataStore,
                   gdata::DataStore) where {T <: Union{COO_T, ADJMAT_T}}
