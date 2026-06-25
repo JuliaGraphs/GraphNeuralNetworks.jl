@@ -10,8 +10,7 @@ steps:
             - GraphNeuralNetworks/src
             - GraphNeuralNetworks/ext
     agents:
-      queue: "juliagpu"
-      cuda: "*"
+      queue: "cuda"
     env:
       GNN_TEST_CUDA: "true"
       GNN_TEST_CPU: "false"
@@ -28,8 +27,7 @@ steps:
             - GraphNeuralNetworks/src
             - GraphNeuralNetworks/ext
     agents:
-      queue: "juliagpu"
-      rocm: "*"
+      queue: "rocm"
       rocmgpu: "*"
     env:
       GNN_TEST_AMDGPU: "true"
@@ -47,8 +45,7 @@ steps:
             - GNNlib/src
             - GNNlib/ext
     agents:
-      queue: "juliagpu"
-      cuda: "*"
+      queue: "cuda"
     env:
       GNN_TEST_CUDA: "true"
       GNN_TEST_CPU: "false"
@@ -65,8 +62,7 @@ steps:
             - GNNlib/src
             - GNNlib/ext
     agents:
-      queue: "juliagpu"
-      rocm: "*"
+      queue: "rocm"
       rocmgpu: "*"
     env:
       GNN_TEST_AMDGPU: "true"
@@ -85,8 +81,7 @@ steps:
             - GNNGraphs/src
             - GNNGraphs/ext
     agents:
-      queue: "juliagpu"
-      cuda: "*"
+      queue: "cuda"
     env:
       GNN_TEST_CUDA: "true"
       GNN_TEST_CPU: "false"
@@ -103,8 +98,7 @@ steps:
             - GNNGraphs/src
             - GNNGraphs/ext
     agents:
-      queue: "juliagpu"
-      rocm: "*"
+      queue: "rocm"
       rocmgpu: "*"
     env:
       GNN_TEST_AMDGPU: "true"
