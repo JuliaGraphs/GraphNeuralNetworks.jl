@@ -42,10 +42,16 @@ using FiniteDifferences: FiniteDifferences
 using Zygote: Zygote
 using Flux: Flux
 
+# Mooncake.jl requires Julia >= 1.12
+const TEST_MOONCAKE = VERSION >= v"1.12"
+if TEST_MOONCAKE
+    import Mooncake
+end
+
 # from this module
 export D_IN, D_OUT, GRAPH_TYPES, TEST_GRAPHS,
        test_gradients, finitediff_withgradient, 
-       check_equal_leaves, gpu_backend
+       check_equal_leaves, gpu_backend, TEST_MOONCAKE
 
 
 const D_IN = 3
@@ -81,12 +87,13 @@ function test_gradients(
             test_grad_f = true,
             test_grad_x = true,
             compare_finite_diff = true,
+            test_mooncake = false,
             loss = (f, g, xs...) -> mean(f(g, xs...)),
             )
 
-    if !test_gpu && !compare_finite_diff
-        error("You should either compare finite diff vs CPU AD \
-               or CPU AD vs GPU AD.")
+    if !test_gpu && !compare_finite_diff && !test_mooncake
+        error("You should either compare finite diff vs CPU AD, \
+               CPU AD vs GPU AD, or test Mooncake AD.")
     end
 
     ## Let's make sure first that the forward pass works.
@@ -115,6 +122,14 @@ function test_gradients(
             check_equal_leaves(g, g_fd; rtol, atol)
         end
 
+        if test_mooncake && !(graph.graph isa AbstractSparseMatrix) # Mooncake friendly tangents currently error on sparse graph internals
+            # Mooncake gradient with respect to input via Flux integration, compared against Zygote.
+            loss_mc_x = (xs...) -> loss(f, graph, xs...)
+            y_mc, g_mc = Flux.withgradient(loss_mc_x, Flux.AutoMooncake(), xs...)
+            @assert isapprox(y, y_mc; rtol, atol)
+            check_equal_leaves(g, g_mc; rtol, atol)
+        end
+
         if test_gpu
             # Zygote gradient with respect to input on GPU.
             y_gpu, g_gpu = Zygote.withgradient((xs...) -> loss(f_gpu, graph_gpu, xs...), xs_gpu...)
@@ -136,6 +151,13 @@ function test_gradients(
             g_fd = (re(g_fd[1]),)
             @assert isapprox(y, y_fd; rtol, atol)
             check_equal_leaves(g, g_fd; rtol, atol)
+        end
+
+        if test_mooncake && !(graph.graph isa AbstractSparseMatrix) # Mooncake friendly tangents currently error on sparse graph internals
+            # Mooncake gradient with respect to f via Flux integration, compared against Zygote.
+            y_mc, g_mc = Flux.withgradient(f -> loss(f, graph, xs...), Flux.AutoMooncake(), f)
+            @assert isapprox(y, y_mc; rtol, atol)
+            check_equal_leaves(g, g_mc; rtol, atol)
         end
 
         if test_gpu
