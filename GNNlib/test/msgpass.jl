@@ -151,6 +151,16 @@ end
         end
     end
 
+    @testset "e_mul_xj + (scalar edge weight)" begin
+        # Scalar per-edge weights hit the spmm fast path that GNNlibMooncakeExt
+        # has a dedicated Mooncake rule for (matrix `e` above stays generic).
+        for g in TEST_GRAPHS
+            e = rand(Float32, g.num_edges)
+            f(g, x, e) = propagate(e_mul_xj, g, +; xj = x, e)
+            test_gradients(f, g, g.x, e; test_grad_f=false, test_mooncake=TEST_MOONCAKE)
+        end
+    end
+
     @testset "w_mul_xj +" begin
         for g in TEST_GRAPHS
             w = rand(Float32, g.num_edges)
