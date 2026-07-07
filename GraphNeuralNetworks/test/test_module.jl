@@ -78,6 +78,13 @@ function check_equal_leaves(a, b; rtol=1e-4, atol=1e-4)
     @assert equal
 end
 
+# Gradient from a generic AD backend, compared against the reference (y, g).
+function test_gradients_with_backend(backend, loss_fn, y, g, args...; rtol, atol)
+    y2, g2 = Flux.withgradient(loss_fn, backend, args...)
+    @assert isapprox(y, y2; rtol, atol)
+    check_equal_leaves(g, g2; rtol, atol)
+end
+
 function test_gradients(
             f,
             graph::GNNGraph, 
@@ -94,6 +101,12 @@ function test_gradients(
     if !test_gpu && !compare_finite_diff && !test_mooncake
         error("You should either compare finite diff vs CPU AD, \
                CPU AD vs GPU AD, or test Mooncake AD.")
+    end
+
+    # AD backends to compare against the Zygote reference gradient.
+    ad_backends = []
+    if test_mooncake && !(graph.graph isa AbstractSparseMatrix) # Mooncake friendly tangents currently error on sparse graph internals
+        push!(ad_backends, Flux.AutoMooncake())
     end
 
     ## Let's make sure first that the forward pass works.
@@ -122,12 +135,9 @@ function test_gradients(
             check_equal_leaves(g, g_fd; rtol, atol)
         end
 
-        if test_mooncake && !(graph.graph isa AbstractSparseMatrix) # Mooncake friendly tangents currently error on sparse graph internals
-            # Mooncake gradient with respect to input via Flux integration, compared against Zygote.
-            loss_mc_x = (xs...) -> loss(f, graph, xs...)
-            y_mc, g_mc = Flux.withgradient(loss_mc_x, Flux.AutoMooncake(), xs...)
-            @assert isapprox(y, y_mc; rtol, atol)
-            check_equal_leaves(g, g_mc; rtol, atol)
+        for backend in ad_backends
+            # AD backend gradient with respect to input.
+            test_gradients_with_backend(backend, (xs...) -> loss(f, graph, xs...), y, g, xs...; rtol, atol)
         end
 
         if test_gpu
@@ -153,11 +163,9 @@ function test_gradients(
             check_equal_leaves(g, g_fd; rtol, atol)
         end
 
-        if test_mooncake && !(graph.graph isa AbstractSparseMatrix) # Mooncake friendly tangents currently error on sparse graph internals
-            # Mooncake gradient with respect to f via Flux integration, compared against Zygote.
-            y_mc, g_mc = Flux.withgradient(f -> loss(f, graph, xs...), Flux.AutoMooncake(), f)
-            @assert isapprox(y, y_mc; rtol, atol)
-            check_equal_leaves(g, g_mc; rtol, atol)
+        for backend in ad_backends
+            # AD backend gradient with respect to f.
+            test_gradients_with_backend(backend, f -> loss(f, graph, xs...), y, g, f; rtol, atol)
         end
 
         if test_gpu
