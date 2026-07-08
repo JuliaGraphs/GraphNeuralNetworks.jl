@@ -48,10 +48,13 @@ if TEST_MOONCAKE
     import Mooncake
 end
 
+# AD backends compared against the Zygote reference in `test_gradients`.
+const AD_BACKENDS = TEST_MOONCAKE ? [Flux.AutoMooncake()] : []
+
 # from this module
 export D_IN, D_OUT, GRAPH_TYPES, TEST_GRAPHS,
        test_gradients, finitediff_withgradient, 
-       check_equal_leaves, gpu_backend, TEST_MOONCAKE
+       check_equal_leaves, gpu_backend, TEST_MOONCAKE, AD_BACKENDS
 
 
 const D_IN = 3
@@ -94,19 +97,18 @@ function test_gradients(
             test_grad_f = true,
             test_grad_x = true,
             compare_finite_diff = true,
-            test_mooncake = false,
+            ad_backends = [],
             loss = (f, g, xs...) -> mean(f(g, xs...)),
             )
 
-    if !test_gpu && !compare_finite_diff && !test_mooncake
+    if !test_gpu && !compare_finite_diff && isempty(ad_backends)
         error("You should either compare finite diff vs CPU AD, \
-               CPU AD vs GPU AD, or test Mooncake AD.")
+               CPU AD vs GPU AD, or test an AD backend.")
     end
 
-    # AD backends to compare against the Zygote reference gradient.
-    ad_backends = []
-    if test_mooncake && !(graph.graph isa AbstractSparseMatrix) # Mooncake friendly tangents currently error on sparse graph internals
-        push!(ad_backends, Flux.AutoMooncake())
+    # Mooncake's friendly tangents currently error on sparse graph internals.
+    if graph.graph isa AbstractSparseMatrix
+        ad_backends = filter(b -> !(b isa Flux.AutoMooncake), ad_backends)
     end
 
     ## Let's make sure first that the forward pass works.

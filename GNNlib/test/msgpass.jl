@@ -132,14 +132,14 @@ end
     @testset "copy_xj +" begin
         for g in TEST_GRAPHS
             f(g, x) = propagate(copy_xj, g, +, xj = x)
-            test_gradients(f, g, g.x; test_grad_f=false, test_mooncake=TEST_MOONCAKE)
+            test_gradients(f, g, g.x; test_grad_f=false, ad_backends=AD_BACKENDS)
         end
     end
 
     @testset "copy_xj mean" begin
         for g in TEST_GRAPHS
             f(g, x) = propagate(copy_xj, g, mean, xj = x)
-            test_gradients(f, g, g.x; test_grad_f=false, test_mooncake=TEST_MOONCAKE)
+            test_gradients(f, g, g.x; test_grad_f=false, ad_backends=AD_BACKENDS)
         end
     end
 
@@ -147,7 +147,7 @@ end
         for g in TEST_GRAPHS
             e = rand(Float32, size(g.x, 1), g.num_edges)
             f(g, x, e) = propagate(e_mul_xj, g, +; xj = x, e)
-            test_gradients(f, g, g.x, e; test_grad_f=false, test_mooncake=TEST_MOONCAKE)
+            test_gradients(f, g, g.x, e; test_grad_f=false, ad_backends=AD_BACKENDS)
         end
     end
 
@@ -157,7 +157,7 @@ end
         for g in TEST_GRAPHS
             e = rand(Float32, g.num_edges)
             f(g, x, e) = propagate(e_mul_xj, g, +; xj = x, e)
-            test_gradients(f, g, g.x, e; test_grad_f=false, test_mooncake=TEST_MOONCAKE)
+            test_gradients(f, g, g.x, e; test_grad_f=false, ad_backends=AD_BACKENDS)
         end
     end
 
@@ -168,7 +168,7 @@ end
                 g = set_edge_weight(g, w)
                 return propagate(w_mul_xj, g, +, xj = x)
             end
-            test_gradients(f, g, g.x, w; test_grad_f=false, test_mooncake=TEST_MOONCAKE)
+            test_gradients(f, g, g.x, w; test_grad_f=false, ad_backends=AD_BACKENDS)
         end
     end
 end
