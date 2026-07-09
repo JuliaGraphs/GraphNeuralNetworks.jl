@@ -89,3 +89,31 @@ function graph_indicator(g::GNNHeteroGraph, node_t::Symbol)
     end
     return gi
 end
+
+"""
+    edge_features(g::GNNHeteroGraph)
+
+Return the edge features for a heterogeneous graph with a single edge type.
+If the graph has multiple edge types, this will error.
+If no edge features are present, returns `nothing`.
+"""
+function edge_features(g::GNNHeteroGraph)
+    if isempty(g.edata)
+        return nothing
+    elseif length(g.edata) > 1
+        @error "Multiple edge types present, access edge features directly through `g.edata[edge_t]`"
+    else
+        edata = only(values(g.edata))
+        if edata isa AbstractArray
+            return isempty(edata) ? nothing : edata
+        else 
+            if isempty(edata)
+                return nothing
+            elseif length(edata) > 1
+                @error "Multiple edge feature arrays present, access directly through `g.edata[edge_t]`"
+            else
+                return first(values(edata))
+            end
+        end
+    end
+end

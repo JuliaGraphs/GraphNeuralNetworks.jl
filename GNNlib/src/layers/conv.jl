@@ -257,11 +257,12 @@ end
 
 ####################### NNConv ######################################
 
-function nn_conv(l, g::GNNGraph, x::AbstractMatrix, e)
+function nn_conv(l, g::AbstractGNNGraph, x, e)
     check_num_nodes(g, x)
+    xj, xi = expand_srcdst(g, x)
     message = Fix1(nn_conv_message, l)
-    m = propagate(message, g, l.aggr, xj = x, e = e)
-    return l.σ.(l.weight * x .+ m .+ l.bias)
+    m = propagate(message, g, l.aggr, xj = xj, e = e)
+    return l.σ.(l.weight * xi .+ m .+ l.bias)
 end
 
 function nn_conv_message(l, xi, xj, e)
