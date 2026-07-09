@@ -155,7 +155,15 @@
         x = (A = rand(Float32, 4,2), B = rand(Float32, 4, 3))
         layers = HeteroGraphConv( (:A, :to, :B) => GCNConv(4 => 2, tanh),
                                     (:B, :to, :A) => GCNConv(4 => 2, tanh));
-        y = layers(g, x); 
+        y = layers(g, x);
         @test size(y.A) == (2,2) && size(y.B) == (2,3)
+    end
+
+    @testset "AGNNConv" begin
+        x = (A = rand(Float32, 4, 2), B = rand(Float32, 4, 3))
+        layers = HeteroGraphConv((:A, :to, :B) => AGNNConv(),
+                                 (:B, :to, :A) => AGNNConv())
+        y = layers(hg, x)
+        @test size(y.A) == (4, 2) && size(y.B) == (4, 3)
     end
 end
