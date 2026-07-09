@@ -369,29 +369,33 @@ end
 
 ####################### GMMConv ######################################
 
-function gmm_conv(l, g::GNNGraph, x::AbstractMatrix, e::AbstractMatrix)
+function gmm_conv(l, g::AbstractGNNGraph, x, e)
     (nin, ein), out = l.ch #Notational Simplicity
 
-    @assert (ein == size(e)[1]&&g.num_edges == size(e)[2]) "Pseudo-cordinate dimension is not equal to (ein,num_edge)"
+    num_edges = g.num_edges isa Integer ? g.num_edges : only(values(g.num_edges))
+    @assert size(e, 2) == num_edges "Expected $num_edges edges but got $(size(e, 2))"
+    @assert size(e, 1) == ein "Edge feature dimension mismatch: expected $ein, got $(size(e, 1))"
 
-    num_edges = g.num_edges
+    xj, xi = expand_srcdst(g, x)
+
+    num_edges = size(e, 2)
     w = reshape(e, (ein, 1, num_edges))
     mu = reshape(l.mu, (ein, l.K, 1))
 
     w = @. -((w - mu)^2) / 2
     w = w .* reshape(l.sigma_inv .^ 2, (ein, l.K, 1))
-    w = exp.(sum(w, dims = 1)) # (1, K, num_edge) 
+    w = exp.(sum(w, dims = 1)) # (1, K, num_edge)
 
-    xj = reshape(l.dense_x(x), (out, l.K, :)) # (out, K, num_nodes) 
+    xj = reshape(l.dense_x(xj), (out, l.K, :)) # (out, K, num_nodes)
 
     m = propagate(e_mul_xj, g, mean, xj = xj, e = w)
-    m = dropdims(mean(m, dims = 2), dims = 2) # (out, num_nodes)  
+    m = dropdims(mean(m, dims = 2), dims = 2) # (out, num_nodes)
 
     m = l.σ.(m .+ l.bias)
 
     if l.residual
-        if size(x, 1) == size(m, 1)
-            m += x
+        if size(xi, 1) == size(m, 1)
+            m += xi
         else
             @warn "Residual not applied : output feature is not equal to input_feature"
         end
