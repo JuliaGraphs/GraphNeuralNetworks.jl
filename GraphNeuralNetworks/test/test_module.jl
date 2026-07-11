@@ -35,9 +35,6 @@ if TEST_MOONCAKE
     import Mooncake
 end
 
-# AD backends compared against the Zygote reference in `test_gradients`.
-const AD_BACKENDS = TEST_MOONCAKE ? [Flux.AutoMooncake()] : []
-
 # from Base
 export mean, randn, SparseArrays, AbstractSparseMatrix
 
@@ -53,7 +50,7 @@ export random_regular_graph, erdos_renyi
 # from this module
 export D_IN, D_OUT, GRAPH_TYPES, TEST_GRAPHS,
        test_gradients, finitediff_withgradient, 
-       check_equal_leaves, gpu_backend, TEST_MOONCAKE, AD_BACKENDS
+       check_equal_leaves, gpu_backend, TEST_MOONCAKE
 
 
 const D_IN = 3
@@ -85,7 +82,7 @@ end
 function test_gradients_with_backend(backend, loss_fn, y, g, args...; rtol, atol)
     y2, g2 = Flux.withgradient(loss_fn, backend, args...)
     @assert isapprox(y, y2; rtol, atol)
-    check_equal_leaves(g, g2; rtol, atol)
+    check_equal_leaves(g2, g; rtol, atol)
 end
 
 function test_gradients(
@@ -96,18 +93,14 @@ function test_gradients(
             test_gpu = false,
             test_grad_f = true,
             test_grad_x = true,
-            compare_finite_diff = true,
-            ad_backends = [],
+            # Reference AD: finite differences for CPU tests, Zygote (on CPU) for GPU tests.
+            reference = test_gpu ? Flux.AutoZygote() : :finitediff,
+            ad_backends = test_gpu ? [] : [Flux.AutoZygote(), Flux.AutoMooncake()],
             loss = (f, g, xs...) -> mean(f(g, xs...)),
             )
 
-    if !test_gpu && !compare_finite_diff && isempty(ad_backends)
-        error("You should either compare finite diff vs CPU AD, \
-               CPU AD vs GPU AD, or test an AD backend.")
-    end
-
-    # Mooncake's friendly tangents currently error on sparse graph internals.
-    if graph.graph isa AbstractSparseMatrix
+    # Mooncake requires Julia >= 1.12 and errors on sparse graph internals.
+    if !TEST_MOONCAKE || graph.graph isa AbstractSparseMatrix
         ad_backends = filter(b -> !(b isa Flux.AutoMooncake), ad_backends)
     end
 
@@ -125,20 +118,18 @@ function test_gradients(
     end
 
     if test_grad_x
-        # Zygote gradient with respect to input.
-        y, g = Zygote.withgradient((xs...) -> loss(f, graph, xs...), xs...)
-        
-        if compare_finite_diff
+        # Reference gradient with respect to input.
+        y, g = if reference === :finitediff
             # Cast to Float64 to avoid precision issues.
             f64 = f |> Flux.f64
             xs64 = xs .|> Flux.f64
-            y_fd, g_fd = finitediff_withgradient((xs...) -> loss(f64, graph, xs...), xs64...)
-            @assert isapprox(y, y_fd; rtol, atol)
-            check_equal_leaves(g, g_fd; rtol, atol)
+            finitediff_withgradient((xs...) -> loss(f64, graph, xs...), xs64...)
+        else
+            Flux.withgradient((xs...) -> loss(f, graph, xs...), reference, xs...)
         end
+        @assert isapprox(l, y; rtol, atol)
 
         for backend in ad_backends
-            # AD backend gradient with respect to input.
             test_gradients_with_backend(backend, (xs...) -> loss(f, graph, xs...), y, g, xs...; rtol, atol)
         end
 
@@ -152,22 +143,23 @@ function test_gradients(
     end
 
     if test_grad_f
-        # Zygote gradient with respect to f.
-        y, g = Zygote.withgradient(f -> loss(f, graph, xs...), f)
-
-        if compare_finite_diff
+        # Reference gradient with respect to f.
+        y, g = if reference === :finitediff
             # Cast to Float64 to avoid precision issues.
             f64 = f |> Flux.f64
             ps, re = Flux.destructure(f64)
-            y_fd, g_fd = finitediff_withgradient(ps -> loss(re(ps),graph, xs...), ps)
-            g_fd = (re(g_fd[1]),)
-            @assert isapprox(y, y_fd; rtol, atol)
-            check_equal_leaves(g, g_fd; rtol, atol)
+            y_fd, g_fd = finitediff_withgradient(ps -> loss(re(ps), graph, xs...), ps)
+            y_fd, (re(g_fd[1]),)
+        else
+            Flux.withgradient(f -> loss(f, graph, xs...), reference, f)
         end
+        @assert isapprox(l, y; rtol, atol)
 
-        for backend in ad_backends
-            # AD backend gradient with respect to f.
-            test_gradients_with_backend(backend, f -> loss(f, graph, xs...), y, g, f; rtol, atol)
+        # Skip comparison for parameterless layers (no gradients wrt f).
+        if !isempty(Flux.trainables(f))
+            for backend in ad_backends
+                test_gradients_with_backend(backend, f -> loss(f, graph, xs...), y, g, f; rtol, atol)
+            end
         end
 
         if test_gpu
