@@ -21,3 +21,6 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 [sources]
 GNNGraphs = {path = "../../GNNGraphs"}
 GNNlib = {path = ".."}
+
+[compat]
+NNlib = "0.9.38"
