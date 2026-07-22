@@ -155,26 +155,33 @@ end
 @testitem "getgraph GPU" setup=[GraphsTestModule] tags=[:gpu] begin
     using .GraphsTestModule
     dev = gpu_device(force=true)
-    g1 = rand_graph(10, 6, ndata = rand(Float32, 4, 10))
-    g2 = rand_graph(4, 4, ndata = rand(Float32, 4, 4))
-    g3 = rand_graph(7, 8, ndata = rand(Float32, 4, 7))
-    g = MLUtils.batch([g1, g2, g3])
-    g_gpu = g |> dev
 
-    # single graph (see #161)
-    r = getgraph(g, 2)
-    r_gpu = getgraph(g_gpu, 2)
-    @test get_device(r_gpu.graph_indicator) isa AbstractGPUDevice
-    @test r_gpu.num_nodes == r.num_nodes
-    @test r_gpu.num_edges == r.num_edges
-    @test Array(node_features(r_gpu)) ≈ node_features(r)
+    # COO graphs are handled natively on the GPU; adjacency-matrix graphs fall
+    # back to the CPU. Check both against the CPU reference (see #161).
+    for GRAPH_T in GRAPH_TYPES
+        gl = [GNNGraph(random_regular_graph(n, 2), ndata = rand(Float32, 4, n),
+                       graph_type = GRAPH_T) for n in [10, 4, 8, 6]]
+        gl = [GNNGraph(g0, edata = rand(Float32, 2, g0.num_edges)) for g0 in gl]
+        g = MLUtils.batch(gl)
+        g_gpu = g |> dev
 
-    # multiple graphs with node map
-    rb, nmap = getgraph(g, [1, 3], nmap = true)
-    rb_gpu, nmap_gpu = getgraph(g_gpu, [1, 3], nmap = true)
-    @test rb_gpu.num_nodes == rb.num_nodes
-    @test rb_gpu.num_edges == rb.num_edges
-    @test Array(nmap_gpu) == nmap
+        for (i, want_nmap) in [(2, false), ([1, 3], true), ([2, 3, 4], true)]
+            ref = getgraph(g, i; nmap = want_nmap)
+            res = getgraph(g_gpu, i; nmap = want_nmap)
+            rg, ng = want_nmap ? (ref[1], res[1]) : (ref, res)
+
+            @test ng isa GNNGraph{typeof(g_gpu.graph)}          # graph type preserved
+            @test get_device(ng.graph_indicator) isa AbstractGPUDevice
+            @test ng.num_nodes == rg.num_nodes
+            @test ng.num_edges == rg.num_edges
+            @test Array(ng.graph_indicator) == rg.graph_indicator
+            @test Array(edge_index(ng)[1]) == edge_index(rg)[1]
+            @test Array(edge_index(ng)[2]) == edge_index(rg)[2]
+            @test Array(node_features(ng)) ≈ node_features(rg)
+            @test Array(edge_features(ng)) ≈ edge_features(rg)
+            want_nmap && @test Array(res[2]) == ref[2]
+        end
+    end
 end
 
 @testitem "remove_edges" setup=[GraphsTestModule] begin

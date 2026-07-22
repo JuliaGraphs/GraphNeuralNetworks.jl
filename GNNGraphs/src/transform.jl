@@ -834,50 +834,71 @@ function getgraph(g::GNNGraph, i::AbstractVector{Int}; nmap = false)
         end
     end
 
-    # The subgraph extraction below relies on scalar `Dict` lookups and array
-    # comprehensions that don't run on the GPU, so move to the CPU and back (#161).
-    dev = get_device(g)
-    if !(dev isa CPUDevice)
-        res = getgraph(cpu_device()(g), i; nmap)
-        return nmap ? (dev(res[1]), dev(res[2])) : dev(res)
+    # Adjacency-matrix graphs need submatrix indexing (and store `graph_indicator`
+    # as a `SparseVector`), neither of which is GPU-friendly, so subgraph them on
+    # the CPU with the index-map implementation below (#161).
+    if g.graph isa ADJMAT_T
+        dev = get_device(g)
+        if !(dev isa CPUDevice)
+            res = getgraph(cpu_device()(g), i; nmap)
+            return nmap ? (dev(res[1]), dev(res[2])) : dev(res)
+        end
+
+        node_mask = g.graph_indicator .∈ Ref(i)
+        nodes = (1:(g.num_nodes))[node_mask]
+        graphmap = Dict(v => inew for (inew, v) in enumerate(i))
+        graph_indicator = [graphmap[v] for v in g.graph_indicator[node_mask]]
+
+        s, t = edge_index(g)
+        edge_mask = s .∈ Ref(nodes)
+        graph = g.graph[nodes, nodes]
+
+        ndata = getobs(g.ndata, node_mask)
+        edata = getobs(g.edata, edge_mask)
+        gdata = getobs(g.gdata, i)
+        gnew = GNNGraph(graph,
+                        length(graph_indicator), sum(edge_mask), length(i),
+                        graph_indicator, ndata, edata, gdata)
+        return nmap ? (gnew, nodes) : gnew
     end
 
-    node_mask = g.graph_indicator .∈ Ref(i)
+    # COO graphs (the common case) have a dense `graph_indicator`, so the whole
+    # routine can be written with gather/scatter/cumsum and run natively on the
+    # GPU, unlike the earlier `∈`/`Dict` version that forced scalar indexing (#161).
+    # We index with the integer vectors `kept_nodes`/`kept_edges` (one `findall`
+    # each) instead of reusing boolean masks, to keep the number of GPU syncs low.
+    gi = g.graph_indicator
+    idev = get_device(gi)(i)                      # selected graph ids, on gi's device
 
-    nodes = (1:(g.num_nodes))[node_mask]
-    nodemap = Dict(v => vnew for (vnew, v) in enumerate(nodes))
+    keep_graph = fill_like(gi, false, Bool, g.num_graphs)
+    keep_graph[idev] .= true
+    node_mask = keep_graph[gi]                    # true for nodes of the selected graphs
+    kept_nodes = findall(node_mask)               # new node id -> old node id
+    new_node_id = cumsum(node_mask)               # old node id -> new node id
 
-    graphmap = Dict(i => inew for (inew, i) in enumerate(i))
-    graph_indicator = [graphmap[i] for i in g.graph_indicator[node_mask]]
+    graphmap = fill_like(gi, 0, Int, g.num_graphs)
+    graphmap[idev] = 1:length(i)                  # old graph id -> new graph id
+    graph_indicator = graphmap[gi[kept_nodes]]
 
     s, t = edge_index(g)
     w = get_edge_weight(g)
-    edge_mask = s .∈ Ref(nodes)
+    kept_edges = findall(node_mask[s])            # edges kept iff their endpoints are
 
-    if g.graph isa COO_T
-        s = [nodemap[i] for i in s[edge_mask]]
-        t = [nodemap[i] for i in t[edge_mask]]
-        w = isnothing(w) ? nothing : w[edge_mask]
-        graph = (s, t, w)
-    elseif g.graph isa ADJMAT_T
-        graph = g.graph[nodes, nodes]
-    end
+    s = new_node_id[s[kept_edges]]
+    t = new_node_id[t[kept_edges]]
+    w = isnothing(w) ? nothing : w[kept_edges]
 
-    ndata = getobs(g.ndata, node_mask)
-    edata = getobs(g.edata, edge_mask)
+    ndata = getobs(g.ndata, kept_nodes)
+    edata = getobs(g.edata, kept_edges)
     gdata = getobs(g.gdata, i)
 
-    num_edges = sum(edge_mask)
-    num_nodes = length(graph_indicator)
-    num_graphs = length(i)
-
-    gnew = GNNGraph(graph,
-                    num_nodes, num_edges, num_graphs,
+    gnew = GNNGraph((s, t, w),
+                    length(kept_nodes), length(kept_edges), length(i),
                     graph_indicator,
                     ndata, edata, gdata)
 
     if nmap
-        return gnew, nodes
+        return gnew, kept_nodes
     else
         return gnew
     end
