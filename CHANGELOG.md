@@ -10,19 +10,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
-## GNNlib.jl — Unreleased (towards 1.3.1)
-
-**Fixed**
-- Worked around a Julia 1.12 code-generation segfault that crashed `CGConv` and `GMMConv` gradients: the layers' `@warn` (in the residual branch) is now wrapped in `ignore_derivatives` to keep the logging macro out of the AD-differentiated code path. Root cause reported upstream as [FluxML/Zygote.jl#1662]; re-enables the previously disabled `CGConv`/`GMMConv` gradient tests ([#695]).
-
 ## GNNLux.jl — Unreleased (towards 0.2.0)
 
 **Added**
 - Added pooling layers (`GlobalPool`, `GlobalAttentionPool`, `TopKPool`) ([#576]).
 - `TGCN` now supports non-linear activation functions ([#596]).
+- Rewrote the recurrent temporal layers following the Flux frontend's design ([#560]): added the `GNNRecurrence` wrapper and split every temporal layer into a `*Cell` and a full-sequence layer, exporting both — `TGCNCell`/`TGCN`, `GConvGRUCell`/`GConvGRU`, `GConvLSTMCell`/`GConvLSTM`, `DCGRUCell`/`DCGRU`, `EvolveGCNOCell`/`EvolveGCNO`. A layer now consumes a whole sequence at once (an `in × timesteps × num_nodes` array on a `GNNGraph`, or a vector of snapshots on a `TemporalSnapshotsGNNGraph`) and returns the full output sequence ([#696]).
 
 **Changed**
 - Bumped the NNlib, OneHotArrays, StableRNGs, and DocumenterInterLinks compat bounds ([#687], [#686], [#684], [#685]).
+- The temporal cells now share their forward-pass math with the Flux frontend via new `GNNlib` functions, and several formulas were corrected in the process (e.g. the `GConvGRU` candidate state, previously `tanh` of the wrong term, and the `GConvLSTM` peephole connections) ([#696]).
+
+**Removed**
+- Removed the `A3TGCN` layer, mirroring its removal from the Flux frontend ([#696]).
+
+## GNNlib.jl — Unreleased (towards 1.4.0)
+
+**Added**
+- Added framework-agnostic forward passes for the recurrent temporal cells — `tgcn`, `gconv_gru`, `gconv_lstm`, `dcgru` — shared by the Flux and Lux frontends ([#696]).
+
+**Fixed**
+- Worked around a Julia 1.12 code-generation segfault that crashed `CGConv` and `GMMConv` gradients: the layers' `@warn` (in the residual branch) is now wrapped in `ignore_derivatives` to keep the logging macro out of the AD-differentiated code path. Root cause reported upstream as [FluxML/Zygote.jl#1662]; re-enables the previously disabled `CGConv`/`GMMConv` gradient tests ([#695]).
+
+## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
+
+**Changed**
+- The recurrent temporal cells now delegate their forward-pass math to shared `GNNlib` functions (requires GNNlib ≥ 1.4); the layer behaviour is unchanged ([#696]).
 
 ## GNNGraphs.jl 1.5.1 — 2026-07-22
 
@@ -205,4 +218,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#691]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/691
 [#623]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/623
 [#695]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/695
+[#696]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/696
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
