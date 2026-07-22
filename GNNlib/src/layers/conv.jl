@@ -316,7 +316,13 @@ function cg_conv(l, g::AbstractGNNGraph, x, e::Union{Nothing, AbstractMatrix} = 
         if size(x, 1) == size(m, 1)
             m += x
         else
-            @warn "number of output features different from number of input features, residual not applied."
+            # `@warn` is wrapped in `ignore_derivatives` to keep the logging
+            # macro out of the AD-differentiated code path: a `@warn`/`@info`
+            # inside a Zygote-differentiated branch segfaults on Julia 1.12
+            # (FluxML/Zygote.jl#1662, GraphNeuralNetworks.jl#623).
+            ignore_derivatives() do
+                @warn "number of output features different from number of input features, residual not applied."
+            end
         end
     end
 
@@ -393,7 +399,11 @@ function gmm_conv(l, g::GNNGraph, x::AbstractMatrix, e::AbstractMatrix)
         if size(x, 1) == size(m, 1)
             m += x
         else
-            @warn "Residual not applied : output feature is not equal to input_feature"
+            # see the note in `cg_conv`: keep `@warn` out of the AD path to
+            # avoid the Julia 1.12 codegen segfault (FluxML/Zygote.jl#1662).
+            ignore_derivatives() do
+                @warn "Residual not applied : output feature is not equal to input_feature"
+            end
         end
     end
 
