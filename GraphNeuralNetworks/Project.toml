@@ -1,7 +1,7 @@
 name = "GraphNeuralNetworks"
 uuid = "cffab07f-9bc2-4db1-8861-388f63bf7694"
 authors = ["Carlo Lucibello and contributors"]
-version = "1.1.0"
+version = "1.1.1-DEV"
 
 [workspace]
 projects = ["test", "docs"]
@@ -25,7 +25,7 @@ ChainRulesCore = "1"
 ConcreteStructs = "0.2.3"
 Flux = "0.16.0"
 GNNGraphs = "1.4"
-GNNlib = "1"
+GNNlib = "1.4"
 LinearAlgebra = "1"
 MLUtils = "0.4"
 MacroTools = "0.5"
