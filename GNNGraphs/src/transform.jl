@@ -123,9 +123,10 @@ function remove_edges(g::GNNGraph{<:COO_T}, edges_to_remove::AbstractVector{<:In
     w = get_edge_weight(g)
     edata = g.edata
 
-    # mask_to_keep = trues(length(s))
-    mask_to_keep = MLUtils.fill_like(edges_to_remove, true)
-
+    # Build the keep-mask on the same device as the graph (see #668): a plain
+    # `trues(length(s))` lives on the CPU and forces scalar indexing when `s`
+    # and `edges_to_remove` are on the GPU.
+    mask_to_keep = fill_like(s, true, Bool, length(s))
     mask_to_keep[edges_to_remove] .= false
 
     s = s[mask_to_keep]
@@ -831,6 +832,14 @@ function getgraph(g::GNNGraph, i::AbstractVector{Int}; nmap = false)
         else
             return g
         end
+    end
+
+    # The subgraph extraction below relies on scalar `Dict` lookups and array
+    # comprehensions that don't run on the GPU, so move to the CPU and back (#161).
+    dev = get_device(g)
+    if !(dev isa CPUDevice)
+        res = getgraph(cpu_device()(g), i; nmap)
+        return nmap ? (dev(res[1]), dev(res[2])) : dev(res)
     end
 
     node_mask = g.graph_indicator .∈ Ref(i)

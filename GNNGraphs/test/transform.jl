@@ -149,7 +149,32 @@ end
         g1b, nodemap = getgraph(g1, 1, nmap = true)
         @test g1b === g1
         @test nodemap == 1:(g1.num_nodes)
-    end 
+    end
+end
+
+@testitem "getgraph GPU" setup=[GraphsTestModule] tags=[:gpu] begin
+    using .GraphsTestModule
+    dev = gpu_device(force=true)
+    g1 = rand_graph(10, 6, ndata = rand(Float32, 4, 10))
+    g2 = rand_graph(4, 4, ndata = rand(Float32, 4, 4))
+    g3 = rand_graph(7, 8, ndata = rand(Float32, 4, 7))
+    g = MLUtils.batch([g1, g2, g3])
+    g_gpu = g |> dev
+
+    # single graph (see #161)
+    r = getgraph(g, 2)
+    r_gpu = getgraph(g_gpu, 2)
+    @test get_device(r_gpu.graph_indicator) isa AbstractGPUDevice
+    @test r_gpu.num_nodes == r.num_nodes
+    @test r_gpu.num_edges == r.num_edges
+    @test Array(node_features(r_gpu)) ≈ node_features(r)
+
+    # multiple graphs with node map
+    rb, nmap = getgraph(g, [1, 3], nmap = true)
+    rb_gpu, nmap_gpu = getgraph(g_gpu, [1, 3], nmap = true)
+    @test rb_gpu.num_nodes == rb.num_nodes
+    @test rb_gpu.num_edges == rb.num_edges
+    @test Array(nmap_gpu) == nmap
 end
 
 @testitem "remove_edges" setup=[GraphsTestModule] begin
@@ -188,6 +213,32 @@ end
             @test gnew.num_edges == g.num_edges
         end
     end
+end
+
+@testitem "remove_edges GPU" setup=[GraphsTestModule] tags=[:gpu] begin
+    using .GraphsTestModule
+    dev = gpu_device(force=true)
+    s = [1, 1, 2, 3]
+    t = [2, 3, 4, 5]
+    w = Float32[0.1, 0.2, 0.3, 0.4]
+    g = GNNGraph((s, t, w), graph_type = :coo) |> dev
+
+    # index vector on the same device as the graph (see #668)
+    gnew = remove_edges(g, dev([1, 2, 4]))
+    @test gnew.num_edges == 1
+    @test get_device(edge_index(gnew)[1]) isa AbstractGPUDevice
+    @test Array(edge_index(gnew)[1]) == [2]
+    @test Array(edge_index(gnew)[2]) == [4]
+    @test Array(get_edge_weight(gnew)) == Float32[0.3]
+
+    # index vector on the CPU while the graph lives on the GPU
+    gnew = remove_edges(g, [1, 2, 4])
+    @test gnew.num_edges == 1
+    @test Array(edge_index(gnew)[1]) == [2]
+
+    # probability overload
+    @test remove_edges(g, 1.0f0).num_edges == 0
+    @test remove_edges(g, 0.0f0).num_edges == g.num_edges
 end
 
 @testitem "add_edges" setup=[GraphsTestModule] begin
