@@ -33,11 +33,10 @@
         test_lux_layer(rng, l, g, x, sizey=(out_dims,10), container=true)
     end
     
-    ## TODO SEGFAULT on julia 1.12
-    # @testset  "CGConv" begin
-    #     l = CGConv(in_dims => in_dims, residual = true)
-    #     test_lux_layer(rng, l, g, x, outputsize=(in_dims,), container=true)
-    # end
+    @testset  "CGConv" begin
+        l = CGConv(in_dims => in_dims, residual = true)
+        test_lux_layer(rng, l, g, x, outputsize=(in_dims,), container=true)
+    end
 
     @testset "DConv" begin
         l = DConv(in_dims => out_dims, 2)
@@ -126,13 +125,12 @@
         test_lux_layer(rng, l, g2, x; outputsize=(n_out,), e, container=true)
     end
 
-    ## TODO SEGFAULT on julia 1.12
-    # @testset "GMMConv" begin
-    #     ein_dims = 4 
-    #     e = randn(rng, Float32, ein_dims, g.num_edges)
-    #     l = GMMConv((in_dims, ein_dims) => out_dims, tanh; K = 2, residual = false)
-    #     test_lux_layer(rng, l, g, x; outputsize=(out_dims,), e)
-    # end
+    @testset "GMMConv" begin
+        ein_dims = 4
+        e = randn(rng, Float32, ein_dims, g.num_edges)
+        l = GMMConv((in_dims, ein_dims) => out_dims, tanh; K = 2, residual = false)
+        test_lux_layer(rng, l, g, x; outputsize=(out_dims,), e)
+    end
 
     @testset "ResGatedGraphConv" begin
         l = ResGatedGraphConv(in_dims => out_dims, tanh)
