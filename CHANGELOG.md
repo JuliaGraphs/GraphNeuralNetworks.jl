@@ -26,6 +26,8 @@ Entries link to the pull request that introduced them.
 - Bumped the NNlib and KrylovKit compat bounds ([#687], [#680]).
 
 **Fixed**
+- Fixed `remove_edges` triggering scalar indexing on GPU graphs ([#672], [#691]).
+- Fixed `getgraph` failing on GPU graphs ([#691]).
 - Fixed `remove_self_loops` mutating the input for adjacency-matrix graphs ([#659]).
 - Fixed `unbatch` for COO batches containing zero-edge graphs ([#652]).
 - Fixed `sample_nbrs` when sampling without replacement ([#648]).
@@ -181,6 +183,7 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#652]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/652
 [#659]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/659
 [#670]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/670
+[#672]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/672
 [#677]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/677
 [#678]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/678
 [#679]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/679
@@ -190,3 +193,4 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#686]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/686
 [#687]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/687
 [#690]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/690
+[#691]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/691
