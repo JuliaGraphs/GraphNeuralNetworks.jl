@@ -693,33 +693,32 @@ end
 
 ######################## DConv ######################################
 
-function d_conv(l, g::GNNGraph, x::AbstractMatrix)
-    #A = adjacency_matrix(g, weighted = true)
-    s, t = edge_index(g)
-    gt = GNNGraph(t, s, get_edge_weight(g))
-    deg_out = degree(g; dir = :out)
-    deg_in = degree(g; dir = :in)
-    deg_out = Diagonal(deg_out)
-    deg_in = Diagonal(deg_in)
-    
-    h = l.weights[1,1,:,:] * x .+ l.weights[2,1,:,:] * x
+# Inverse degree, guarding isolated nodes (degree 0) so they contribute 0 instead of Inf/NaN.
+_safe_inv(d) = iszero(d) ? zero(d) : inv(d)
 
-    T0 = x
-    if l.k > 1
-        # T1_in = T0 * deg_in * A'
-        #T1_out = T0 * deg_out' * A
-        T1_out = propagate(w_mul_xj, g, +; xj = T0*deg_out')
-        T1_in = propagate(w_mul_xj, gt, +; xj = T0*deg_in)
-        h = h .+ l.weights[1,2,:,:] * T1_in .+ l.weights[2,2,:,:] * T1_out
+# Diffusion convolution, Li et al. (2018), https://arxiv.org/abs/1707.01926 (Eq. 2):
+#   H = Σ_{k=0}^{K-1} ( Θ_{k,1} (D_O⁻¹ W)ᵏ x  +  Θ_{k,2} (D_I⁻¹ Wᵀ)ᵏ x )
+# a bidirectional random-walk *power series* (NOT a Chebyshev polynomial). In the
+# features×nodes layout the forward power (D_O⁻¹ W)ᵏ x is built by repeatedly
+# propagating over the reversed graph `gt` (= Wᵀ) and rescaling each node column by
+# 1/deg_out; the backward power uses `g` (= W) and 1/deg_in. The degree/reverse-graph
+# terms are graph structure, not differentiable parameters, so they are computed under
+# `ignore_derivatives`. See issue #592: earlier versions inverted the degree
+# normalization and used a `2T - T₀` Chebyshev step (as in PyTorch-Geometric-Temporal),
+# neither of which matches the paper.
+function d_conv(l, g::GNNGraph, x::AbstractMatrix)
+    Tf = x   # forward  diffusion power (D_O⁻¹ W)ᵏ x
+    Tb = x   # backward diffusion power (D_I⁻¹ Wᵀ)ᵏ x
+    gt, inv_out, inv_in = ignore_derivatives() do
+        s, t = edge_index(g)
+        gt = GNNGraph(t, s, get_edge_weight(g); num_nodes = g.num_nodes)
+        (gt, _safe_inv.(degree(g, eltype(x); dir = :out)), _safe_inv.(degree(g, eltype(x); dir = :in)))
     end
-    for i in 2:l.k
-        T2_in = propagate(w_mul_xj, gt, +; xj = T1_in*deg_in)
-        T2_in = 2 * T2_in - T0
-        T2_out =  propagate(w_mul_xj, g ,+; xj = T1_out*deg_out')
-        T2_out = 2 * T2_out - T0
-        h = h .+ l.weights[1,i,:,:] * T2_in .+ l.weights[2,i,:,:] * T2_out
-        T1_in = T2_in
-        T1_out = T2_out
+    h = l.weights[1, 1, :, :] * x .+ l.weights[2, 1, :, :] * x   # k = 0 (self term)
+    for k in 2:l.k
+        Tf = propagate(w_mul_xj, gt, +; xj = Tf) .* inv_out'
+        Tb = propagate(w_mul_xj, g,  +; xj = Tb) .* inv_in'
+        h = h .+ l.weights[1, k, :, :] * Tf .+ l.weights[2, k, :, :] * Tb
     end
     return h .+ l.bias
 end

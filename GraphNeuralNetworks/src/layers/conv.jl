@@ -1546,15 +1546,25 @@ function Base.show(io::IO, l::TransformerConv)
     print(io, "TransformerConv(($in, $ein) => $out, heads=$(l.heads))")
 end
 
-"""
+@doc raw"""
     DConv(ch::Pair{Int, Int}, k::Int; init = glorot_uniform, bias = true)
 
 Diffusion convolution layer from the paper [Diffusion Convolutional Recurrent Neural Networks: Data-Driven Traffic Forecasting](https://arxiv.org/pdf/1707.01926).
 
+It implements the bidirectional diffusion (random-walk) convolution
+
+```math
+H = \sum_{k=0}^{K-1} \left( (D_O^{-1} W)^k X \, \Theta_{k,1} + (D_I^{-1} W^\top)^k X \, \Theta_{k,2} \right),
+```
+
+where ``W`` is the weighted adjacency matrix and ``D_O``, ``D_I`` are the diagonal
+out- and in-degree matrices. This is a power series in the two transition matrices;
+it is *not* a Chebyshev polynomial recurrence.
+
 # Arguments
 
 - `ch`: Pair of input and output dimensions.
-- `k`: Number of diffusion steps.
+- `k`: Number of diffusion steps (`K`, i.e. powers `0` through `K-1`).
 - `init`: Weights' initializer. Default `glorot_uniform`.
 - `bias`: Add learnable bias. Default `true`.
 

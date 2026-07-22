@@ -41,6 +41,9 @@ Entries link to the pull request that introduced them.
 - Relaxed the `CUDA` compat bound to `"5, 6"`, adding support for CUDA.jl v6 ([#690]).
 - Bumped the NNlib compat bound ([#687]).
 
+**Fixed**
+- Fixed the `d_conv` (`DConv`) forward pass, which did not compute the diffusion convolution from the paper: the degree normalization was inverted (multiplying by degree instead of `D_O⁻¹`/`D_I⁻¹`), one weight slice was applied twice, and a spurious Chebyshev `2T − T₀` recurrence was used in place of the paper's bidirectional random-walk power series. Isolated nodes are now handled without producing `NaN` ([#592]).
+
 ## GNNlib.jl 1.2.1 — 2026-04-29
 
 **Changed**
@@ -164,6 +167,7 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#587]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/587
 [#588]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/588
 [#589]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/589
+[#592]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/592
 [#596]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/596
 [#601]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/601
 [#605]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/605

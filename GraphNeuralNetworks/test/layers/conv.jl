@@ -611,13 +611,54 @@ end
 
 @testitem "DConv" setup=[TolSnippet, TestModule] begin
     using .TestModule
-    K = [1, 2, 3] # for different number of hops       
+    K = [1, 2, 3] # for different number of hops
     for k in K
         l = DConv(D_IN => D_OUT, k)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
             test_gradients(l, g, g.x, rtol = RTOL_HIGH, ad_backends = [Flux.AutoZygote()])
         end
+    end
+end
+
+@testitem "DConv numerical" setup=[TolSnippet, TestModule] begin
+    using .TestModule
+
+    # Independent dense reference for the DConv (DCRNN) diffusion convolution,
+    # Li et al. (2018), https://arxiv.org/abs/1707.01926 (Eq. 2):
+    #   H = Σ_{k=0}^{K-1} ( Θ_{k,1} (D_O⁻¹ W)ᵏ x + Θ_{k,2} (D_I⁻¹ Wᵀ)ᵏ x )
+    # a bidirectional random-walk power series (no Chebyshev recurrence). Guards
+    # isolated nodes (degree 0) to a 0 contribution, matching the layer. This checks
+    # the forward *formula*, which `size` + `test_gradients` above cannot (see #592).
+    # `v .* A` scales the rows of `A` by `v` (i.e. `Diagonal(v) * A`, without LinearAlgebra).
+    function dconv_reference(l, g, x)
+        A = Matrix(adjacency_matrix(g, eltype(x); weighted = true))
+        sinv(d) = iszero(d) ? zero(d) : inv(d)
+        Pf = sinv.(vec(sum(A, dims = 2))) .* A      # D_O⁻¹ W  (forward)
+        Pb = sinv.(vec(sum(A, dims = 1))) .* A'     # D_I⁻¹ Wᵀ (backward)
+        Xn = collect(x')
+        h = zero(l.weights[1, 1, :, :] * x)
+        Sf, Sb = Xn, Xn
+        for d in 0:(l.k - 1)
+            if d > 0
+                Sf = Pf * Sf
+                Sb = Pb * Sb
+            end
+            h = h .+ l.weights[1, d + 1, :, :] * Sf' .+ l.weights[2, d + 1, :, :] * Sb'
+        end
+        return h .+ l.bias
+    end
+
+    # A directed, weighted graph exercises the forward/backward asymmetry and the
+    # degree normalization; the fixture graphs (undirected/unweighted) additionally
+    # cover isolated nodes and the :coo/:dense/:sparse storage paths.
+    g_dir = GNNGraph([1, 1, 2, 3, 4, 4], [2, 3, 3, 4, 1, 2],
+                     Float32[0.5, 1.0, 2.0, 0.3, 0.7, 1.5]; num_nodes = 4)
+    x_dir = rand(Float32, D_IN, 4)
+
+    for k in 1:3, (g, x) in [(g_dir, x_dir); [(g, g.x) for g in TEST_GRAPHS]]
+        l = DConv(D_IN => D_OUT, k)
+        @test l(g, x) ≈ dconv_reference(l, g, x) rtol=1e-4
     end
 end
 
