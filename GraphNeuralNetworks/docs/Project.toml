@@ -30,4 +30,4 @@ GraphNeuralNetworks = {path = ".."}
 
 [compat]
 DocumenterInterLinks = "1.1.0"
-cuDNN = "6.2.1"
+cuDNN = "1, 6"

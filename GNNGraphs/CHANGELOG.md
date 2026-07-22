@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.5.1] - 2026-07-22
 
 ### Changed
+- Relaxed the `CUDA` compat bound to `"5, 6"`, adding support for CUDA.jl v6 ([#690]).
 - Bumped the NNlib and KrylovKit compat bounds ([#687], [#680]).
 
 ### Fixed
