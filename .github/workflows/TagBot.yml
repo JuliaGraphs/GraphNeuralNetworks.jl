@@ -13,9 +13,22 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
     # ubuntu-slim doesn't support containers, and thus won't work
     runs-on: ubuntu-latest
+    # This is a monorepo with one registered package per subdirectory. TagBot
+    # reads <subdir>/Project.toml to find the package UUID; without `subdir` it
+    # reads the root [workspace] Project.toml, finds no UUID, and skips with
+    # "This package is not registered". So run one TagBot per package.
+    strategy:
+      fail-fast: false
+      matrix:
+        subdir:
+          - GNNGraphs
+          - GNNlib
+          - GraphNeuralNetworks
+          - GNNLux
     steps:
       - uses: JuliaRegistries/TagBot@14d7645453716d7a2f09b1da0504a024f97462a1 # v1.25.10
         with:
+          subdir: ${{ matrix.subdir }}
           token: ${{ secrets.GITHUB_TOKEN }}
           # For commits that modify workflow files: SSH key enables tagging, but
           # releases require manual creation. For full automation of such commits,
