@@ -5,7 +5,7 @@ All notable changes to the GNNlib.jl package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.2] - 2026-07-22
+## [1.3.0] - 2026-07-22
 
 ### Added
 - Added Mooncake rules for the `propagate` `copy_xj`, `e_mul_xj`, and `w_mul_xj` fast paths ([#677], [#678], [#679]).
@@ -55,7 +55,7 @@ First stable release of GNNlib.jl.
 - Rewrote the recurrent temporal layers for Flux v0.16 ([#560]).
 - Updated for compatibility with Flux v0.15 ([#550]).
 
-[1.2.2]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/releases/tag/GNNlib-v1.2.2
+[1.3.0]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/releases/tag/GNNlib-v1.3.0
 [1.2.1]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/releases/tag/GNNlib-v1.2.1
 [1.2.0]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/releases/tag/GNNlib-v1.2.0
 [1.1.0]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/releases/tag/GNNlib-v1.1.0
