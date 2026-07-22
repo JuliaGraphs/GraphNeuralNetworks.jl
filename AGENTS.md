@@ -31,6 +31,11 @@ Julia ≥ 1.10 is required (some tests, e.g. Mooncake, need ≥ 1.12). Thanks to
 julia --project=GraphNeuralNetworks -e 'using Pkg; Pkg.test("GraphNeuralNetworks")'
 julia --project=GNNGraphs         -e 'using Pkg; Pkg.test("GNNGraphs")'
 
+# Run only the :gpu-tagged items on CUDA (works locally on a CUDA machine, not
+# just in CI). The test harness auto-installs the backend (CUDA + cuDNN) and sets
+# allowscalar(false); swap in GNN_TEST_AMDGPU / GNN_TEST_Metal for other backends.
+GNN_TEST_CPU=false GNN_TEST_CUDA=true julia --project=GNNGraphs -e 'using Pkg; Pkg.test("GNNGraphs")'
+
 # Build docs for one package
 julia --project=GNNGraphs/docs GNNGraphs/docs/make.jl
 
@@ -42,7 +47,8 @@ julia -e 'using JuliaFormatter; format(".")'
 Test files define independent `@testitem "..." setup=[TestModule] begin ... end` blocks. `runtests.jl` in each package just calls `@run_package_tests` with a tag filter. Shared fixtures and exports live in each package's `test/test_module.jl` (`TestModule`).
 
 - **Run a single test item**: use the VS Code Julia extension's test-item UI, or filter in `runtests.jl`. Test items are self-contained, so you can also copy one into a REPL after `include("test/test_module.jl")`.
-- **GPU tests** are tagged `:gpu`; untagged items are CPU tests. Backend selection is via env vars read in `runtests.jl` and `test_module.jl`: `GNN_TEST_CPU` (default `"true"`), `GNN_TEST_CUDA`, `GNN_TEST_AMDGPU`, `GNN_TEST_Metal`. CPU CI runs untagged items; GPU CI (Buildkite, `.buildkite/pipeline.yml`) sets `GNN_TEST_CPU=false` and a backend var to `true`.
+- **GPU tests** are tagged `:gpu`; untagged items are CPU tests. Backend selection is via env vars read in `runtests.jl` and `test_module.jl`: `GNN_TEST_CPU` (default `"true"`), `GNN_TEST_CUDA`, `GNN_TEST_AMDGPU`, `GNN_TEST_Metal`. CPU CI runs untagged items; GPU CI (Buildkite, `.buildkite/pipeline.yml`) sets `GNN_TEST_CPU=false` and a backend var to `true`. `test_module.jl` `Pkg.add`s the backend on demand, so it need not be in `test/Project.toml`.
+- **Exercise a `:gpu` item in the REPL**: inside a `@testitem`, `dev = gpu_device(force=true)` and helpers like `AbstractGPUDevice` come from the package's test-module setup (`GraphsTestModule` in GNNGraphs). To reproduce the same environment interactively, load the backend the way the harness does — for CUDA that means `using CUDA, cuDNN` (**cuDNN is required**; without it `gpu_device()` reports "no functional GPU backend" and silently falls back to the CPU) — then set `CUDA.allowscalar(false)` so any accidental scalar indexing errors instead of running slowly (this is what catches most GPU regressions, e.g. graph ops that materialize a CPU mask).
 
 ## Adding a new convolutional layer
 
