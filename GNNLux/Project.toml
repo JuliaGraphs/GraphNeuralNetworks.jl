@@ -1,6 +1,6 @@
 name = "GNNLux"
 uuid = "e8545f4d-a905-48ac-a8c4-ca114b98986d"
-version = "0.2.0-DEV"
+version = "0.2.0"
 authors = ["Carlo Lucibello and contributors"]
 
 [workspace]
