@@ -123,7 +123,8 @@ function remove_edges(g::GNNGraph{<:COO_T}, edges_to_remove::AbstractVector{<:In
     w = get_edge_weight(g)
     edata = g.edata
 
-    mask_to_keep = trues(length(s))
+    # mask_to_keep = trues(length(s))
+    mask_to_keep = MLUtils.fill_like(edges_to_remove, true)
 
     mask_to_keep[edges_to_remove] .= false
 
