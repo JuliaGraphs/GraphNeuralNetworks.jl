@@ -13,7 +13,7 @@ Entries link to the pull request that introduced them.
 ## GNNlib.jl — Unreleased (towards 1.3.1)
 
 **Fixed**
-- Worked around a Julia 1.12 code-generation segfault that crashed `CGConv` and `GMMConv` gradients: the layers' `@warn` (in the residual branch) is now wrapped in `ignore_derivatives` to keep the logging macro out of the AD-differentiated code path. Root cause reported upstream as [FluxML/Zygote.jl#1662]; re-enables the previously disabled `CGConv`/`GMMConv` gradient tests ([#623]).
+- Worked around a Julia 1.12 code-generation segfault that crashed `CGConv` and `GMMConv` gradients: the layers' `@warn` (in the residual branch) is now wrapped in `ignore_derivatives` to keep the logging macro out of the AD-differentiated code path. Root cause reported upstream as [FluxML/Zygote.jl#1662]; re-enables the previously disabled `CGConv`/`GMMConv` gradient tests ([#695]).
 
 ## GNNLux.jl — Unreleased (towards 0.2.0)
 
@@ -204,4 +204,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#690]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/690
 [#691]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/691
 [#623]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/623
+[#695]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/695
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
