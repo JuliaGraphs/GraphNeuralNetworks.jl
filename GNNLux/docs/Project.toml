@@ -23,4 +23,5 @@ GNNLux = {path = ".."}
 GNNlib = {path = "../../GNNlib"}
 
 [compat]
+DocumenterInterLinks = "1.1.0"
 OneHotArrays = "0.2.11"
