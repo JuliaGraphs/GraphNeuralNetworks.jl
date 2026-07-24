@@ -252,7 +252,7 @@ function gin_conv(l, g::AbstractGNNGraph, x)
     xj, xi = expand_srcdst(g, x) 
  
     m = propagate(copy_xj, g, l.aggr, xj = xj)
-    ϵ = convert.(float(eltype(xi)), l.ϵ)
+    ϵ = l.ϵ isa Real ? ofeltype(xi, l.ϵ) : l.ϵ
     return l.nn((1 .+ ϵ) .* xi .+ m)
 end
 
