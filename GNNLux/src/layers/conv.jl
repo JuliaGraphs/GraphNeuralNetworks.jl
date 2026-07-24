@@ -1277,7 +1277,7 @@ function Base.show(io::IO, l::GatedGraphConv)
 end
 
 @doc raw"""
-    GINConv(f, ϵ; aggr=+)
+    GINConv(f, [eps]; aggr=+, train_eps=false)
 
 Graph Isomorphism convolutional layer from paper [How Powerful are Graph Neural Networks?](https://arxiv.org/pdf/1810.00826.pdf).
 
@@ -1290,7 +1290,9 @@ where ``f_\Theta`` typically denotes a learnable function, e.g. a linear layer o
 # Arguments
 
 - `f`: A (possibly learnable) function acting on node features. 
-- `ϵ`: Weighting factor.
+- `eps`: Initial value of the weighting factor ``\epsilon``. Default `0.0f0`.
+- `train_eps`: If `true`, ``\epsilon`` is trainable. Default `false`.
+- `aggr`: Neighborhood aggregation function. Default `+`.
 
 # Examples:
 
@@ -1312,7 +1314,7 @@ x = randn(rng, Float32, in_channel, g.num_nodes)
 nn = Dense(in_channel, out_channel)
 
 # create layer
-l = GINConv(nn, 0.01f0, aggr = mean)
+l = GINConv(nn; eps = 0.01f0, train_eps = true, aggr = mean)
 
 # setup layer
 ps, st = LuxCore.setup(rng, l)
@@ -1323,15 +1325,31 @@ y, st = l(g, x, ps, st)       # size:  out_channel × num_nodes
 """
 @concrete struct GINConv <: GNNContainerLayer{(:nn,)}
     nn <: AbstractLuxLayer
-    ϵ <: Real
+    eps
     aggr
+    train_eps::Bool
 end
 
-GINConv(nn, ϵ; aggr = +) = GINConv(nn, ϵ, aggr)
+GINConv(nn, eps::Real; aggr = +, train_eps::Bool = false) =
+    GINConv(nn, train_eps ? [eps] : eps, aggr, train_eps)
+
+GINConv(nn, eps::Real, aggr) = GINConv(nn, eps; aggr)
+
+GINConv(nn; eps::Real = 0.0f0, aggr = +, train_eps::Bool = false) =
+    GINConv(nn, eps; aggr, train_eps)
+
+function LuxCore.initialparameters(rng::AbstractRNG, l::GINConv)
+    nn = LuxCore.initialparameters(rng, l.nn)
+    return l.train_eps ? (; nn, eps = l.eps) : (; nn)
+end
+
+LuxCore.parameterlength(l::GINConv) = parameterlength(l.nn) + l.train_eps
+LuxCore.statelength(l::GINConv) = statelength(l.nn)
 
 function (l::GINConv)(g, x, ps, st)
     nn = StatefulLuxLayer{true}(l.nn, ps.nn, st.nn)
-    m = (; nn, l.ϵ, l.aggr)
+    eps = l.train_eps ? ps.eps : l.eps
+    m = (; nn, eps, l.aggr)
     y = GNNlib.gin_conv(m, g, x)
     stnew = (; nn = _getstate(nn))
     return y, stnew
@@ -1339,7 +1357,9 @@ end
 
 function Base.show(io::IO, l::GINConv)
     print(io, "GINConv($(l.nn)")
-    print(io, ", $(l.ϵ)")
+    print(io, ", eps=$(l.eps)")
+    l.train_eps && print(io, ", train_eps=true")
+    l.aggr == (+) || print(io, ", aggr=$(l.aggr)")
     print(io, ")")
 end
 

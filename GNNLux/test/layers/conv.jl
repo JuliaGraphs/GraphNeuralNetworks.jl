@@ -93,8 +93,17 @@
 
     @testset "GINConv" begin
         nn = Chain(Dense(in_dims => out_dims, tanh), Dense(out_dims => out_dims))
-        l = GINConv(nn, 0.5)
+        l = GINConv(nn; eps = 0.5)
         test_lux_layer(rng, l, g, x, sizey=(out_dims,g.num_nodes), container=true)
+        ps = LuxCore.initialparameters(rng, l)
+        @test !hasproperty(ps, :eps)
+
+        l = GINConv(nn; train_eps = true)
+        test_lux_layer(rng, l, g, x, sizey=(out_dims,g.num_nodes), container=true)
+        ps = LuxCore.initialparameters(rng, l)
+        @test ps.eps == [0.0f0]
+
+        @test GINConv(nn, 0.5).eps == 0.5
     end
 
     @testset "MEGNetConv" begin
