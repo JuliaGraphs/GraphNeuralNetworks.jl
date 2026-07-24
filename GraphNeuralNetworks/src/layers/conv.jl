@@ -590,7 +590,7 @@ function Base.show(io::IO, l::EdgeConv)
 end
 
 @doc raw"""
-    GINConv(f, [eps]; aggr=+, train_eps=false)
+    GINConv(f, [ϵ]; aggr=+, train_eps=false)
 
 Graph Isomorphism convolutional layer from paper [How Powerful are Graph Neural Networks?](https://arxiv.org/pdf/1810.00826.pdf).
 
@@ -603,7 +603,7 @@ where ``f_\Theta`` typically denotes a learnable function, e.g. a linear layer o
 # Arguments
 
 - `f`: A (possibly learnable) function acting on node features. 
-- `eps`: Initial value of the weighting factor ``\epsilon``. Default `0.0f0`.
+- `ϵ`: Initial value of the weighting factor ``\epsilon``. Default `0.0f0`.
 - `train_eps`: If `true`, ``\epsilon`` is trainable. Default `false`.
 - `aggr`: Neighborhood aggregation function. Default `+`.
 
@@ -621,7 +621,7 @@ g = GNNGraph(s, t)
 nn = Dense(in_channel, out_channel)
 
 # create layer
-l = GINConv(nn; eps = 0.01f0, train_eps = true, aggr = mean)
+l = GINConv(nn; ϵ = 0.01f0, train_eps = true, aggr = mean)
 
 # forward pass
 y = l(g, x)  
@@ -629,27 +629,27 @@ y = l(g, x)
 """
 struct GINConv{E, NN, A} <: GNNLayer
     nn::NN
-    eps::E
+    ϵ::E
     aggr::A
     train_eps::Bool
 end
 
 Flux.@layer :expand GINConv
-Flux.trainable(l::GINConv) = l.train_eps ? (; l.nn, l.eps) : (; l.nn)
+Flux.trainable(l::GINConv) = l.train_eps ? (; l.nn, l.ϵ) : (; l.nn)
 
-GINConv(nn, eps::Real; aggr = +, train_eps::Bool = false) =
-    GINConv(nn, train_eps ? [eps] : eps, aggr, train_eps)
+GINConv(nn, ϵ::Real; aggr = +, train_eps::Bool = false) =
+    GINConv(nn, train_eps ? [ϵ] : ϵ, aggr, train_eps)
 
-GINConv(nn, eps::Real, aggr) = GINConv(nn, eps; aggr)
+GINConv(nn, ϵ::Real, aggr) = GINConv(nn, ϵ; aggr)
 
-GINConv(nn; eps::Real = 0.0f0, aggr = +, train_eps::Bool = false) =
-    GINConv(nn, eps; aggr, train_eps)
+GINConv(nn; ϵ::Real = 0.0f0, aggr = +, train_eps::Bool = false) =
+    GINConv(nn, ϵ; aggr, train_eps)
 
 (l::GINConv)(g, x) = GNNlib.gin_conv(l, g, x)
 
 function Base.show(io::IO, l::GINConv)
     print(io, "GINConv($(l.nn)")
-    print(io, ", eps=$(l.eps)")
+    print(io, ", ϵ=$(l.ϵ)")
     l.train_eps && print(io, ", train_eps=true")
     l.aggr == (+) || print(io, ", aggr=$(l.aggr)")
     print(io, ")")
