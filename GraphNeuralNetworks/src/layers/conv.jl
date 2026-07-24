@@ -590,7 +590,7 @@ function Base.show(io::IO, l::EdgeConv)
 end
 
 @doc raw"""
-    GINConv(f, ϵ; aggr=+)
+    GINConv(f, [eps]; aggr=+, train_eps=false)
 
 Graph Isomorphism convolutional layer from paper [How Powerful are Graph Neural Networks?](https://arxiv.org/pdf/1810.00826.pdf).
 
@@ -603,7 +603,9 @@ where ``f_\Theta`` typically denotes a learnable function, e.g. a linear layer o
 # Arguments
 
 - `f`: A (possibly learnable) function acting on node features. 
-- `ϵ`: Weighting factor.
+- `eps`: Initial value of the weighting factor ``\epsilon``. Default `0.0f0`.
+- `train_eps`: If `true`, ``\epsilon`` is trainable. Default `false`.
+- `aggr`: Neighborhood aggregation function. Default `+`.
 
 # Examples:
 
@@ -619,28 +621,37 @@ g = GNNGraph(s, t)
 nn = Dense(in_channel, out_channel)
 
 # create layer
-l = GINConv(nn, 0.01f0, aggr = mean)
+l = GINConv(nn; eps = 0.01f0, train_eps = true, aggr = mean)
 
 # forward pass
 y = l(g, x)  
 ```
 """
-struct GINConv{R <: Real, NN, A} <: GNNLayer
+struct GINConv{E, NN, A} <: GNNLayer
     nn::NN
-    ϵ::R
+    eps::E
     aggr::A
+    train_eps::Bool
 end
 
 Flux.@layer :expand GINConv
-Flux.trainable(l::GINConv) = (nn = l.nn,)
+Flux.trainable(l::GINConv) = l.train_eps ? (; l.nn, l.eps) : (; l.nn)
 
-GINConv(nn, ϵ; aggr = +) = GINConv(nn, ϵ, aggr)
+GINConv(nn, eps::Real; aggr = +, train_eps::Bool = false) =
+    GINConv(nn, train_eps ? [eps] : eps, aggr, train_eps)
+
+GINConv(nn, eps::Real, aggr) = GINConv(nn, eps; aggr)
+
+GINConv(nn; eps::Real = 0.0f0, aggr = +, train_eps::Bool = false) =
+    GINConv(nn, eps; aggr, train_eps)
 
 (l::GINConv)(g, x) = GNNlib.gin_conv(l, g, x)
 
 function Base.show(io::IO, l::GINConv)
     print(io, "GINConv($(l.nn)")
-    print(io, ", $(l.ϵ)")
+    print(io, ", eps=$(l.eps)")
+    l.train_eps && print(io, ", train_eps=true")
+    l.aggr == (+) || print(io, ", aggr=$(l.aggr)")
     print(io, ")")
 end
 
