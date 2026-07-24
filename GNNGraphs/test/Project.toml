@@ -25,3 +25,4 @@ GNNGraphs = {path = ".."}
 
 [compat]
 NNlib = "0.9.38"
+StableRNGs = "1.0.4"

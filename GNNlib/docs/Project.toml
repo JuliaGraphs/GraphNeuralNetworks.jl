@@ -10,3 +10,6 @@ MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
 [sources]
 GNNGraphs = {path = "../../GNNGraphs"}
 GNNlib = {path = ".."}
+
+[compat]
+DocumenterInterLinks = "1.1.0"

@@ -1,8 +1,9 @@
 module GNNlibMooncakeExt
 
-using GNNlib: GNNlib, propagate, copy_xj, e_mul_xj
-using GNNGraphs: GNNGraph, adjacency_matrix, edge_index, set_edge_weight
-using LinearAlgebra: adjoint
+using GNNlib: GNNlib, propagate, copy_xj, e_mul_xj, w_mul_xj
+using GNNGraphs: GNNGraph, adjacency_matrix, degree, edge_index, set_edge_weight
+using LinearAlgebra: Diagonal, adjoint
+using Statistics: mean
 using Base: IEEEFloat
 import Mooncake
 using Mooncake: CoDual, DefaultCtx, NoRData, @is_primitive
@@ -83,6 +84,98 @@ function Mooncake.rrule!!(
                NoRData(), NoRData(), NoRData(), NoRData()
     end
     return res, propagate_e_mul_xj_add_pullback!!
+end
+
+# Reverse rule for the weighted fast path `propagate(w_mul_xj, g, +, xj) == xj * A(w)`.
+# `w` are the graph's own weights, so `dw` accumulates into the COO tangent `g.graph[3]`.
+
+@is_primitive DefaultCtx Tuple{
+    typeof(propagate),
+    typeof(w_mul_xj),
+    GNNGraph{<:Tuple},
+    typeof(+),
+    Nothing,
+    AbstractMatrix{P},
+    Nothing,
+} where {P <: IEEEFloat}
+
+# Edge-weight tangent accumulator (COO `graph[3]`), or `nothing` for a constant graph.
+_w_mul_xj_dw(::Mooncake.NoFData) = nothing
+function _w_mul_xj_dw(dg::Mooncake.FData)
+    gt = dg.data.graph
+    gt isa Tuple || return nothing
+    dw = gt[3]
+    return dw isa AbstractVector{<:IEEEFloat} ? dw : nothing
+end
+
+function Mooncake.rrule!!(
+    ::CoDual{typeof(propagate)},
+    ::CoDual{typeof(w_mul_xj)},
+    g::CoDual{<:GNNGraph{<:Tuple}},
+    ::CoDual{typeof(+)},
+    ::CoDual{Nothing},
+    xj::CoDual{<:AbstractMatrix{P}},
+    ::CoDual{Nothing},
+) where {P <: IEEEFloat}
+    pg = Mooncake.primal(g)
+    pxj = Mooncake.primal(xj)
+    s, t = edge_index(pg)
+    A = adjacency_matrix(pg, P; weighted = true)
+    y = pxj * A
+    res = Mooncake.zero_fcodual(y)
+    dw = _w_mul_xj_dw(Mooncake.tangent(g))
+    function propagate_w_mul_xj_add_pullback!!(::NoRData)
+        dy = Mooncake.tangent(res)
+        dxj = Mooncake.tangent(xj)
+        dxj .+= dy * adjoint(A)
+        if dw !== nothing
+            dw .+= vec(sum(view(pxj, :, s) .* view(dy, :, t); dims = 1))
+        end
+        return NoRData(), NoRData(), Mooncake.zero_rdata(pg),
+               NoRData(), NoRData(), NoRData(), NoRData()
+    end
+    return res, propagate_w_mul_xj_add_pullback!!
+end
+
+# Reverse rule for the mean fast path `propagate(copy_xj, g, mean, xj) == xj * Â`,
+# with `Â = A * Diagonal(dinv)` the in-degree-normalized adjacency. Isolated
+# nodes get 0, matching `NNlib.scatter(mean, ...)`. `Â` is constant w.r.t. the
+# inputs, so `dxj = dy * Â'`.
+
+@is_primitive DefaultCtx Tuple{
+    typeof(propagate),
+    typeof(copy_xj),
+    GNNGraph,
+    typeof(mean),
+    Nothing,
+    AbstractMatrix{P},
+    Nothing,
+} where {P <: IEEEFloat}
+
+function Mooncake.rrule!!(
+    ::CoDual{typeof(propagate)},
+    ::CoDual{typeof(copy_xj)},
+    g::CoDual{<:GNNGraph},
+    ::CoDual{typeof(mean)},
+    ::CoDual{Nothing},
+    xj::CoDual{<:AbstractMatrix{P}},
+    ::CoDual{Nothing},
+) where {P <: IEEEFloat}
+    pg = Mooncake.primal(g)
+    pxj = Mooncake.primal(xj)
+    d = degree(pg, P; dir = :in, edge_weight = false)
+    dinv = map(x -> ifelse(iszero(x), zero(P), inv(x)), d)
+    A = adjacency_matrix(pg, P; weighted = false) * Diagonal(dinv)
+    y = pxj * A
+    res = Mooncake.zero_fcodual(y)
+    function propagate_copy_xj_mean_pullback!!(::NoRData)
+        dy = Mooncake.tangent(res)
+        dxj = Mooncake.tangent(xj)
+        dxj .+= dy * adjoint(A)
+        return NoRData(), NoRData(), Mooncake.zero_rdata(pg),
+               NoRData(), NoRData(), NoRData(), NoRData()
+    end
+    return res, propagate_copy_xj_mean_pullback!!
 end
 
 end # module

@@ -1,193 +1,244 @@
-@concrete struct StatefulRecurrentCell <: AbstractLuxContainerLayer{(:cell,)}     
-    cell <: Union{<:Lux.AbstractRecurrentCell, <:GNNContainerLayer}
-end
+# Carrier builders: assemble the lightweight namedtuples that the shared GNNlib
+# forward passes expect, merging the layer configuration with the parameters `ps`.
+_cheb_carrier(conv, ps) = (; ps.weight, bias = _getbias(ps), conv.k)
+_dconv_carrier(conv, ps) = (; ps.weights, bias = _getbias(ps), conv.k)
+_dense_carrier(dense, ps) = (; ps.weight, bias = _getbias(ps), σ = dense.activation)
 
-function LuxCore.initialstates(rng::AbstractRNG, r::GNNLux.StatefulRecurrentCell)
-    return (cell=LuxCore.initialstates(rng, r.cell), carry=nothing)
-end
+@doc raw"""
+    GNNRecurrence(cell; return_sequence = true)
 
-function (r::StatefulRecurrentCell)(g, x::AbstractMatrix, ps, st::NamedTuple)
-    (out, carry), st = applyrecurrentcell(r.cell, g, x, ps.cell, st.cell, st.carry)
-    return out, (; cell=st, carry)
-end
+Recurrent layer analogous to [`Lux.Recurrence`](https://lux.csail.mit.edu/stable/api/Lux/layers#Lux.Recurrence)
+that wraps a graph recurrent `cell` and applies it over an entire temporal
+sequence of node features at once.
 
-function (r::StatefulRecurrentCell)(g, x::AbstractVector, ps, st::NamedTuple)
-    stcell, carry = st.cell, st.carry
-    for xᵢ in x
-        (out, carry), stcell = applyrecurrentcell(r.cell, g, xᵢ, ps.cell, stcell, carry)
-    end
-    return out, (; cell=stcell, carry)
-end
+The `cell` has to follow the recurrent-cell interface
+`(out, carry), st = cell(g, (x, carry), ps, st)`, with the convenience method
+`(out, carry), st = cell(g, x, ps, st)` initializing the carry to zeros.
 
-function applyrecurrentcell(l, g, x, ps, st, carry)
-    return Lux.apply(l, g, (x, carry), ps, st)
-end
-
-LuxCore.apply(m::GNNContainerLayer, g, x, ps, st) = m(g, x, ps, st)
-
-@concrete struct TGCNCell <: GNNContainerLayer{(:conv, :gru)}
-    in_dims::Int
-    out_dims::Int
-    conv
-    gru
-    init_state::Function
-end
-
-function TGCNCell(ch::Pair{Int, Int}; use_bias = true, init_weight = glorot_uniform, 
-                    init_state = zeros32, init_bias = zeros32, add_self_loops = false, 
-                    use_edge_weight = true, act = sigmoid) 
-    in_dims, out_dims = ch
-    conv = GCNConv(ch, act; init_weight, init_bias, use_bias, add_self_loops, use_edge_weight)
-    gru = Lux.GRUCell(out_dims => out_dims; use_bias, init_weight = (init_weight, init_weight, init_weight), init_bias = (init_bias, init_bias, init_bias), init_state = init_state)
-    return TGCNCell(in_dims, out_dims, conv, gru, init_state)
-end
-
-function (l::TGCNCell)(g, (x, h), ps, st)
-    if h === nothing
-        h = l.init_state(l.out_dims, 1)
-    end
-    x̃, stconv = l.conv(g, x, ps.conv, st.conv)
-    (h, (h,)), stgru = l.gru((x̃,(h,)), ps.gru,st.gru)
-    return  (h, h), (conv=stconv, gru=stgru)
-end
-
-LuxCore.outputsize(l::TGCNCell) = (l.out_dims,)
-LuxCore.outputsize(l::GNNLux.StatefulRecurrentCell) = (l.cell.out_dims,)
-
-function Base.show(io::IO, tgcn::TGCNCell)
-    print(io, "TGCNCell($(tgcn.in_dims) => $(tgcn.out_dims))")
-end
-
-"""
-    TGCN(in => out; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32, add_self_loops = false, use_edge_weight = true, act = sigmoid) 
-
-Temporal Graph Convolutional Network (T-GCN) recurrent layer from the paper [T-GCN: A Temporal Graph Convolutional Network for Traffic Prediction](https://arxiv.org/pdf/1811.05320.pdf).
-
-Performs a layer of GCNConv to model spatial dependencies, followed by a Gated Recurrent Unit (GRU) cell to model temporal dependencies.
+The layer constructors [`TGCN`](@ref), [`GConvGRU`](@ref), [`GConvLSTM`](@ref),
+[`DCGRU`](@ref) and [`EvolveGCNO`](@ref) all return a `GNNRecurrence` wrapping
+the corresponding cell.
 
 # Arguments
 
-- `in`: Number of input features.
-- `out`: Number of output features.
-- `use_bias`: Add learnable bias. Default `true`.
-- `init_weight`: Weights' initializer. Default `glorot_uniform`.
-- `init_state`: Initial state of the hidden stat of the GRU layer. Default `zeros32`.
-- `init_bias`: Bias initializer. Default `zeros32`.
-- `add_self_loops`: Add self loops to the graph before performing the convolution. Default `false`.
-- `use_edge_weight`: If `true`, consider the edge weights in the input graph (if available).
-                     If `add_self_loops=true` the new weights will be set to 1. 
-                     This option is ignored if the `edge_weight` is explicitly provided in the forward pass.
-                     Default `false`.
-- `act`: Activation function used in the GCNConv layer. Default `sigmoid`.
+- `cell`: A graph recurrent cell (e.g. [`TGCNCell`](@ref)).
+- `return_sequence`: If `true` the whole sequence of outputs is returned,
+  otherwise only the last output. Default `true`.
 
+# Forward
+
+    layer(g, x, ps, st)
+
+- `g`: The input `GNNGraph` or `TemporalSnapshotsGNNGraph`.
+    - If a `GNNGraph`, the same graph is used at every timestep.
+    - If a `TemporalSnapshotsGNNGraph`, a different graph (snapshot) is used at
+      each timestep. Not all cells support this.
+- `x`: The time-varying node features.
+    - If `g` is a `GNNGraph`, an array of size `in x timesteps x num_nodes`.
+    - If `g` is a `TemporalSnapshotsGNNGraph`, a vector of length `timesteps`
+      whose `t`-th element has size `in x num_nodes_t`.
+
+Returns the updated node features and state:
+- If `return_sequence == true` and `g` is a `GNNGraph`, the output is an array of
+  size `out x timesteps x num_nodes`; if `g` is a `TemporalSnapshotsGNNGraph`, it
+  is a vector of length `timesteps`.
+- If `return_sequence == false`, only the last timestep's output is returned.
 
 # Examples
 
 ```julia
 using GNNLux, Lux, Random
 
-# initialize random number generator
 rng = Random.default_rng()
+num_nodes, num_edges = 5, 10
+d_in, d_out, timesteps = 2, 3, 5
 
-# create data
-g = rand_graph(rng, 5, 10)
-x = rand(rng, Float32, 2, 5)
+g = rand_graph(rng, num_nodes, num_edges)
+x = rand(rng, Float32, d_in, timesteps, num_nodes)
 
-# create TGCN layer 
-tgcn = TGCN(2 => 6)
+cell = GConvLSTMCell(d_in => d_out, 2)
+layer = GNNRecurrence(cell)
+ps, st = LuxCore.setup(rng, layer)
 
-# create TGCN layer with custom activation
-tgcn_relu = TGCN(2 => 6, act = relu)
-
-# setup layer
-ps, st = LuxCore.setup(rng, tgcn)
-
-# forward pass
-y, st = tgcn(g, x, ps, st)      # result size (6, 5)
+y, st = layer(g, x, ps, st)   # size(y) == (d_out, timesteps, num_nodes)
 ```
 """
-TGCN(ch::Pair{Int, Int}; kwargs...) = GNNLux.StatefulRecurrentCell(TGCNCell(ch; kwargs...))
+@concrete struct GNNRecurrence <: GNNContainerLayer{(:cell,)}
+    cell
+    return_sequence <: StaticBool
+end
 
-"""
-    A3TGCN(in => out; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32, add_self_loops = false, use_edge_weight = true) 
+GNNRecurrence(cell; return_sequence::Bool = true) = GNNRecurrence(cell, static(return_sequence))
 
-Attention Temporal Graph Convolutional Network (A3T-GCN) model from the paper [A3T-GCN: Attention Temporal Graph
-Convolutional Network for Traffic Forecasting](https://arxiv.org/pdf/2006.11583.pdf).
+_reduce_sequence(::Static.True, outs) = stack(outs; dims = 2)
+_reduce_sequence(::Static.False, outs) = last(outs)
+_reduce_snapshots(::Static.True, outs) = outs
+_reduce_snapshots(::Static.False, outs) = last(outs)
 
-Performs a TGCN layer, followed by a soft attention layer.
+function (r::GNNRecurrence)(g::GNNGraph, x::AbstractArray{<:Any, 3}, ps, st::NamedTuple)
+    (out, carry), cst = r.cell(g, x[:, 1, :], ps.cell, st.cell)
+    outs = [out]
+    for t in 2:size(x, 2)
+        (out, carry), cst = r.cell(g, (x[:, t, :], carry), ps.cell, cst)
+        outs = vcat(outs, [out])
+    end
+    return _reduce_sequence(r.return_sequence, outs), (; cell = cst)
+end
+
+function (r::GNNRecurrence)(tg::TemporalSnapshotsGNNGraph, x::AbstractVector, ps, st::NamedTuple)
+    (out, carry), cst = r.cell(tg.snapshots[1], x[1], ps.cell, st.cell)
+    outs = [out]
+    for t in 2:length(x)
+        (out, carry), cst = r.cell(tg.snapshots[t], (x[t], carry), ps.cell, cst)
+        outs = vcat(outs, [out])
+    end
+    return _reduce_snapshots(r.return_sequence, outs), (; cell = cst)
+end
+
+LuxCore.outputsize(r::GNNRecurrence) = LuxCore.outputsize(r.cell)
+
+function Base.show(io::IO, r::GNNRecurrence)
+    print(io, "GNNRecurrence($(r.cell))")
+end
+
+@doc raw"""
+    TGCNCell(in => out; use_bias = true, init_weight = glorot_uniform, init_bias = zeros32,
+             add_self_loops = true, use_edge_weight = false, act = relu)
+
+Recurrent graph convolutional cell from the paper
+[T-GCN: A Temporal Graph Convolutional Network for Traffic Prediction](https://arxiv.org/pdf/1811.05320).
+
+Uses two stacked [`GCNConv`](@ref) layers to model spatial dependencies and a
+GRU mechanism to model temporal dependencies.
 
 # Arguments
 
-- `in`: Number of input features.
-- `out`: Number of output features.
+- `in => out`: A pair where `in` is the number of input node features and `out`
+  the number of output node features.
 - `use_bias`: Add learnable bias. Default `true`.
-- `init_weight`: Weights' initializer. Default `glorot_uniform`.
-- `init_state`: Initial state of the hidden stat of the GRU layer. Default `zeros32`.
+- `init_weight`: Convolution weights' initializer. Default `glorot_uniform`.
 - `init_bias`: Bias initializer. Default `zeros32`.
-- `add_self_loops`: Add self loops to the graph before performing the convolution. Default `false`.
-- `use_edge_weight`: If `true`, consider the edge weights in the input graph (if available).
-                     If `add_self_loops=true` the new weights will be set to 1. 
-                     This option is ignored if the `edge_weight` is explicitly provided in the forward pass.
-                     Default `false`.
+- `add_self_loops`: Add self loops to the graph before the convolution. Default `true`.
+- `use_edge_weight`: If `true`, consider the edge weights in the input graph (if available). Default `false`.
+- `act`: Activation function of the first `GCNConv` layer. Default `relu`.
+
+# Forward
+
+    cell(g, x, ps, st)
+    cell(g, (x, h), ps, st)
+
+Performs one recurrence step and returns `(h, h), st`, where `h` is the updated
+hidden state of size `out x num_nodes`. If the carry `h` is not provided, it is
+initialized to zeros.
+
 # Examples
 
 ```julia
 using GNNLux, Lux, Random
 
-# initialize random number generator
 rng = Random.default_rng()
-
-# create data
 g = rand_graph(rng, 5, 10)
 x = rand(rng, Float32, 2, 5)
 
-# create A3TGCN layer
-l = A3TGCN(2 => 6)
-
-# setup layer
-ps, st = LuxCore.setup(rng, l)
-
-# forward pass
-y, st = l(g, x, ps, st)      # result size (6, 5)
+cell = TGCNCell(2 => 6)
+ps, st = LuxCore.setup(rng, cell)
+(y, h), st = cell(g, x, ps, st)   # size(y) == (6, 5)
 ```
 """
-@concrete struct A3TGCN <: GNNContainerLayer{(:tgcn, :dense1, :dense2)}
+@concrete struct TGCNCell <: GNNContainerLayer{(:conv_z, :dense_z, :conv_r, :dense_r, :conv_h, :dense_h)}
     in_dims::Int
     out_dims::Int
-    tgcn
-    dense1
-    dense2
+    conv_z
+    dense_z
+    conv_r
+    dense_r
+    conv_h
+    dense_h
 end
 
-function A3TGCN(ch::Pair{Int, Int}; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32, add_self_loops = false, use_edge_weight = true) 
-    in_dims, out_dims = ch
-    tgcn = TGCN(ch; use_bias, init_weight, init_state, init_bias, add_self_loops, use_edge_weight)
-    dense1 = Dense(out_dims, out_dims)
-    dense2 = Dense(out_dims, out_dims)
-    return A3TGCN(in_dims, out_dims, tgcn, dense1, dense2)
+function TGCNCell((in_dims, out_dims)::Pair{Int, Int}; act = relu,
+                  use_bias = true, init_weight = glorot_uniform, init_bias = zeros32,
+                  add_self_loops = true, use_edge_weight = false)
+    convkws = (; use_bias, init_weight, init_bias, add_self_loops, use_edge_weight)
+    mkconv(σ) = GNNChain(GCNConv(in_dims => out_dims, σ; convkws...),
+                         GCNConv(out_dims => out_dims; convkws...))
+    conv_z = mkconv(act); dense_z = Dense(2 * out_dims => out_dims, sigmoid)
+    conv_r = mkconv(act); dense_r = Dense(2 * out_dims => out_dims, sigmoid)
+    conv_h = mkconv(act); dense_h = Dense(2 * out_dims => out_dims, tanh)
+    return TGCNCell(in_dims, out_dims, conv_z, dense_z, conv_r, dense_r, conv_h, dense_h)
 end
 
-function (l::A3TGCN)(g, x, ps, st)
-    dense1 = StatefulLuxLayer{true}(l.dense1, ps.dense1, _getstate(st, :dense1))
-    dense2 = StatefulLuxLayer{true}(l.dense2, ps.dense2, _getstate(st, :dense2))
-    h, st = l.tgcn(g, x, ps.tgcn, st.tgcn)
-    x = dense1(h)
-    x = dense2(x)
-    a = NNlib.softmax(x, dims = 3)
-    c = sum(a .* h , dims = 3)
-    if length(size(c)) == 3
-        c = dropdims(c, dims = 3)
-    end
-    return c, st
+function (cell::TGCNCell)(g, x::AbstractMatrix, ps, st::NamedTuple)
+    h = zeros_like(x, (cell.out_dims, g.num_nodes))
+    return cell(g, (x, h), ps, st)
 end
 
-LuxCore.outputsize(l::A3TGCN) = (l.out_dims,)
-
-function Base.show(io::IO, l::A3TGCN)
-    print(io, "A3TGCN($(l.in_dims) => $(l.out_dims))")
+function (cell::TGCNCell)(g, xh::Tuple, ps, st::NamedTuple)
+    x, h = xh
+    cz, _ = cell.conv_z(g, x, ps.conv_z, st.conv_z)
+    cr, _ = cell.conv_r(g, x, ps.conv_r, st.conv_r)
+    ch, _ = cell.conv_h(g, x, ps.conv_h, st.conv_h)
+    l = (; dense_z = _dense_carrier(cell.dense_z, ps.dense_z),
+           dense_r = _dense_carrier(cell.dense_r, ps.dense_r),
+           dense_h = _dense_carrier(cell.dense_h, ps.dense_h))
+    h = GNNlib.tgcn(l, cz, cr, ch, h)
+    return (h, h), st
 end
 
- @concrete struct GConvGRUCell <: GNNContainerLayer{(:conv_x_r, :conv_h_r, :conv_x_z, :conv_h_z, :conv_x_h, :conv_h_h)}
+LuxCore.outputsize(cell::TGCNCell) = (cell.out_dims,)
+
+Base.show(io::IO, cell::TGCNCell) = print(io, "TGCNCell($(cell.in_dims) => $(cell.out_dims))")
+
+"""
+    TGCN(in => out; kws...)
+
+Construct a [`GNNRecurrence`](@ref) layer from a [`TGCNCell`](@ref).
+The arguments are passed to the [`TGCNCell`](@ref) constructor.
+
+# Examples
+
+```julia
+using GNNLux, Lux, Random
+
+rng = Random.default_rng()
+g = rand_graph(rng, 5, 10)
+x = rand(rng, Float32, 2, 5, 5)  # (in, timesteps, num_nodes)
+
+layer = TGCN(2 => 6)
+ps, st = LuxCore.setup(rng, layer)
+y, st = layer(g, x, ps, st)   # size(y) == (6, 5, 5)
+```
+"""
+TGCN(ch::Pair{Int, Int}; kws...) = GNNRecurrence(TGCNCell(ch; kws...))
+
+@doc raw"""
+    GConvGRUCell(in => out, k; use_bias = true, init_weight = glorot_uniform, init_bias = zeros32)
+
+Graph Convolutional Gated Recurrent Unit (GConvGRU) recurrent cell from the paper
+[Structured Sequence Modeling with Graph Convolutional Recurrent Networks](https://arxiv.org/abs/1612.07659).
+
+Uses [`ChebConv`](@ref) to model spatial dependencies, followed by a Gated
+Recurrent Unit (GRU) cell to model temporal dependencies.
+
+# Arguments
+
+- `in => out`: A pair where `in` is the number of input node features and `out`
+  the number of output node features.
+- `k`: Chebyshev polynomial order.
+- `use_bias`: Add learnable bias. Default `true`.
+- `init_weight`: Weights' initializer. Default `glorot_uniform`.
+- `init_bias`: Bias initializer. Default `zeros32`.
+
+# Forward
+
+    cell(g, x, ps, st)
+    cell(g, (x, h), ps, st)
+
+Performs one recurrence step and returns `(h, h), st`, where `h` is the updated
+hidden state of size `out x num_nodes`. If the carry `h` is not provided, it is
+initialized to zeros.
+"""
+@concrete struct GConvGRUCell <: GNNContainerLayer{(:conv_x_r, :conv_h_r, :conv_x_z, :conv_h_z, :conv_x_h, :conv_h_h)}
     in_dims::Int
     out_dims::Int
     k::Int
@@ -197,212 +248,198 @@ end
     conv_h_z
     conv_x_h
     conv_h_h
-    init_state::Function
 end
 
-function GConvGRUCell(ch::Pair{Int, Int}, k::Int; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32) 
-    in_dims, out_dims = ch
-    #reset gate
-    conv_x_r = ChebConv(in_dims => out_dims, k; use_bias, init_weight, init_bias)
-    conv_h_r = ChebConv(out_dims => out_dims, k; use_bias, init_weight, init_bias)
-    #update gate
-    conv_x_z = ChebConv(in_dims => out_dims, k; use_bias, init_weight, init_bias)
-    conv_h_z = ChebConv(out_dims => out_dims, k; use_bias, init_weight, init_bias)
-    #hidden state
-    conv_x_h = ChebConv(in_dims => out_dims, k; use_bias, init_weight, init_bias)
-    conv_h_h = ChebConv(out_dims => out_dims, k; use_bias, init_weight, init_bias)
-    return GConvGRUCell(in_dims, out_dims, k, conv_x_r, conv_h_r, conv_x_z, conv_h_z, conv_x_h, conv_h_h, init_state)
+function GConvGRUCell((in_dims, out_dims)::Pair{Int, Int}, k::Int;
+                      use_bias = true, init_weight = glorot_uniform, init_bias = zeros32)
+    convkws = (; use_bias, init_weight, init_bias)
+    conv_x_r = ChebConv(in_dims => out_dims, k; convkws...)
+    conv_h_r = ChebConv(out_dims => out_dims, k; convkws...)
+    conv_x_z = ChebConv(in_dims => out_dims, k; convkws...)
+    conv_h_z = ChebConv(out_dims => out_dims, k; convkws...)
+    conv_x_h = ChebConv(in_dims => out_dims, k; convkws...)
+    conv_h_h = ChebConv(out_dims => out_dims, k; convkws...)
+    return GConvGRUCell(in_dims, out_dims, k, conv_x_r, conv_h_r, conv_x_z, conv_h_z, conv_x_h, conv_h_h)
 end
 
-function (l::GConvGRUCell)(g, (x, h), ps, st)
-    if h === nothing
-        h = l.init_state(l.out_dims, g.num_nodes)
-    end
-    xr, st_conv_xr =  l.conv_x_r(g, x, ps.conv_x_r, st.conv_x_r)
-    hr, st_conv_hr =  l.conv_h_r(g, h, ps.conv_h_r, st.conv_h_r)
-    r = xr .+ hr
-    r = NNlib.sigmoid_fast(r)
-    xz, st_conv_x_z = l.conv_x_z(g, x, ps.conv_x_z, st.conv_x_z)
-    hz, st_conv_h_z =  l.conv_h_z(g, h, ps.conv_h_z, st.conv_h_z)
-    z = xz .+ hz
-    z = NNlib.sigmoid_fast(z)
-    xh, st_conv_x_h =  l.conv_x_h(g, x, ps.conv_x_h, st.conv_x_h)
-    hh, st_conv_h_h =  l.conv_h_h(g, r .* h, ps.conv_h_h, st.conv_h_h)
-    h̃ = xh .+ hh
-    h̃ = NNlib.tanh_fast(h)
-    h = (1 .- z).* h̃ + z.* h
-    return (h, h), (conv_x_r = st_conv_xr, conv_h_r = st_conv_hr, conv_x_z = st_conv_x_z, conv_h_z = st_conv_h_z, conv_x_h = st_conv_x_h, conv_h_h = st_conv_h_h)
+function (cell::GConvGRUCell)(g, x::AbstractMatrix, ps, st::NamedTuple)
+    h = zeros_like(x, (cell.out_dims, g.num_nodes))
+    return cell(g, (x, h), ps, st)
 end
 
-function Base.show(io::IO, l::GConvGRUCell)
-    print(io, "GConvGRUCell($(l.in_dims) => $(l.out_dims))")
+function (cell::GConvGRUCell)(g, xh::Tuple, ps, st::NamedTuple)
+    x, h = xh
+    l = (; conv_x_r = _cheb_carrier(cell.conv_x_r, ps.conv_x_r),
+           conv_h_r = _cheb_carrier(cell.conv_h_r, ps.conv_h_r),
+           conv_x_z = _cheb_carrier(cell.conv_x_z, ps.conv_x_z),
+           conv_h_z = _cheb_carrier(cell.conv_h_z, ps.conv_h_z),
+           conv_x_h = _cheb_carrier(cell.conv_x_h, ps.conv_x_h),
+           conv_h_h = _cheb_carrier(cell.conv_h_h, ps.conv_h_h))
+    h = GNNlib.gconv_gru(l, g, x, h)
+    return (h, h), st
 end
 
-LuxCore.outputsize(l::GConvGRUCell) = (l.out_dims,)
+LuxCore.outputsize(cell::GConvGRUCell) = (cell.out_dims,)
+
+Base.show(io::IO, cell::GConvGRUCell) = print(io, "GConvGRUCell($(cell.in_dims) => $(cell.out_dims), $(cell.k))")
 
 """
-    GConvGRU(in => out, k; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32) 
+    GConvGRU(in => out, k; kws...)
 
-Graph Convolutional Gated Recurrent Unit (GConvGRU) recurrent layer from the paper [Structured Sequence Modeling with Graph Convolutional Recurrent Networks](https://arxiv.org/pdf/1612.07659).
-
-Performs a layer of ChebConv to model spatial dependencies, followed by a Gated Recurrent Unit (GRU) cell to model temporal dependencies.
-
-# Arguments
-
-- `in`: Number of input features.
-- `out`: Number of output features.
-- `k`: Chebyshev polynomial order.
-- `use_bias`: Add learnable bias. Default `true`.
-- `init_weight`: Weights' initializer. Default `glorot_uniform`.
-- `init_state`: Initial state of the hidden stat of the GRU layer. Default `zeros32`.
-- `init_bias`: Bias initializer. Default `zeros32`.
+Construct a [`GNNRecurrence`](@ref) layer from a [`GConvGRUCell`](@ref).
+The arguments are passed to the [`GConvGRUCell`](@ref) constructor.
 
 # Examples
 
 ```julia
 using GNNLux, Lux, Random
 
-# initialize random number generator
 rng = Random.default_rng()
-
-# create data
 g = rand_graph(rng, 5, 10)
-x = rand(rng, Float32, 2, 5)
+x = rand(rng, Float32, 2, 5, 5)  # (in, timesteps, num_nodes)
 
-# create layer
-l = GConvGRU(2 => 5, 2)
-
-# setup layer
-ps, st = LuxCore.setup(rng, l)
-
-# forward pass
-y, st = l(g, x, ps, st)      # result size (5, 5)
+layer = GConvGRU(2 => 5, 2)
+ps, st = LuxCore.setup(rng, layer)
+y, st = layer(g, x, ps, st)   # size(y) == (5, 5, 5)
 ```
 """
-GConvGRU(ch::Pair{Int, Int}, k::Int; kwargs...) = GNNLux.StatefulRecurrentCell(GConvGRUCell(ch, k; kwargs...))
+GConvGRU(ch::Pair{Int, Int}, k::Int; kws...) = GNNRecurrence(GConvGRUCell(ch, k; kws...))
 
-@concrete struct GConvLSTMCell <: GNNContainerLayer{(:conv_x_i, :conv_h_i, :dense_i, :conv_x_f, :conv_h_f, :dense_f, :conv_x_c, :conv_h_c, :dense_c, :conv_x_o, :conv_h_o, :dense_o)}
+@doc raw"""
+    GConvLSTMCell(in => out, k; use_bias = true, init_weight = glorot_uniform, init_bias = zeros32)
+
+Graph Convolutional Long Short-Term Memory (GConvLSTM) recurrent cell from the
+paper [Structured Sequence Modeling with Graph Convolutional Recurrent Networks](https://arxiv.org/abs/1612.07659).
+
+Uses [`ChebConv`](@ref) to model spatial dependencies, followed by a Long
+Short-Term Memory (LSTM) cell with peephole connections to model temporal
+dependencies.
+
+# Arguments
+
+- `in => out`: A pair where `in` is the number of input node features and `out`
+  the number of output node features.
+- `k`: Chebyshev polynomial order.
+- `use_bias`: Add learnable bias. Default `true`.
+- `init_weight`: Weights' initializer. Default `glorot_uniform`.
+- `init_bias`: Bias initializer. Default `zeros32`.
+
+# Forward
+
+    cell(g, x, ps, st)
+    cell(g, (x, (h, c)), ps, st)
+
+Performs one recurrence step and returns `(h, (h, c)), st`, where `h` is the
+updated hidden state and `c` the updated cell state, both of size `out x num_nodes`.
+If the carry `(h, c)` is not provided, it is initialized to zeros.
+"""
+@concrete struct GConvLSTMCell <: GNNContainerLayer{(:conv_x_i, :conv_h_i, :scale_i, :conv_x_f, :conv_h_f, :scale_f, :conv_x_c, :conv_h_c, :scale_c, :conv_x_o, :conv_h_o, :scale_o)}
     in_dims::Int
     out_dims::Int
     k::Int
     conv_x_i
     conv_h_i
-    dense_i
+    scale_i
     conv_x_f
     conv_h_f
-    dense_f
+    scale_f
     conv_x_c
     conv_h_c
-    dense_c
+    scale_c
     conv_x_o
     conv_h_o
-    dense_o
-    init_state::Function
+    scale_o
 end
 
-function GConvLSTMCell(ch::Pair{Int, Int}, k::Int; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32) 
-    in_dims, out_dims = ch
-    #input gate
-    conv_x_i = ChebConv(in_dims => out_dims, k; use_bias, init_weight, init_bias)
-    conv_h_i = ChebConv(out_dims => out_dims, k; use_bias, init_weight, init_bias)
-    dense_i = Dense(out_dims, 1; use_bias, init_weight, init_bias)
-    #forget gate
-    conv_x_f = ChebConv(in_dims => out_dims, k; use_bias, init_weight, init_bias)
-    conv_h_f = ChebConv(out_dims => out_dims, k; use_bias, init_weight, init_bias)
-    dense_f = Dense(out_dims, 1; use_bias, init_weight, init_bias)
-    #cell gate
-    conv_x_c = ChebConv(in_dims => out_dims, k; use_bias, init_weight, init_bias)
-    conv_h_c = ChebConv(out_dims => out_dims, k; use_bias, init_weight, init_bias)
-    dense_c = Dense(out_dims, 1; use_bias, init_weight, init_bias)
-    #output gate
-    conv_x_o = ChebConv(in_dims => out_dims, k; use_bias, init_weight, init_bias)
-    conv_h_o = ChebConv(out_dims => out_dims, k; use_bias, init_weight, init_bias)
-    dense_o = Dense(out_dims, 1; use_bias, init_weight, init_bias)
-    return GConvLSTMCell(in_dims, out_dims, k, conv_x_i, conv_h_i, dense_i, conv_x_f, conv_h_f, dense_f, conv_x_c, conv_h_c, dense_c, conv_x_o, conv_h_o, dense_o, init_state)
+function GConvLSTMCell((in_dims, out_dims)::Pair{Int, Int}, k::Int;
+                       use_bias = true, init_weight = glorot_uniform, init_bias = zeros32)
+    convkws = (; use_bias, init_weight, init_bias)
+    mkconv(d) = ChebConv(d, k; convkws...)
+    mkscale() = Lux.Scale(out_dims; use_bias, init_weight, init_bias)
+    return GConvLSTMCell(in_dims, out_dims, k,
+        mkconv(in_dims => out_dims), mkconv(out_dims => out_dims), mkscale(),
+        mkconv(in_dims => out_dims), mkconv(out_dims => out_dims), mkscale(),
+        mkconv(in_dims => out_dims), mkconv(out_dims => out_dims), mkscale(),
+        mkconv(in_dims => out_dims), mkconv(out_dims => out_dims), mkscale())
 end
 
-function (l::GConvLSTMCell)(g, (x, m), ps, st)
-    if m === nothing
-        h = l.init_state(l.out_dims, g.num_nodes)
-        c = l.init_state(l.out_dims, g.num_nodes)
-    else 
-        h, c = m
-    end
-
-    dense_i = StatefulLuxLayer{true}(l.dense_i, ps.dense_i, _getstate(st, :dense_i))
-    dense_f = StatefulLuxLayer{true}(l.dense_f, ps.dense_f, _getstate(st, :dense_f))
-    dense_c = StatefulLuxLayer{true}(l.dense_c, ps.dense_c, _getstate(st, :dense_c))
-    dense_o = StatefulLuxLayer{true}(l.dense_o, ps.dense_o, _getstate(st, :dense_o))
-    
-    xi, st_conv_x_i = l.conv_x_i(g, x, ps.conv_x_i, st.conv_x_i)
-    hi, st_conv_h_i = l.conv_h_i(g, h, ps.conv_h_i, st.conv_h_i)
-    i = xi .+ hi .+ dense_i(c)
-    i = NNlib.sigmoid_fast(i)
-   
-    xf, st_conv_x_f = l.conv_x_f(g, x, ps.conv_x_f, st.conv_x_f)
-    hf, st_conv_h_f = l.conv_h_f(g, h, ps.conv_h_f, st.conv_h_f)
-    f = xf .+ hf .+ dense_f(c)
-    f =  NNlib.sigmoid_fast(f)
-    
-    xc, st_conv_x_c = l.conv_x_c(g, x, ps.conv_x_c, st.conv_x_c)
-    hc, st_conv_h_c = l.conv_h_c(g, h, ps.conv_h_c, st.conv_h_c)
-    c = f .* c + i.* NNlib.tanh_fast(xc .+ hc .+ dense_c(c))
-    
-    xo, st_conv_x_o = l.conv_x_o(g, x, ps.conv_x_o, st.conv_x_o)
-    ho, st_conv_h_o = l.conv_h_o(g, h, ps.conv_h_o, st.conv_h_o)
-    o = xo .+ ho .+ dense_o(c)
-    o = NNlib.sigmoid_fast(o)
-    h = o.* NNlib.tanh_fast(c)
-    return (h, (h, c)), (conv_x_i = st_conv_x_i, conv_h_i = st_conv_h_i, conv_x_f = st_conv_x_f, conv_h_f = st_conv_h_f, conv_x_c = st_conv_x_c, conv_h_c = st_conv_h_c, conv_x_o = st_conv_x_o, conv_h_o = st_conv_h_o)
+function (cell::GConvLSTMCell)(g, x::AbstractMatrix, ps, st::NamedTuple)
+    h = zeros_like(x, (cell.out_dims, g.num_nodes))
+    c = zeros_like(x, (cell.out_dims, g.num_nodes))
+    return cell(g, (x, (h, c)), ps, st)
 end
 
-function Base.show(io::IO, l::GConvLSTMCell)
-    print(io, "GConvLSTMCell($(l.in_dims) => $(l.out_dims))")
+function (cell::GConvLSTMCell)(g, xhc::Tuple, ps, st::NamedTuple)
+    x, (h, c) = xhc
+    l = (; conv_x_i = _cheb_carrier(cell.conv_x_i, ps.conv_x_i),
+           conv_h_i = _cheb_carrier(cell.conv_h_i, ps.conv_h_i),
+           w_i = ps.scale_i.weight, b_i = _getbias(ps.scale_i),
+           conv_x_f = _cheb_carrier(cell.conv_x_f, ps.conv_x_f),
+           conv_h_f = _cheb_carrier(cell.conv_h_f, ps.conv_h_f),
+           w_f = ps.scale_f.weight, b_f = _getbias(ps.scale_f),
+           conv_x_c = _cheb_carrier(cell.conv_x_c, ps.conv_x_c),
+           conv_h_c = _cheb_carrier(cell.conv_h_c, ps.conv_h_c),
+           w_c = ps.scale_c.weight, b_c = _getbias(ps.scale_c),
+           conv_x_o = _cheb_carrier(cell.conv_x_o, ps.conv_x_o),
+           conv_h_o = _cheb_carrier(cell.conv_h_o, ps.conv_h_o),
+           w_o = ps.scale_o.weight, b_o = _getbias(ps.scale_o))
+    h, c = GNNlib.gconv_lstm(l, g, x, h, c)
+    return (h, (h, c)), st
 end
 
-LuxCore.outputsize(l::GConvLSTMCell) = (l.out_dims,)
+LuxCore.outputsize(cell::GConvLSTMCell) = (cell.out_dims,)
+
+Base.show(io::IO, cell::GConvLSTMCell) = print(io, "GConvLSTMCell($(cell.in_dims) => $(cell.out_dims), $(cell.k))")
 
 """
-    GConvLSTM(in => out, k; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32) 
+    GConvLSTM(in => out, k; kws...)
 
-Graph Convolutional Long Short-Term Memory (GConvLSTM) recurrent layer from the paper [Structured Sequence Modeling with Graph Convolutional Recurrent Networks](https://arxiv.org/pdf/1612.07659). 
-
-Performs a layer of ChebConv to model spatial dependencies, followed by a Long Short-Term Memory (LSTM) cell to model temporal dependencies.
-
-# Arguments
-
-- `in`: Number of input features.
-- `out`: Number of output features.
-- `k`: Chebyshev polynomial order.
-- `use_bias`: Add learnable bias. Default `true`.
-- `init_weight`: Weights' initializer. Default `glorot_uniform`.
-- `init_state`: Initial state of the hidden stat of the GRU layer. Default `zeros32`.
-- `init_bias`: Bias initializer. Default `zeros32`.
+Construct a [`GNNRecurrence`](@ref) layer from a [`GConvLSTMCell`](@ref).
+The arguments are passed to the [`GConvLSTMCell`](@ref) constructor.
 
 # Examples
 
 ```julia
 using GNNLux, Lux, Random
 
-# initialize random number generator
 rng = Random.default_rng()
-
-# create data
 g = rand_graph(rng, 5, 10)
-x = rand(rng, Float32, 2, 5)
+x = rand(rng, Float32, 2, 5, 5)  # (in, timesteps, num_nodes)
 
-# create GConvLSTM layer
-l = GConvLSTM(2 => 5, 2)
-
-# setup layer
-ps, st = LuxCore.setup(rng, l)
-
-# forward pass
-y, st = l(g, x, ps, st)      # result size (5, 5)
+layer = GConvLSTM(2 => 5, 2)
+ps, st = LuxCore.setup(rng, layer)
+y, st = layer(g, x, ps, st)   # size(y) == (5, 5, 5)
 ```
 """
-GConvLSTM(ch::Pair{Int, Int}, k::Int; kwargs...) = GNNLux.StatefulRecurrentCell(GConvLSTMCell(ch, k; kwargs...))
+GConvLSTM(ch::Pair{Int, Int}, k::Int; kws...) = GNNRecurrence(GConvLSTMCell(ch, k; kws...))
 
+@doc raw"""
+    DCGRUCell(in => out, k; use_bias = true, init_weight = glorot_uniform, init_bias = zeros32)
+
+Diffusion Convolutional Recurrent Neural Network (DCGRU) cell from the paper
+[Diffusion Convolutional Recurrent Neural Network: Data-driven Traffic Forecasting](https://arxiv.org/abs/1707.01926).
+
+Uses a [`DConv`](@ref) layer to model spatial dependencies, in combination with a
+Gated Recurrent Unit (GRU) cell to model temporal dependencies.
+
+# Arguments
+
+- `in => out`: A pair where `in` is the number of input node features and `out`
+  the number of output node features.
+- `k`: Diffusion step for the `DConv`.
+- `use_bias`: Add learnable bias. Default `true`.
+- `init_weight`: Convolution weights' initializer. Default `glorot_uniform`.
+- `init_bias`: Bias initializer. Default `zeros32`.
+
+# Forward
+
+    cell(g, x, ps, st)
+    cell(g, (x, h), ps, st)
+
+Performs one recurrence step and returns `(h, h), st`, where `h` is the updated
+hidden state of size `out x num_nodes`. If the carry `h` is not provided, it is
+initialized to zeros.
+"""
 @concrete struct DCGRUCell <: GNNContainerLayer{(:dconv_u, :dconv_r, :dconv_c)}
     in_dims::Int
     out_dims::Int
@@ -410,176 +447,139 @@ GConvLSTM(ch::Pair{Int, Int}, k::Int; kwargs...) = GNNLux.StatefulRecurrentCell(
     dconv_u
     dconv_r
     dconv_c
-    init_state::Function
 end
 
-function DCGRUCell(ch::Pair{Int, Int}, k::Int; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32) 
-    in_dims, out_dims = ch
-    dconv_u = DConv((in_dims + out_dims) => out_dims, k; use_bias = use_bias, init_weight = init_weight, init_bias = init_bias)
-    dconv_r = DConv((in_dims + out_dims) => out_dims, k; use_bias = use_bias, init_weight = init_weight, init_bias = init_bias)
-    dconv_c = DConv((in_dims + out_dims) => out_dims, k; use_bias = use_bias, init_weight = init_weight, init_bias = init_bias)
-    return DCGRUCell(in_dims, out_dims, k, dconv_u, dconv_r, dconv_c, init_state)
+function DCGRUCell((in_dims, out_dims)::Pair{Int, Int}, k::Int;
+                   use_bias = true, init_weight = glorot_uniform, init_bias = zeros32)
+    convkws = (; use_bias, init_weight, init_bias)
+    dconv_u = DConv((in_dims + out_dims) => out_dims, k; convkws...)
+    dconv_r = DConv((in_dims + out_dims) => out_dims, k; convkws...)
+    dconv_c = DConv((in_dims + out_dims) => out_dims, k; convkws...)
+    return DCGRUCell(in_dims, out_dims, k, dconv_u, dconv_r, dconv_c)
 end
 
-function (l::DCGRUCell)(g, (x, h), ps, st)
-    if h === nothing
-        h = l.init_state(l.out_dims, g.num_nodes)
-    end
-    h̃ = vcat(x, h)
-    z, st_dconv_u = l.dconv_u(g, h̃, ps.dconv_u, st.dconv_u)
-    z = NNlib.sigmoid_fast.(z)
-    r, st_dconv_r = l.dconv_r(g, h̃, ps.dconv_r, st.dconv_r)
-    r = NNlib.sigmoid_fast.(r)
-    ĥ = vcat(x, h .* r)
-    c, st_dconv_c = l.dconv_c(g, ĥ, ps.dconv_c, st.dconv_c)
-    c = NNlib.tanh_fast.(c)
-    h = z.* h + (1 .- z).* c
-    return (h, h), (dconv_u = st_dconv_u, dconv_r = st_dconv_r, dconv_c = st_dconv_c)
+function (cell::DCGRUCell)(g, x::AbstractMatrix, ps, st::NamedTuple)
+    h = zeros_like(x, (cell.out_dims, g.num_nodes))
+    return cell(g, (x, h), ps, st)
 end
 
-function Base.show(io::IO, l::DCGRUCell)
-    print(io, "DCGRUCell($(l.in_dims) => $(l.out_dims))")
+function (cell::DCGRUCell)(g, xh::Tuple, ps, st::NamedTuple)
+    x, h = xh
+    l = (; dconv_u = _dconv_carrier(cell.dconv_u, ps.dconv_u),
+           dconv_r = _dconv_carrier(cell.dconv_r, ps.dconv_r),
+           dconv_c = _dconv_carrier(cell.dconv_c, ps.dconv_c))
+    h = GNNlib.dcgru(l, g, x, h)
+    return (h, h), st
 end
 
-LuxCore.outputsize(l::DCGRUCell) = (l.out_dims,)
+LuxCore.outputsize(cell::DCGRUCell) = (cell.out_dims,)
+
+Base.show(io::IO, cell::DCGRUCell) = print(io, "DCGRUCell($(cell.in_dims) => $(cell.out_dims), $(cell.k))")
 
 """
-    DCGRU(in => out, k; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32) 
+    DCGRU(in => out, k; kws...)
 
-Diffusion Convolutional Recurrent Neural Network (DCGRU) layer from the paper [Diffusion Convolutional Recurrent Neural
-Network: Data-driven Traffic Forecasting](https://arxiv.org/pdf/1707.01926).
-
-Performs a Diffusion Convolutional layer to model spatial dependencies, followed by a Gated Recurrent Unit (GRU) cell to model temporal dependencies.
-
-# Arguments
-
-- `in`: Number of input features.
-- `out`: Number of output features.
-- `k`: Diffusion step.
-- `use_bias`: Add learnable bias. Default `true`.
-- `init_weight`: Weights' initializer. Default `glorot_uniform`.
-- `init_state`: Initial state of the hidden stat of the GRU layer. Default `zeros32`.
-- `init_bias`: Bias initializer. Default `zeros32`.
+Construct a [`GNNRecurrence`](@ref) layer from a [`DCGRUCell`](@ref).
+The arguments are passed to the [`DCGRUCell`](@ref) constructor.
 
 # Examples
 
 ```julia
 using GNNLux, Lux, Random
 
-# initialize random number generator
 rng = Random.default_rng()
-
-# create data
 g = rand_graph(rng, 5, 10)
-x = rand(rng, Float32, 2, 5)
+x = rand(rng, Float32, 2, 5, 5)  # (in, timesteps, num_nodes)
 
-# create layer
-l = DCGRU(2 => 5, 2)
-
-# setup layer
-ps, st = LuxCore.setup(rng, l)
-
-# forward pass
-y, st = l(g, x, ps, st)      # result size (5, 5)
+layer = DCGRU(2 => 5, 2)
+ps, st = LuxCore.setup(rng, layer)
+y, st = layer(g, x, ps, st)   # size(y) == (5, 5, 5)
 ```
 """
-DCGRU(ch::Pair{Int, Int}, k::Int; kwargs...) = GNNLux.StatefulRecurrentCell(DCGRUCell(ch, k; kwargs...))
+DCGRU(ch::Pair{Int, Int}, k::Int; kws...) = GNNRecurrence(DCGRUCell(ch, k; kws...))
 
-"""
-    EvolveGCNO(ch; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32)
+@doc raw"""
+    EvolveGCNOCell(in => out; use_bias = true, init_weight = glorot_uniform, init_bias = zeros32)
 
-Evolving Graph Convolutional Network (EvolveGCNO) layer from the paper [EvolveGCN: Evolving Graph Convolutional Networks for Dynamic Graphs](https://arxiv.org/pdf/1902.10191).
+Evolving Graph Convolutional Network cell of type "-O" from the paper
+[EvolveGCN: Evolving Graph Convolutional Networks for Dynamic Graphs](https://arxiv.org/abs/1902.10191).
 
-Perfoms a Graph Convolutional layer with parameters derived from a Long Short-Term Memory (LSTM) layer across the snapshots of the temporal graph.
-
+Uses a [`GCNConv`](@ref) layer whose weight matrix is evolved across the temporal
+sequence by an `LSTMCell`. It can work with time-varying graphs and node features.
 
 # Arguments
 
-- `in`: Number of input features.
-- `out`: Number of output features.
-- `use_bias`: Add learnable bias. Default `true`.
+- `in => out`: A pair where `in` is the number of input node features and `out`
+  the number of output node features.
+- `use_bias`: Add learnable bias for the convolution and the LSTM cell. Default `true`.
 - `init_weight`: Weights' initializer. Default `glorot_uniform`.
-- `init_state`: Initial state of the hidden stat of the GRU layer. Default `zeros32`.
 - `init_bias`: Bias initializer. Default `zeros32`.
 
-# Examples
+# Forward
 
-```julia
-using GNNLux, Lux, Random
+    cell(g, x, ps, st)
+    cell(g, (x, state), ps, st)
 
-# initialize random number generator
-rng = Random.default_rng()
-
-# create data
-tg = TemporalSnapshotsGNNGraph([rand_graph(rng, 10, 20; ndata = rand(rng, 4, 10)), rand_graph(rng, 10, 14; ndata = rand(rng, 4, 10)), rand_graph(rng, 10, 22; ndata = rand(rng, 4, 10))])
-
-# create layer
-l = EvolveGCNO(4 => 5)
-
-# setup layer
-ps, st = LuxCore.setup(rng, l)
-
-# forward pass
-y, st = l(tg, tg.ndata.x , ps, st)      # result size 3, size y[1] (5, 10)
-```
+Performs one recurrence step and returns `(y, state), st`, where `y` is the
+convolution output of size `out x num_nodes` and `state` is the updated
+`(weight, lstm_carry)` carry. If the carry is not provided, the convolution
+weight is initialized from the parameters and the LSTM carry to zeros.
 """
-@concrete struct EvolveGCNO <: GNNLayer
+@concrete struct EvolveGCNOCell <: GNNContainerLayer{(:conv, :lstm)}
     in_dims::Int
     out_dims::Int
-    use_bias::Bool
-    init_weight
-    init_state::Function
-    init_bias
+    conv
+    lstm
 end
 
-function EvolveGCNO(ch::Pair{Int, Int}; use_bias = true, init_weight = glorot_uniform, init_state = zeros32, init_bias = zeros32)
-    in_dims, out_dims = ch
-    return EvolveGCNO(in_dims, out_dims, use_bias, init_weight, init_state, init_bias)
+function EvolveGCNOCell((in_dims, out_dims)::Pair{Int, Int};
+                        use_bias = true, init_weight = glorot_uniform, init_bias = zeros32)
+    conv = GCNConv(in_dims => out_dims; use_bias, init_weight, init_bias)
+    lstm = Lux.LSTMCell(in_dims * out_dims => in_dims * out_dims; use_bias)
+    return EvolveGCNOCell(in_dims, out_dims, conv, lstm)
 end
 
-function LuxCore.initialparameters(rng::AbstractRNG, l::EvolveGCNO)
-    weight = l.init_weight(rng, l.out_dims, l.in_dims)
-    Wf = l.init_weight(rng, l.out_dims, l.in_dims)
-    Uf = l.init_weight(rng, l.out_dims, l.in_dims)
-    Wi = l.init_weight(rng, l.out_dims, l.in_dims)
-    Ui = l.init_weight(rng, l.out_dims, l.in_dims)
-    Wo = l.init_weight(rng, l.out_dims, l.in_dims)
-    Uo = l.init_weight(rng, l.out_dims, l.in_dims)
-    Wc = l.init_weight(rng, l.out_dims, l.in_dims)
-    Uc = l.init_weight(rng, l.out_dims, l.in_dims)
-    if l.use_bias
-        bias = l.init_bias(rng, l.out_dims)
-        Bf = l.init_bias(rng, l.out_dims, l.in_dims)
-        Bi = l.init_bias(rng, l.out_dims, l.in_dims)
-        Bo = l.init_bias(rng, l.out_dims, l.in_dims)
-        Bc = l.init_bias(rng, l.out_dims, l.in_dims)
-        return (; conv = (; weight, bias), lstm = (; Wf, Uf, Wi, Ui, Wo, Uo, Wc, Uc, Bf, Bi, Bo, Bc))
-    else
-        return (; conv = (; weight), lstm = (; Wf, Uf, Wi, Ui, Wo, Uo, Wc, Uc))
-    end
+function (cell::EvolveGCNOCell)(g, x::AbstractMatrix, ps, st::NamedTuple)
+    w0 = reshape(ps.conv.weight, :, 1)
+    (w, lstm_carry), st_lstm = cell.lstm(w0, ps.lstm, st.lstm)
+    return _evolvegcno_apply(cell, g, x, w, lstm_carry, ps, st, st_lstm)
 end
 
-function LuxCore.initialstates(rng::AbstractRNG, l::EvolveGCNO)
-    h = l.init_state(rng, l.out_dims, l.in_dims)
-    c = l.init_state(rng, l.out_dims, l.in_dims)
-    return (; conv = (;), lstm = (; h, c))
+function (cell::EvolveGCNOCell)(g, xs::Tuple, ps, st::NamedTuple)
+    x, (wprev, lstm_carry) = xs
+    (w, lstm_carry), st_lstm = cell.lstm((wprev, lstm_carry), ps.lstm, st.lstm)
+    return _evolvegcno_apply(cell, g, x, w, lstm_carry, ps, st, st_lstm)
 end
 
-function (l::EvolveGCNO)(tg::TemporalSnapshotsGNNGraph, x, ps::NamedTuple, st::NamedTuple)
-    H, C = st.lstm
-    W = ps.conv.weight
-    m = (; ps.conv.weight, bias = _getbias(ps), 
-    add_self_loops =true, use_edge_weight=true, σ = identity)
-
-    X = map(1:tg.num_snapshots) do i
-        F = NNlib.sigmoid_fast.(ps.lstm.Wf .* W .+ ps.lstm.Uf .* H .+ ps.lstm.Bf)
-        I = NNlib.sigmoid_fast.(ps.lstm.Wi .* W .+ ps.lstm.Ui .* H .+ ps.lstm.Bi)
-        O = NNlib.sigmoid_fast.(ps.lstm.Wo .* W .+ ps.lstm.Uo .* H .+ ps.lstm.Bo)
-        C̃ = NNlib.tanh_fast.(ps.lstm.Wc .* W .+ ps.lstm.Uc .* H .+ ps.lstm.Bc)
-        C = F .* C + I .* C̃
-        H = O .* NNlib.tanh_fast.(C)
-        W = H
-        GNNlib.gcn_conv(m,tg.snapshots[i], x[i], nothing, d -> 1 ./ sqrt.(d), W)
-    end
-    return X, (; conv = (;), lstm = (h = H, c = C))
+function _evolvegcno_apply(cell::EvolveGCNOCell, g, x, w, lstm_carry, ps, st, st_lstm)
+    conv_weight = reshape(w, cell.out_dims, cell.in_dims)
+    y, st_conv = cell.conv(g, x, ps.conv, st.conv; conv_weight)
+    return (y, (w, lstm_carry)), (; conv = st_conv, lstm = st_lstm)
 end
+
+LuxCore.outputsize(cell::EvolveGCNOCell) = (cell.out_dims,)
+
+Base.show(io::IO, cell::EvolveGCNOCell) = print(io, "EvolveGCNOCell($(cell.in_dims) => $(cell.out_dims))")
+
+"""
+    EvolveGCNO(in => out; kws...)
+
+Construct a [`GNNRecurrence`](@ref) layer from an [`EvolveGCNOCell`](@ref).
+It can process an entire temporal sequence of graphs and node features at once.
+The arguments are passed to the [`EvolveGCNOCell`](@ref) constructor.
+
+# Examples
+
+```julia
+using GNNLux, Lux, Random
+
+rng = Random.default_rng()
+tg = TemporalSnapshotsGNNGraph([rand_graph(rng, 10, 20), rand_graph(rng, 10, 14), rand_graph(rng, 10, 22)])
+x = [rand(rng, Float32, 4, 10) for _ in 1:tg.num_snapshots]
+
+layer = EvolveGCNO(4 => 5)
+ps, st = LuxCore.setup(rng, layer)
+y, st = layer(tg, x, ps, st)   # length(y) == 3, size(y[1]) == (5, 10)
+```
+"""
+EvolveGCNO(ch::Pair{Int, Int}; kws...) = GNNRecurrence(EvolveGCNOCell(ch; kws...))

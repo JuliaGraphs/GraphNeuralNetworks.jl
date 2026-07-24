@@ -149,7 +149,39 @@ end
         g1b, nodemap = getgraph(g1, 1, nmap = true)
         @test g1b === g1
         @test nodemap == 1:(g1.num_nodes)
-    end 
+    end
+end
+
+@testitem "getgraph GPU" setup=[GraphsTestModule] tags=[:gpu] begin
+    using .GraphsTestModule
+    dev = gpu_device(force=true)
+
+    # COO graphs are handled natively on the GPU; adjacency-matrix graphs fall
+    # back to the CPU. Check both against the CPU reference (see #161).
+    for GRAPH_T in GRAPH_TYPES
+        gl = [GNNGraph(random_regular_graph(n, 2), ndata = rand(Float32, 4, n),
+                       graph_type = GRAPH_T) for n in [10, 4, 8, 6]]
+        gl = [GNNGraph(g0, edata = rand(Float32, 2, g0.num_edges)) for g0 in gl]
+        g = MLUtils.batch(gl)
+        g_gpu = g |> dev
+
+        for (i, want_nmap) in [(2, false), ([1, 3], true), ([2, 3, 4], true)]
+            ref = getgraph(g, i; nmap = want_nmap)
+            res = getgraph(g_gpu, i; nmap = want_nmap)
+            rg, ng = want_nmap ? (ref[1], res[1]) : (ref, res)
+
+            @test ng isa GNNGraph{typeof(g_gpu.graph)}          # graph type preserved
+            @test get_device(ng.graph_indicator) isa AbstractGPUDevice
+            @test ng.num_nodes == rg.num_nodes
+            @test ng.num_edges == rg.num_edges
+            @test Array(ng.graph_indicator) == rg.graph_indicator
+            @test Array(edge_index(ng)[1]) == edge_index(rg)[1]
+            @test Array(edge_index(ng)[2]) == edge_index(rg)[2]
+            @test Array(node_features(ng)) ≈ node_features(rg)
+            @test Array(edge_features(ng)) ≈ edge_features(rg)
+            want_nmap && @test Array(res[2]) == ref[2]
+        end
+    end
 end
 
 @testitem "remove_edges" setup=[GraphsTestModule] begin
@@ -188,6 +220,32 @@ end
             @test gnew.num_edges == g.num_edges
         end
     end
+end
+
+@testitem "remove_edges GPU" setup=[GraphsTestModule] tags=[:gpu] begin
+    using .GraphsTestModule
+    dev = gpu_device(force=true)
+    s = [1, 1, 2, 3]
+    t = [2, 3, 4, 5]
+    w = Float32[0.1, 0.2, 0.3, 0.4]
+    g = GNNGraph((s, t, w), graph_type = :coo) |> dev
+
+    # index vector on the same device as the graph (see #668)
+    gnew = remove_edges(g, dev([1, 2, 4]))
+    @test gnew.num_edges == 1
+    @test get_device(edge_index(gnew)[1]) isa AbstractGPUDevice
+    @test Array(edge_index(gnew)[1]) == [2]
+    @test Array(edge_index(gnew)[2]) == [4]
+    @test Array(get_edge_weight(gnew)) == Float32[0.3]
+
+    # index vector on the CPU while the graph lives on the GPU
+    gnew = remove_edges(g, [1, 2, 4])
+    @test gnew.num_edges == 1
+    @test Array(edge_index(gnew)[1]) == [2]
+
+    # probability overload
+    @test remove_edges(g, 1.0f0).num_edges == 0
+    @test remove_edges(g, 0.0f0).num_edges == g.num_edges
 end
 
 @testitem "add_edges" setup=[GraphsTestModule] begin

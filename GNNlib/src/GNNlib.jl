@@ -6,7 +6,7 @@ using MLUtils: zeros_like, ones_like
 using NNlib
 using NNlib: scatter, gather
 using DataStructures: nlargest
-using ChainRulesCore: @non_differentiable
+using ChainRulesCore: @non_differentiable, ignore_derivatives
 using GNNGraphs
 using .GNNGraphs: COO_T, ADJMAT_T, SPARSE_T,
                   check_num_nodes, check_num_edges,
@@ -61,7 +61,10 @@ export agnn_conv,
        transformer_conv
 
 include("layers/temporalconv.jl")
-export tgcn_conv
+export tgcn,
+       gconv_gru,
+       gconv_lstm,
+       dcgru
 
 include("layers/pool.jl")
 export global_pool,

@@ -5,8 +5,9 @@ using Statistics: mean
 using LuxCore: LuxCore, AbstractLuxLayer, AbstractLuxContainerLayer, parameterlength, statelength, outputsize, 
               initialparameters, initialstates, parameterlength, statelength
 using Lux: Lux, Chain, Dense, GRUCell,
-           glorot_uniform, zeros32, 
+           glorot_uniform, zeros32,
            StatefulLuxLayer
+using MLUtils: zeros_like
 using Reexport: @reexport
 using Random: AbstractRNG
 using GNNlib: GNNlib
@@ -41,12 +42,12 @@ export AGNNConv,
        # TransformerConv
 
 include("layers/temporalconv.jl")
-export TGCN,
-       A3TGCN,
-       GConvGRU,
-       GConvLSTM,
-       DCGRU,
-       EvolveGCNO
+export GNNRecurrence,
+       TGCN, TGCNCell,
+       GConvGRU, GConvGRUCell,
+       GConvLSTM, GConvLSTMCell,
+       DCGRU, DCGRUCell,
+       EvolveGCNO, EvolveGCNOCell
 
 include("layers/pool.jl")
 export GlobalPool,
