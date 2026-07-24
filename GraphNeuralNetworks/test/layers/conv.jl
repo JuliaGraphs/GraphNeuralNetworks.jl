@@ -278,19 +278,31 @@ end
     using .TestModule
     nn = Dense(D_IN, D_OUT)
 
-    l = GINConv(nn, 0.01, aggr = mean)
+    l = GINConv(nn; ϵ = 0.01, aggr = mean)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
         test_gradients(l, g, g.x, rtol = RTOL_HIGH)
     end
+    @test keys(Flux.trainable(l)) == (:nn,)
 
-    @test !in(:eps, Flux.trainable(l))
+    l = GINConv(Dense(D_IN, D_OUT); train_eps = true, aggr = mean)
+    @test keys(Flux.trainable(l)) == (:nn, :ϵ)
+    @test l.ϵ == [0.0f0]
+    for g in TEST_GRAPHS
+        @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
+    end
+    g = first(TEST_GRAPHS)
+    grad = Flux.gradient(l -> mean(l(g, g.x)), l)[1]
+    @test grad.ϵ isa AbstractVector
+    @test length(grad.ϵ) == 1
+
+    @test GINConv(nn, 0.5).ϵ == 0.5
 end
 
 @testitem "GINConv GPU" setup=[TolSnippet, TestModule] tags=[:gpu] begin
     using .TestModule
     nn = Dense(D_IN, D_OUT)
-    l = GINConv(nn, 0.01, aggr = mean)
+    l = GINConv(nn; train_eps = true, aggr = mean)
     for g in TEST_GRAPHS
         g.graph isa AbstractSparseMatrix && continue
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
