@@ -1,7 +1,7 @@
 # Developer Notes
 
 
-## Development Enviroment
+## Development Environment
 GraphNeuralNetworks.jl is a collection of packages hosted on a single GitHub repository.
 These packages are `GraphNeuralNetworks.jl` (a package with the same name as the whole project), `GNNGraphs.jl`, `GNNlib.jl`, and `GNNLux.jl`.
 
@@ -17,7 +17,7 @@ graph TD;
 
 Thanks to [workspaces](https://pkgdocs.julialang.org/v1/toml-files/#The-%5Bworkspace%5D-section) introduced in julia 1.12, developing multiple packages in a monorepo is straightforward.
 
-Clone the repository with 
+Clone the repository with
 ```
 git clone https://github.com/JuliaGraphs/GraphNeuralNetworks.jl
 ```
@@ -29,7 +29,7 @@ julia --project=.
 ```
 Dependencies in the monorepo will be automatically available in `dev` mode, so you can start editing the code of any of the packages and test your changes immediately.
 
-## Add a New Layer 
+## Add a New Layer
 
 To add a new graph convolutional layer and make it available in both the Flux-based frontend (GraphNeuralNetworks.jl) and the Lux-based frontend (GNNLux), you need to:
 
@@ -70,7 +70,7 @@ end
 ```
 
 ## Versions and Tagging
-Each PR should update the version number in the Porject.toml file of each involved package if needed by semnatic versioning. For instance, when adding new features GNNGraphs could move from "1.17.5" to "1.18.0-DEV". The "DEV" will be removed when the package is tagged and released. Pay also attention to updating
+Each PR should update the version number in the Project.toml file of each involved package if needed by semnatic versioning. For instance, when adding new features GNNGraphs could move from "1.17.5" to "1.18.0-DEV". The "DEV" will be removed when the package is tagged and released. Pay also attention to updating
 the compat bounds, e.g. GraphNeuralNetworks might require a newer version of GNNGraphs.
 
 ## Generate Documentation Locally

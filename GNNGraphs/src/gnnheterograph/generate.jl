@@ -1,9 +1,9 @@
 """
     rand_heterograph([rng,] n, m; bidirected=false, kws...)
 
-Construct an [`GNNHeteroGraph`](@ref) with random edges and with number of nodes and edges 
+Construct an [`GNNHeteroGraph`](@ref) with random edges and with number of nodes and edges
 specified by `n` and `m` respectively. `n` and `m` can be any iterable of pairs
-specifing node/edge types and their numbers.
+specifying node/edge types and their numbers.
 
 Pass a random number generator as a first argument to make the generation reproducible.
 
@@ -67,18 +67,18 @@ end
 
 
 """
-    rand_bipartite_heterograph([rng,] 
-                               (n1, n2), (m12, m21); 
-                               bidirected = true, 
-                               node_t = (:A, :B), 
-                               edge_t = :to, 
+    rand_bipartite_heterograph([rng,]
+                               (n1, n2), (m12, m21);
+                               bidirected = true,
+                               node_t = (:A, :B),
+                               edge_t = :to,
                                kws...)
 
 Construct an [`GNNHeteroGraph`](@ref) with random edges representing a bipartite graph.
 The graph will have two types of nodes, and edges will only connect nodes of different types.
 
 The first argument is a tuple `(n1, n2)` specifying the number of nodes of each type.
-The second argument is a tuple `(m12, m21)` specifying the number of edges connecting nodes of type `1` to nodes of type `2` 
+The second argument is a tuple `(m12, m21)` specifying the number of edges connecting nodes of type `1` to nodes of type `2`
 and vice versa.
 
 The type of nodes and edges can be specified with the `node_t` and `edge_t` keyword arguments,
@@ -109,7 +109,7 @@ GNNHeteroGraph:
 """
 rand_bipartite_heterograph(n, m; kws...) = rand_bipartite_heterograph(Random.default_rng(), n, m; kws...)
 
-function rand_bipartite_heterograph(rng::AbstractRNG, (n1, n2)::NTuple{2,Int}, m; bidirected=true, 
+function rand_bipartite_heterograph(rng::AbstractRNG, (n1, n2)::NTuple{2,Int}, m; bidirected=true,
                         node_t = (:A, :B), edge_t::Symbol = :to, kws...)
     if m isa Integer
         m12 = m21 = m
@@ -117,8 +117,7 @@ function rand_bipartite_heterograph(rng::AbstractRNG, (n1, n2)::NTuple{2,Int}, m
         m12, m21 = m
     end
 
-    return rand_heterograph(rng, Dict(node_t[1] => n1, node_t[2] => n2), 
-                            Dict((node_t[1], edge_t, node_t[2]) => m12, (node_t[2], edge_t, node_t[1]) => m21); 
+    return rand_heterograph(rng, Dict(node_t[1] => n1, node_t[2] => n2),
+                            Dict((node_t[1], edge_t, node_t[2]) => m12, (node_t[2], edge_t, node_t[1]) => m21);
                             bidirected, kws...)
 end
-

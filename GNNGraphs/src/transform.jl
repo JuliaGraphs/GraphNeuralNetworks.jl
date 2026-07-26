@@ -42,7 +42,7 @@ end
     remove_self_loops(g::GNNGraph)
 
 Return a graph constructed from `g` where self-loops (edges from a node to itself)
-are removed. 
+are removed.
 
 See also [`add_self_loops`](@ref) and [`coalesce`](@ref).
 """
@@ -100,7 +100,7 @@ julia> g = GNNGraph([1, 1, 2, 2, 3], [2, 3, 1, 3, 1])
 GNNGraph:
   num_nodes: 3
   num_edges: 5
-  
+
 # Remove the second edge
 julia> g_new = remove_edges(g, [2]);
 
@@ -143,15 +143,15 @@ end
 
 function remove_edges(g::GNNGraph{<:COO_T}, p = 0.5)
     num_edges = g.num_edges
-    edges_to_remove = filter(_ -> rand() < p, 1:num_edges)        
+    edges_to_remove = filter(_ -> rand() < p, 1:num_edges)
     return remove_edges(g, edges_to_remove)
 end
 
 """
     coalesce(g::GNNGraph; aggr=+)
 
-Return a new GNNGraph where all multiple edges between the same pair of nodes are merged 
-(using aggr for edge weights and features), 
+Return a new GNNGraph where all multiple edges between the same pair of nodes are merged
+(using aggr for edge weights and features),
 and the edge indices are sorted lexicographically (by target, then by source).
 This method is only applicable to graphs of type `:coo`.
 
@@ -198,7 +198,7 @@ Remove specified nodes, and their associated edges, from a GNNGraph. This operat
 - `nodes_to_remove`: Vector of node indices to be removed.
 
 # Returns
-A new GNNGraph with the specified nodes and all edges associated with these nodes removed. 
+A new GNNGraph with the specified nodes and all edges associated with these nodes removed.
 
 # Example
 ```julia
@@ -219,14 +219,14 @@ function remove_nodes(g::GNNGraph{<:COO_T}, nodes_to_remove::AbstractVector)
     w = get_edge_weight(g)
     edata = g.edata
     ndata = g.ndata
-    
+
     function find_edges_to_remove(nodes, nodes_to_remove)
         return findall(node_id -> begin
             idx = searchsortedlast(nodes_to_remove, node_id)
             idx >= 1 && idx <= length(nodes_to_remove) && nodes_to_remove[idx] == node_id
         end, nodes)
     end
-    
+
     edges_to_remove_s = find_edges_to_remove(s, nodes_to_remove)
     edges_to_remove_t = find_edges_to_remove(t, nodes_to_remove)
     edges_to_remove = union(edges_to_remove_s, edges_to_remove_t)
@@ -238,7 +238,7 @@ function remove_nodes(g::GNNGraph{<:COO_T}, nodes_to_remove::AbstractVector)
 
     w = isnothing(w) ? nothing : getobs(w, mask_edges_to_keep)
 
-    for node in sort(nodes_to_remove, rev=true) 
+    for node in sort(nodes_to_remove, rev=true)
         s[s .> node] .-= 1
         t[t .> node] .-= 1
     end
@@ -248,7 +248,7 @@ function remove_nodes(g::GNNGraph{<:COO_T}, nodes_to_remove::AbstractVector)
     edata = getobs(edata, mask_edges_to_keep)
 
     num_nodes = g.num_nodes - length(nodes_to_remove)
-    
+
     return GNNGraph((s, t, w),
              num_nodes, length(s), g.num_graphs,
              g.graph_indicator,
@@ -258,7 +258,7 @@ end
 """
     remove_nodes(g::GNNGraph, p)
 
-Returns a new graph obtained by dropping nodes from `g` with independent probabilities `p`. 
+Returns a new graph obtained by dropping nodes from `g` with independent probabilities `p`.
 
 # Examples
 
@@ -359,11 +359,11 @@ end
 """
     perturb_edges([rng], g::GNNGraph, perturb_ratio)
 
-Return a new graph obtained from `g` by adding random edges, based on a specified `perturb_ratio`. 
-The `perturb_ratio` determines the fraction of new edges to add relative to the current number of edges in the graph. 
-These new edges are added without creating self-loops. 
+Return a new graph obtained from `g` by adding random edges, based on a specified `perturb_ratio`.
+The `perturb_ratio` determines the fraction of new edges to add relative to the current number of edges in the graph.
+These new edges are added without creating self-loops.
 
-The function returns a new `GNNGraph` instance that shares some of the underlying data with `g` but includes the additional edges. 
+The function returns a new `GNNGraph` instance that shares some of the underlying data with `g` but includes the additional edges.
 The nodes for the new edges are selected randomly, and no edge data (`edata`) or weights (`w`) are assigned to these new edges.
 
 # Arguments
@@ -386,7 +386,7 @@ GNNGraph:
   num_edges: 6
 ```
 """
-perturb_edges(g::GNNGraph{<:COO_T}, perturb_ratio::AbstractFloat) = 
+perturb_edges(g::GNNGraph{<:COO_T}, perturb_ratio::AbstractFloat) =
     perturb_edges(Random.default_rng(), g, perturb_ratio)
 
 function perturb_edges(rng::AbstractRNG, g::GNNGraph{<:COO_T}, perturb_ratio::AbstractFloat)
@@ -444,10 +444,10 @@ end
 """
     to_bidirected(g)
 
-Adds a reverse edge for each edge in the graph, then calls 
-[`coalesce`](@ref) with `mean` aggregation to simplify the graph. 
+Adds a reverse edge for each edge in the graph, then calls
+[`coalesce`](@ref) with `mean` aggregation to simplify the graph.
 
-See also [`is_bidirected`](@ref). 
+See also [`is_bidirected`](@ref).
 
 # Examples
 
@@ -550,7 +550,7 @@ end
 """
     add_nodes(g::GNNGraph, n; [ndata])
 
-Add `n` new nodes to graph `g`. In the 
+Add `n` new nodes to graph `g`. In the
 new graph, these nodes will have indexes from `g.num_nodes + 1`
 to `g.num_nodes + n`.
 """
@@ -567,7 +567,7 @@ end
 """
     set_edge_weight(g::GNNGraph, w::AbstractVector)
 
-Set `w` as edge weights in the returned graph. 
+Set `w` as edge weights in the returned graph.
 """
 function set_edge_weight(g::GNNGraph, w::AbstractVector)
     # TODO preserve the representation instead of converting to COO
@@ -634,7 +634,7 @@ end
 """
     batch(gs::Vector{<:GNNGraph})
 
-Batch together multiple `GNNGraph`s into a single one 
+Batch together multiple `GNNGraph`s into a single one
 containing the total number of original nodes and edges.
 
 Equivalent to [`SparseArrays.blockdiag`](@ref).
@@ -719,7 +719,7 @@ end
 """
     unbatch(g::GNNGraph)
 
-Opposite of the [`MLUtils.batch`](@ref) operation, returns 
+Opposite of the [`MLUtils.batch`](@ref) operation, returns
 an array of the individual graphs batched together in `g`.
 
 See also [`MLUtils.batch`](@ref) and [`getgraph`](@ref).
@@ -816,10 +816,10 @@ CRC.@non_differentiable _unbatch_edgemasks(::Any...)
 
 Return the subgraph of `g` induced by those nodes `j`
 for which `g.graph_indicator[j] == i` or,
-if `i` is a collection, `g.graph_indicator[j] ∈ i`. 
-In other words, it extract the component graphs from a batched graph. 
+if `i` is a collection, `g.graph_indicator[j] ∈ i`.
+In other words, it extract the component graphs from a batched graph.
 
-If `nmap=true`, return also a vector `v` mapping the new nodes to the old ones. 
+If `nmap=true`, return also a vector `v` mapping the new nodes to the old ones.
 The node `i` in the subgraph will correspond to the node `v[i]` in `g`.
 """
 getgraph(g::GNNGraph, i::Int; kws...) = getgraph(g, [i]; kws...)
@@ -905,14 +905,14 @@ function getgraph(g::GNNGraph, i::AbstractVector{Int}; nmap = false)
 end
 
 """
-    negative_sample(g::GNNGraph; 
-                    num_neg_edges = g.num_edges, 
+    negative_sample(g::GNNGraph;
+                    num_neg_edges = g.num_edges,
                     bidirected = is_bidirected(g))
 
 Return a graph containing random negative edges (i.e. non-edges) from graph `g` as edges.
 
 If `bidirected=true`, the output graph will be bidirected and there will be no
-leakage from the origin graph. 
+leakage from the origin graph.
 
 See also [`is_bidirected`](@ref).
 """
@@ -933,11 +933,11 @@ function negative_sample(g::GNNGraph;
     idx_pos, maxid = edge_encoding(s, t, n)
     if bidirected
         num_neg_edges = num_neg_edges ÷ 2
-        pneg = 1 - g.num_edges / 2maxid # prob of selecting negative edge 
+        pneg = 1 - g.num_edges / 2maxid # prob of selecting negative edge
     else
-        pneg = 1 - g.num_edges / 2maxid # prob of selecting negative edge 
+        pneg = 1 - g.num_edges / 2maxid # prob of selecting negative edge
     end
-    # pneg * sample_prob * maxid == num_neg_edges  
+    # pneg * sample_prob * maxid == num_neg_edges
     sample_prob = min(1, num_neg_edges / (pneg * maxid) * 1.1)
     idx_neg = Int[]
     for _ in 1:max_trials
@@ -962,14 +962,14 @@ end
 
 Randomly partition the edges in `g` to form two graphs, `g1`
 and `g2`. Both will have the same number of nodes as `g`.
-`g1` will contain a fraction `frac` of the original edges, 
-while `g2` wil contain the rest.
+`g1` will contain a fraction `frac` of the original edges,
+while `g2` will contain the rest.
 
 If `bidirected = true` makes sure that an edge and its reverse go into the same split.
 This option is supported only for bidirected graphs with no self-loops
 and multi-edges.
 
-`rand_edge_split` is tipically used to create train/test splits in link prediction tasks.
+`rand_edge_split` is typically used to create train/test splits in link prediction tasks.
 """
 function rand_edge_split(g::GNNGraph, frac; bidirected = is_bidirected(g))
     s, t = edge_index(g)
@@ -999,7 +999,7 @@ end
 """
     random_walk_pe(g, walk_length)
 
-Return the random walk positional encoding from the paper [Graph Neural Networks with Learnable Structural and Positional Representations](https://arxiv.org/abs/2110.07875) of the given graph `g` and the length of the walk `walk_length` as a matrix of size `(walk_length, g.num_nodes)`. 
+Return the random walk positional encoding from the paper [Graph Neural Networks with Learnable Structural and Positional Representations](https://arxiv.org/abs/2110.07875) of the given graph `g` and the length of the walk `walk_length` as a matrix of size `(walk_length, g.num_nodes)`.
 """
 function random_walk_pe(g::GNNGraph, walk_length::Int)
     matrix = zeros(walk_length, g.num_nodes)
