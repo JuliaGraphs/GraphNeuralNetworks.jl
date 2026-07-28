@@ -26,10 +26,11 @@ end
 @testitem "TGCNCell" setup=[TemporalConvTestModule, TestModule] begin
     using .TemporalConvTestModule, .TestModule
 
-    # Mooncake is skipped here: it intermittently returns zeroed gradients for
-    # some parameters when differentiating the graph-conv path from an all-zeros
-    # initial state (Zygote and finite differences agree). Reference against
-    # Zygote only, matching the other temporal cells.
+    # Mooncake is skipped here: it returns wrong gradients through the cell's
+    # sigmoid gates (`Dense(_, sigmoid)`) on a fraction of inputs, so the check is
+    # flaky (Zygote and finite differences agree). Upstream Mooncake bug with
+    # NNlib.sigmoid: https://github.com/chalk-lab/Mooncake.jl/issues/1257.
+    # Reference against Zygote only, matching the other temporal cells.
     ad_backends = [Flux.AutoZygote()]
 
     # Test with default activation function
@@ -59,9 +60,9 @@ end
 @testitem "TGCN" setup=[TemporalConvTestModule, TestModule] begin
     using .TemporalConvTestModule, .TestModule
 
-    # Mooncake is skipped here (see the TGCNCell test item): it intermittently
-    # returns zeroed gradients when differentiating the TGCN graph-conv path from
-    # an all-zeros initial state. Reference against Zygote only.
+    # Mooncake is skipped here (see the TGCNCell test item and
+    # https://github.com/chalk-lab/Mooncake.jl/issues/1257): it returns wrong
+    # gradients through the cell's sigmoid gates on some inputs. Zygote only.
     ad_backends = [Flux.AutoZygote()]
 
     # Test with default activation function
