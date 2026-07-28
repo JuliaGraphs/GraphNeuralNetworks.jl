@@ -8,15 +8,13 @@ and the Lux (`GNNLux`) frontends build such a carrier and call into these
 functions, so the recurrence math lives in a single place.
 =#
 
-"""
-    tgcn(l, cz, cr, ch, h)
-
-GRU gating of the T-GCN cell. `cz`, `cr`, `ch` are the spatial-convolution
-outputs of the three gates (computed by the frontend), `h` is the current
-hidden state, and `l` carries the three gate `Dense` sub-modules
-(`l.dense_z`, `l.dense_r`, `l.dense_h`, each exposing `weight`, `bias`, `σ`).
-Returns the updated hidden state.
-"""
+# tgcn(l, cz, cr, ch, h)
+#
+# GRU gating of the T-GCN cell. `cz`, `cr`, `ch` are the spatial-convolution
+# outputs of the three gates (computed by the frontend), `h` is the current
+# hidden state, and `l` carries the three gate `Dense` sub-modules
+# (`l.dense_z`, `l.dense_r`, `l.dense_h`, each exposing `weight`, `bias`, `σ`).
+# Returns the updated hidden state.
 function tgcn(l, cz, cr, ch, h)
     z = l.dense_z.σ.(l.dense_z.weight * vcat(cz, h) .+ l.dense_z.bias)
     r = l.dense_r.σ.(l.dense_r.weight * vcat(cr, h) .+ l.dense_r.bias)
@@ -25,13 +23,11 @@ function tgcn(l, cz, cr, ch, h)
     return h
 end
 
-"""
-    gconv_gru(l, g, x, h)
-
-Forward pass of the GConvGRU cell. `l` carries the six `ChebConv` sub-modules
-(`conv_x_r`, `conv_h_r`, `conv_x_z`, `conv_h_z`, `conv_x_h`, `conv_h_h`).
-Returns the updated hidden state.
-"""
+# gconv_gru(l, g, x, h)
+#
+# Forward pass of the GConvGRU cell. `l` carries the six `ChebConv` sub-modules
+# (`conv_x_r`, `conv_h_r`, `conv_x_z`, `conv_h_z`, `conv_x_h`, `conv_h_h`).
+# Returns the updated hidden state.
 function gconv_gru(l, g::GNNGraph, x, h)
     r = NNlib.sigmoid_fast.(cheb_conv(l.conv_x_r, g, x) .+ cheb_conv(l.conv_h_r, g, h))
     z = NNlib.sigmoid_fast.(cheb_conv(l.conv_x_z, g, x) .+ cheb_conv(l.conv_h_z, g, h))
@@ -40,13 +36,11 @@ function gconv_gru(l, g::GNNGraph, x, h)
     return h
 end
 
-"""
-    gconv_lstm(l, g, x, h, c)
-
-Forward pass of the GConvLSTM cell. `l` carries the eight `ChebConv` sub-modules
-and the four peephole scalings/biases (`w_i`, `b_i`, `w_f`, `b_f`, `w_c`, `b_c`,
-`w_o`, `b_o`). Returns the updated `(h, c)` state.
-"""
+# gconv_lstm(l, g, x, h, c)
+#
+# Forward pass of the GConvLSTM cell. `l` carries the eight `ChebConv` sub-modules
+# and the four peephole scalings/biases (`w_i`, `b_i`, `w_f`, `b_f`, `w_c`, `b_c`,
+# `w_o`, `b_o`). Returns the updated `(h, c)` state.
 function gconv_lstm(l, g::GNNGraph, x, h, c)
     # input gate
     i = cheb_conv(l.conv_x_i, g, x) .+ cheb_conv(l.conv_h_i, g, h) .+ l.w_i .* c .+ l.b_i
@@ -63,12 +57,10 @@ function gconv_lstm(l, g::GNNGraph, x, h, c)
     return h, c
 end
 
-"""
-    dcgru(l, g, x, h)
-
-Forward pass of the DCGRU cell. `l` carries the three `DConv` sub-modules
-(`dconv_u`, `dconv_r`, `dconv_c`). Returns the updated hidden state.
-"""
+# dcgru(l, g, x, h)
+#
+# Forward pass of the DCGRU cell. `l` carries the three `DConv` sub-modules
+# (`dconv_u`, `dconv_r`, `dconv_c`). Returns the updated hidden state.
 function dcgru(l, g::GNNGraph, x, h)
     h̃ = vcat(x, h)
     z = NNlib.sigmoid_fast.(d_conv(l.dconv_u, g, h̃))
