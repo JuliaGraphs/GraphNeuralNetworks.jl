@@ -18,6 +18,4 @@ TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [sources]
-GNNGraphs = {path = "../../GNNGraphs"}
-GNNlib = {path = "../../GNNlib"}
 GraphNeuralNetworks = {path = ".."}

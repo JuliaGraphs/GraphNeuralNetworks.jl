@@ -25,17 +25,24 @@ end
 
 @testitem "TGCNCell" setup=[TemporalConvTestModule, TestModule] begin
     using .TemporalConvTestModule, .TestModule
-    
+
+    # Mooncake is skipped here: it returns wrong gradients through the cell's
+    # sigmoid gates (`Dense(_, sigmoid)`) on a fraction of inputs, so the check is
+    # flaky (Zygote and finite differences agree). Upstream Mooncake bug with
+    # NNlib.sigmoid: https://github.com/chalk-lab/Mooncake.jl/issues/1257.
+    # Reference against Zygote only, matching the other temporal cells.
+    ad_backends = [Flux.AutoZygote()]
+
     # Test with default activation function
     cell = GraphNeuralNetworks.TGCNCell(in_channel => out_channel)
     y, h = cell(g, g.x)
     @test y === h
     @test size(h) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_HIGH)
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_HIGH; ad_backends)
     # with initial state
-    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_HIGH)
-    
+    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_HIGH; ad_backends)
+
     # Test with custom activation function
     custom_activation = tanh
     cell_custom = GraphNeuralNetworks.TGCNCell(in_channel => out_channel, act = custom_activation)
@@ -45,14 +52,19 @@ end
     # Test that outputs differ when using different activation functions
     @test !isapprox(y, y_custom, rtol=RTOL_HIGH)
     # with no initial state
-    test_gradients(cell_custom, g, g.x, loss=cell_loss, rtol=RTOL_HIGH)
+    test_gradients(cell_custom, g, g.x, loss=cell_loss, rtol=RTOL_HIGH; ad_backends)
     # with initial state
-    test_gradients(cell_custom, g, g.x, h_custom, loss=cell_loss, rtol=RTOL_HIGH)
+    test_gradients(cell_custom, g, g.x, h_custom, loss=cell_loss, rtol=RTOL_HIGH; ad_backends)
 end
 
 @testitem "TGCN" setup=[TemporalConvTestModule, TestModule] begin
     using .TemporalConvTestModule, .TestModule
-    
+
+    # Mooncake is skipped here (see the TGCNCell test item and
+    # https://github.com/chalk-lab/Mooncake.jl/issues/1257): it returns wrong
+    # gradients through the cell's sigmoid gates on some inputs. Zygote only.
+    ad_backends = [Flux.AutoZygote()]
+
     # Test with default activation function
     layer = TGCN(in_channel => out_channel)
     x = rand(Float32, in_channel, timesteps, g.num_nodes)
@@ -61,9 +73,9 @@ end
     @test layer isa GNNRecurrence
     @test size(y) == (out_channel, timesteps, g.num_nodes)
     # with no initial state
-    test_gradients(layer, g, x, rtol = RTOL_HIGH)
+    test_gradients(layer, g, x, rtol = RTOL_HIGH; ad_backends)
     # with initial state
-    test_gradients(layer, g, x, state0, rtol = RTOL_HIGH)
+    test_gradients(layer, g, x, state0, rtol = RTOL_HIGH; ad_backends)
 
     # Test with custom activation function
     custom_activation = tanh
@@ -74,15 +86,15 @@ end
     # Test that outputs differ when using different activation functions
     @test !isapprox(y, y_custom, rtol = RTOL_HIGH)
     # with no initial state
-    test_gradients(layer_custom, g, x, rtol = RTOL_HIGH)
+    test_gradients(layer_custom, g, x, rtol = RTOL_HIGH; ad_backends)
     # with initial state
-    test_gradients(layer_custom, g, x, state0, rtol = RTOL_HIGH)
+    test_gradients(layer_custom, g, x, state0, rtol = RTOL_HIGH; ad_backends)
 
     # interplay with GNNChain
     model = GNNChain(TGCN(in_channel => out_channel), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol = RTOL_HIGH, atol = ATOL_LOW)
+    test_gradients(model, g, x, rtol = RTOL_HIGH, atol = ATOL_LOW; ad_backends)
 end
 
 @testitem "GConvLSTMCell" setup=[TemporalConvTestModule, TestModule] begin
