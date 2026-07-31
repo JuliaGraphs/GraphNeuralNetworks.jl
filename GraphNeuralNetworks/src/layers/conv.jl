@@ -1,7 +1,7 @@
 # The implementations of the forward pass of the graph convolutional layers are in the `GNNlib` module,
 # in the src/layers/conv.jl file. The `GNNlib` module is re-exported in the GraphNeuralNetworks module.
 # This annoying for the readability of the code, as the user has to look at two different files to understand
-# the implementation of a single layer, 
+# the implementation of a single layer,
 # but it is done for GraphNeuralNetworks.jl and GNNLux.jl to be able to share the same code.
 
 @doc raw"""
@@ -13,7 +13,7 @@ Performs the operation
 ```math
 \mathbf{x}'_i = \sum_{j\in N(i)} a_{ij} W \mathbf{x}_j
 ```
-where ``a_{ij} = 1 / \sqrt{|N(i)||N(j)|}`` is a normalization factor computed from the node degrees. 
+where ``a_{ij} = 1 / \sqrt{|N(i)||N(j)|}`` is a normalization factor computed from the node degrees.
 
 If the input graph has weighted edges and `use_edge_weight=true`, than ``a_{ij}`` will be computed as
 ```math
@@ -32,7 +32,7 @@ and optionally an edge weight vector.
 - `init`: Weights' initializer. Default `glorot_uniform`.
 - `add_self_loops`: Add self loops to the graph before performing the convolution. Default `false`.
 - `use_edge_weight`: If `true`, consider the edge weights in the input graph (if available).
-                     If `add_self_loops=true` the new weights will be set to 1. 
+                     If `add_self_loops=true` the new weights will be set to 1.
                      This option is ignored if the `edge_weight` is explicitly provided in the forward pass.
                      Default `false`.
 
@@ -41,11 +41,11 @@ and optionally an edge weight vector.
     (::GCNConv)(g::GNNGraph, x, edge_weight = nothing; norm_fn = d -> 1 ./ sqrt.(d), conv_weight = nothing) -> AbstractMatrix
 
 Takes as input a graph `g`, a node feature matrix `x` of size `[in, num_nodes]`,
-and optionally an edge weight vector. Returns a node feature matrix of size 
+and optionally an edge weight vector. Returns a node feature matrix of size
 `[out, num_nodes]`.
 
-The `norm_fn` parameter allows for custom normalization of the graph convolution operation by passing a function as argument. 
-By default, it computes ``\frac{1}{\sqrt{d}}`` i.e the inverse square root of the degree (`d`) of each node in the graph. 
+The `norm_fn` parameter allows for custom normalization of the graph convolution operation by passing a function as argument.
+By default, it computes ``\frac{1}{\sqrt{d}}`` i.e the inverse square root of the degree (`d`) of each node in the graph.
 If `conv_weight` is an `AbstractMatrix` of size `[out, in]`, then the convolution is performed using that weight matrix instead of the weights stored in the model.
 
 # Examples
@@ -58,7 +58,7 @@ g = GNNGraph(s, t)
 x = randn(Float32, 3, g.num_nodes)
 
 # create layer
-l = GCNConv(3 => 5) 
+l = GCNConv(3 => 5)
 
 # forward pass
 y = l(g, x)       # size:  5 × num_nodes
@@ -70,8 +70,8 @@ y = l(g, x, w; norm_fn = custom_norm_fn)
 
 # Edge weights can also be embedded in the graph.
 g = GNNGraph(s, t, w)
-l = GCNConv(3 => 5, use_edge_weight=true) 
-y = l(g, x) # same as l(g, x, w) 
+l = GCNConv(3 => 5, use_edge_weight=true)
+y = l(g, x) # same as l(g, x, w)
 ```
 """
 struct GCNConv{W <: AbstractMatrix, B, F} <: GNNLayer
@@ -153,7 +153,7 @@ g = GNNGraph(s, t)
 x = randn(Float32, 3, g.num_nodes)
 
 # create layer
-l = ChebConv(3 => 5, 5) 
+l = ChebConv(3 => 5, 5)
 
 # forward pass
 y = l(g, x)       # size:  5 × num_nodes
@@ -220,7 +220,7 @@ x = randn(Float32, 3, g.num_nodes)
 l = GraphConv(in_channel => out_channel, relu, bias = false, aggr = mean)
 
 # forward pass
-y = l(g, x)       
+y = l(g, x)
 ```
 """
 struct GraphConv{W <: AbstractMatrix, B, F, A} <: GNNLayer
@@ -267,10 +267,10 @@ where the attention coefficients ``\alpha_{ij}`` are given by
 ```math
 \alpha_{ij} = \frac{1}{z_i} \exp(LeakyReLU(\mathbf{a}^T [W \mathbf{x}_i; W \mathbf{x}_j]))
 ```
-with ``z_i`` a normalization factor. 
+with ``z_i`` a normalization factor.
 
-In case `ein > 0` is given, edge features of dimension `ein` will be expected in the forward pass 
-and the attention coefficients will be calculated as  
+In case `ein > 0` is given, edge features of dimension `ein` will be expected in the forward pass
+and the attention coefficients will be calculated as
 ```math
 \alpha_{ij} = \frac{1}{z_i} \exp(LeakyReLU(\mathbf{a}^T [W_e \mathbf{e}_{j\to i}; W \mathbf{x}_i; W \mathbf{x}_j]))
 ```
@@ -303,7 +303,7 @@ x = randn(Float32, 3, g.num_nodes)
 l = GATConv(in_channel => out_channel, add_self_loops = false, bias = false; heads=2, concat=true)
 
 # forward pass
-y = l(g, x)       
+y = l(g, x)
 ```
 """
 struct GATConv{DX<:Dense,DE<:Union{Dense, Nothing},DV,T,A<:AbstractMatrix,F,B} <: GNNLayer
@@ -370,8 +370,8 @@ where the attention coefficients ``\alpha_{ij}`` are given by
 ```
 with ``z_i`` a normalization factor.
 
-In case `ein > 0` is given, edge features of dimension `ein` will be expected in the forward pass 
-and the attention coefficients will be calculated as  
+In case `ein > 0` is given, edge features of dimension `ein` will be expected in the forward pass
+and the attention coefficients will be calculated as
 ```math
 \alpha_{ij} = \frac{1}{z_i} \exp(\mathbf{a}^T LeakyReLU(W_3 \mathbf{e}_{j\to i} + W_2 \mathbf{x}_i + W_1 \mathbf{x}_j)).
 ```
@@ -407,7 +407,7 @@ l = GATv2Conv((in_channel, ein) => out_channel, add_self_loops = false)
 e = randn(Float32, ein, length(s))
 
 # forward pass
-y = l(g, x, e)    
+y = l(g, x, e)
 ```
 """
 struct GATv2Conv{T, A1, A2, A3, DV, B, C <: AbstractMatrix, F} <: GNNLayer
@@ -456,7 +456,7 @@ function GATv2Conv(ch::Pair{NTuple{2, Int}, Int},
     end
     b = bias ? Flux.create_bias(dense_i.weight, true, concat ? out * heads : out) : false
     a = init(out, heads)
-    return GATv2Conv(dense_i, dense_j, dense_e, 
+    return GATv2Conv(dense_i, dense_j, dense_e,
               b, a, σ, negative_slope, ch, heads, concat,
               add_self_loops, dropout)
 end
@@ -509,7 +509,7 @@ g = GNNGraph(s, t)
 l = GatedGraphConv(out_channel, num_layers)
 
 # forward pass
-y = l(g, x)   
+y = l(g, x)
 ```
 """
 struct GatedGraphConv{W <: AbstractArray{<:Number, 3}, R, A} <: GNNLayer
@@ -552,7 +552,7 @@ where `nn` generally denotes a learnable function, e.g. a linear layer or a mult
 
 # Arguments
 
-- `nn`: A (possibly learnable) function. 
+- `nn`: A (possibly learnable) function.
 - `aggr`: Aggregation operator for the incoming messages (e.g. `+`, `*`, `max`, `min`, and `mean`).
 
 # Examples:
@@ -602,7 +602,7 @@ where ``f_\Theta`` typically denotes a learnable function, e.g. a linear layer o
 
 # Arguments
 
-- `f`: A (possibly learnable) function acting on node features. 
+- `f`: A (possibly learnable) function acting on node features.
 - `ϵ`: Weighting factor.
 
 # Examples:
@@ -622,7 +622,7 @@ nn = Dense(in_channel, out_channel)
 l = GINConv(nn, 0.01f0, aggr = mean)
 
 # forward pass
-y = l(g, x)  
+y = l(g, x)
 ```
 """
 struct GINConv{R <: Real, NN, A} <: GNNLayer
@@ -647,9 +647,9 @@ end
 @doc raw"""
     NNConv(in => out, f, σ=identity; aggr=+, bias=true, init=glorot_uniform)
 
-The continuous kernel-based convolutional operator from the 
-[Neural Message Passing for Quantum Chemistry](https://arxiv.org/abs/1704.01212) paper. 
-This convolution is also known as the edge-conditioned convolution from the 
+The continuous kernel-based convolutional operator from the
+[Neural Message Passing for Quantum Chemistry](https://arxiv.org/abs/1704.01212) paper.
+This convolution is also known as the edge-conditioned convolution from the
 [Dynamic Edge-Conditioned Filters in Convolutional Neural Networks on Graphs](https://arxiv.org/abs/1704.02901) paper.
 
 Performs the operation
@@ -659,7 +659,7 @@ Performs the operation
 ```
 
 where ``f_\Theta``  denotes a learnable function (e.g. a linear layer or a multi-layer perceptron).
-Given an input of batched edge features `e` of size `(num_edge_features, num_edges)`, 
+Given an input of batched edge features `e` of size `(num_edge_features, num_edges)`,
 the function `f` will return an batched matrices array whose size is `(out, in, num_edges)`.
 For convenience, also functions returning a single `(out*in, num_edges)` matrix are allowed.
 
@@ -695,7 +695,7 @@ x = randn(Float32, n_in, g.num_nodes)
 e = randn(Float32, n_in_edge, g.num_edges)
 
 # forward pass
-y = l(g, x, e)  
+y = l(g, x, e)
 ```
 """
 struct NNConv{W, B, NN, F, A} <: GNNLayer
@@ -764,7 +764,7 @@ g = GNNGraph(s, t)
 l = SAGEConv(in_channel => out_channel, tanh, bias = false, aggr = +)
 
 # forward pass
-y = l(g, x)   
+y = l(g, x)
 ```
 """
 struct SAGEConv{W <: AbstractMatrix, B, F, A} <: GNNLayer
@@ -815,7 +815,7 @@ where the edge gates ``\eta_{ij}`` are given by
 - `in`: The dimension of input features.
 - `out`: The dimension of output features.
 - `act`: Activation function.
-- `init`: Weight matrices' initializing function. 
+- `init`: Weight matrices' initializing function.
 - `bias`: Learn an additive bias if true.
 
 # Examples:
@@ -832,7 +832,7 @@ g = GNNGraph(s, t)
 l = ResGatedGraphConv(in_channel => out_channel, tanh, bias = true)
 
 # forward pass
-y = l(g, x)  
+y = l(g, x)
 ```
 """
 struct ResGatedGraphConv{W, B, F} <: GNNLayer
@@ -879,16 +879,16 @@ Performs the operation
 \mathbf{x}_i' = \mathbf{x}_i + \sum_{j\in N(i)}\sigma(W_f \mathbf{z}_{ij} + \mathbf{b}_f)\, act(W_s \mathbf{z}_{ij} + \mathbf{b}_s)
 ```
 
-where ``\mathbf{z}_{ij}``  is the node and edge features concatenation 
-``[\mathbf{x}_i; \mathbf{x}_j; \mathbf{e}_{j\to i}]`` 
+where ``\mathbf{z}_{ij}``  is the node and edge features concatenation
+``[\mathbf{x}_i; \mathbf{x}_j; \mathbf{e}_{j\to i}]``
 and ``\sigma`` is the sigmoid function.
-The residual ``\mathbf{x}_i`` is added only if `residual=true` and the output size is the same 
+The residual ``\mathbf{x}_i`` is added only if `residual=true` and the output size is the same
 as the input size.
 
 # Arguments
 
 - `in`: The dimension of input node features.
-- `ein`: The dimension of input edge features. 
+- `ein`: The dimension of input edge features.
 If `ein` is not given, assumes that no edge features are passed as input in the forward pass.
 - `out`: The dimension of output node features.
 - `act`: Activation function.
@@ -896,7 +896,7 @@ If `ein` is not given, assumes that no edge features are passed as input in the 
 - `init`: Weights' initializer.
 - `residual`: Add a residual connection.
 
-# Examples 
+# Examples
 
 ```julia
 g = rand_graph(5, 6)
@@ -958,8 +958,8 @@ where the attention coefficients ``\alpha_{ij}`` are given by
                   {\sum_{j'}e^{\beta \cos(\mathbf{x}_i, \mathbf{x}_{j'})}}
 ```
 with the cosine distance defined by
-```math 
-\cos(\mathbf{x}_i, \mathbf{x}_j) = 
+```math
+\cos(\mathbf{x}_i, \mathbf{x}_j) =
   \frac{\mathbf{x}_i \cdot \mathbf{x}_j}{\lVert\mathbf{x}_i\rVert \lVert\mathbf{x}_j\rVert}
 ```
 and ``\beta`` a trainable parameter if `trainable=true`.
@@ -982,7 +982,7 @@ g = GNNGraph(s, t)
 l = AGNNConv(init_beta=2.0f0)
 
 # forward pass
-y = l(g, x)   
+y = l(g, x)
 ```
 """
 struct AGNNConv{A <: AbstractVector} <: GNNLayer
@@ -1007,7 +1007,7 @@ end
 
 Convolution from [Graph Networks as a Universal Machine Learning Framework for Molecules and Crystals](https://arxiv.org/pdf/1812.05055.pdf)
 paper. In the forward pass, takes as inputs node features `x` and edge features `e` and returns
-updated features `x'` and `e'` according to 
+updated features `x'` and `e'` according to
 
 ```math
 \begin{aligned}
@@ -1019,7 +1019,7 @@ updated features `x'` and `e'` according to
 `aggr` defines the aggregation to be performed.
 
 If the neural networks `ϕe` and  `ϕv` are not provided, they will be constructed from
-the `in` and `out` arguments instead as multi-layer perceptron with one hidden layer and `relu` 
+the `in` and `out` arguments instead as multi-layer perceptron with one hidden layer and `relu`
 activations.
 
 # Examples
@@ -1076,10 +1076,10 @@ w^a_{k}(e^a) = \exp(-\frac{1}{2}(e^a - \mu^a_k)^T (\Sigma^{-1})^a_k(e^a - \mu^a_
 
 The input to the layer is a node feature array `x` of size `(num_features, num_nodes)` and
 edge pseudo-coordinate array `e` of size `(num_features, num_edges)`
-The residual ``\mathbf{x}_i`` is added only if `residual=true` and the output size is the same 
+The residual ``\mathbf{x}_i`` is added only if `residual=true` and the output size is the same
 as the input size.
 
-# Arguments 
+# Arguments
 
 - `in`: Number of input node features.
 - `ein`: Number of input edge features.
@@ -1088,7 +1088,7 @@ as the input size.
 - `K`: Number of kernels. Default `1`.
 - `bias`: Add learnable bias. Default `true`.
 - `init`: Weights' initializer. Default `glorot_uniform`.
-- `residual`: Residual conncetion. Default `false`.
+- `residual`: Residual connection. Default `false`.
 
 # Examples
 
@@ -1097,7 +1097,7 @@ as the input size.
 s = [1,1,2,3]
 t = [2,3,1,1]
 g = GNNGraph(s,t)
-nin, ein, out, K = 4, 10, 7, 8 
+nin, ein, out, K = 4, 10, 7, 8
 x = randn(Float32, nin, g.num_nodes)
 e = randn(Float32, ein, g.num_edges)
 
@@ -1150,7 +1150,7 @@ end
 
 @doc raw"""
     SGConv(int => out, k=1; [bias, init, add_self_loops, use_edge_weight])
-                                
+
 SGC layer from [Simplifying Graph Convolutional Networks](https://arxiv.org/pdf/1902.07153.pdf)
 Performs operation
 ```math
@@ -1179,7 +1179,7 @@ g = GNNGraph(s, t)
 x = randn(Float32, 3, g.num_nodes)
 
 # create layer
-l = SGConv(3 => 5; add_self_loops = true) 
+l = SGConv(3 => 5; add_self_loops = true)
 
 # forward pass
 y = l(g, x)       # size:  5 × num_nodes
@@ -1190,8 +1190,8 @@ y = l(g, x, w)
 
 # Edge weights can also be embedded in the graph.
 g = GNNGraph(s, t, w)
-l = SGConv(3 => 5, add_self_loops = true, use_edge_weight=true) 
-y = l(g, x) # same as l(g, x, w) 
+l = SGConv(3 => 5, add_self_loops = true, use_edge_weight=true)
+y = l(g, x) # same as l(g, x, w)
 ```
 """
 struct SGConv{A <: AbstractMatrix, B} <: GNNLayer
@@ -1228,7 +1228,7 @@ end
     TAGConv(in => out, k=3; bias=true, init=glorot_uniform, add_self_loops=true, use_edge_weight=false)
 
 TAGConv layer from [Topology Adaptive Graph Convolutional Networks](https://arxiv.org/pdf/1710.10370.pdf).
-This layer extends the idea of graph convolutions by applying filters that adapt to the topology of the data. 
+This layer extends the idea of graph convolutions by applying filters that adapt to the topology of the data.
 It performs the operation:
 
 ```math
@@ -1323,10 +1323,10 @@ computed as ``1/|\mathcal{N}(i)|``.
 - `hidden_size`: Hidden representation size.
 - `residual`: If `true`, add a residual connection. Only possible if `in == out`. Default `false`.
 
-# Forward Pass 
+# Forward Pass
 
     l(g, x, h, e=nothing)
-                     
+
 ## Forward Pass Arguments:
 
 - `g` : The graph.
@@ -1402,11 +1402,11 @@ end
     TransformerConv((in, ein) => out; [heads, concat, init, add_self_loops, bias_qkv,
         bias_root, root_weight, gating, skip_connection, batch_norm, ff_channels]))
 
-The transformer-like multi head attention convolutional operator from the 
-[Masked Label Prediction: Unified Message Passing Model for Semi-Supervised 
-Classification](https://arxiv.org/abs/2009.03509) paper, which also considers 
+The transformer-like multi head attention convolutional operator from the
+[Masked Label Prediction: Unified Message Passing Model for Semi-Supervised
+Classification](https://arxiv.org/abs/2009.03509) paper, which also considers
 edge features.
-It further contains options to also be configured as the transformer-like convolutional operator from the 
+It further contains options to also be configured as the transformer-like convolutional operator from the
 [Attention, Learn to Solve Routing Problems!](https://arxiv.org/abs/1706.03762) paper,
 including a successive feed-forward network as well as skip layers and batch normalization.
 
@@ -1420,7 +1420,7 @@ where the attention scores are
 W_6e_{ij})}{\sqrt{d}}\right).
 ```
 
-Optionally, a combination of the aggregated value with transformed root node features 
+Optionally, a combination of the aggregated value with transformed root node features
 by a gating mechanism via
 ```math
 x'_i = \beta_i W_1 x_i + (1 - \beta_i) \underbrace{\left(\sum_{j \in \mathcal{N}(i)}
@@ -1432,9 +1432,9 @@ with
 ```
 can be performed.
 
-# Arguments 
+# Arguments
 
-- `in`: Dimension of input features, which also corresponds to the dimension of 
+- `in`: Dimension of input features, which also corresponds to the dimension of
     the output features.
 - `ein`: Dimension of the edge features; if 0, no edge features will be used.
 - `out`: Dimension of the output.
@@ -1445,17 +1445,17 @@ can be performed.
 - `add_self_loops`: Add self loops to the input graph. Default `false`.
 - `bias_qkv`: If set, bias is used in the key, query and value transformations for nodes.
     Default `true`.
-- `bias_root`: If set, the layer will also learn an additive bias for the root when root 
+- `bias_root`: If set, the layer will also learn an additive bias for the root when root
     weight is used. Default `true`.
 - `root_weight`: If set, the layer will add the transformed root node features
     to the output. Default `true`.
 - `gating`: If set, will combine aggregation and transformed root node features by a
     gating mechanism. Default `false`.
-- `skip_connection`: If set, a skip connection will be made from the input and 
+- `skip_connection`: If set, a skip connection will be made from the input and
     added to the output. Default `false`.
 - `batch_norm`: If set, a batch normalization will be applied to the output. Default `false`.
 - `ff_channels`: If positive, a feed-forward NN is appended, with the first having the given
-    number of hidden nodes; this NN also gets a skip connection and batch normalization 
+    number of hidden nodes; this NN also gets a skip connection and batch normalization
     if the respective parameters are set. Default: `0`.
 
 # Examples
@@ -1468,7 +1468,7 @@ l = TransformerConv((in_channel, ein) => in_channel; heads, gating = true, bias_
 x = rand(Float32, in_channel, N)
 e = rand(Float32, ein, g.num_edges)
 l(g, x, e)
-```        
+```
 """
 struct TransformerConv{TW1, TW2, TW3, TW4, TW5, TW6, TFF, TBN1, TBN2} <: GNNLayer
     W1::TW1

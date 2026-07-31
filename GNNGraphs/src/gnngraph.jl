@@ -13,7 +13,7 @@ A type representing a graph structure that also stores
 feature arrays associated to nodes, edges, and the graph itself.
 
 The feature arrays are stored in the fields `ndata`, `edata`, and `gdata`
-as [`DataStore`](@ref) objects offering a convenient dictionary-like 
+as [`DataStore`](@ref) objects offering a convenient dictionary-like
 and namedtuple-like interface. The features can be passed at construction
 time or added later.
 
@@ -23,10 +23,10 @@ is determined by `graph_type`.
 
 When constructed from another `GNNGraph`, the internal graph representation
 is preserved and shared. The node/edge/graph features are retained
-as well, unless explicitely set by the keyword arguments
+as well, unless explicitly set by the keyword arguments
 `ndata`, `edata`, and `gdata`.
 
-A `GNNGraph` can also represent multiple graphs batched togheter
+A `GNNGraph` can also represent multiple graphs batched together
 (see [`MLUtils.batch`](@ref) or [`SparseArrays.blockdiag`](@ref)).
 The field `g.graph_indicator` contains the graph membership
 of each node.
@@ -102,7 +102,7 @@ g.edata.e # or just g.e
 source, target = edge_index(g)
 ```
 A `GNNGraph` can be sent to the GPU, for example by using Flux.jl's `gpu` function
-or MLDataDevices.jl's utilities. 
+or MLDataDevices.jl's utilities.
 """
 struct GNNGraph{T <: Union{COO_T, ADJMAT_T}} <: AbstractGNNGraph{T}
     graph::T
