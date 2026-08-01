@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
+## GNNGraphs.jl — Unreleased (towards 1.6.0)
+
+**Added**
+- Added a package extension `GNNGraphsEnzymeCoreExt` that marks the new internal graph-storage conversion helper `_to_coo_graph` as `EnzymeRules.inactive`, so Enzyme treats the adjacency-matrix→COO conversion as a non-differentiable primitive instead of crashing during differentiation ([#703]).
+
 ## GNNLux.jl — Unreleased (towards 0.2.0)
 
 **Added**
@@ -24,18 +29,23 @@ Entries link to the pull request that introduced them.
 **Removed**
 - Removed the `A3TGCN` layer, mirroring its removal from the Flux frontend ([#696]).
 
-## GNNlib.jl — Unreleased (towards 1.4.0)
+## GNNlib.jl — Unreleased (towards 1.5.0)
+
+**Fixed**
+- Fixed `Enzyme.gradient` crashing with `EnzymeInternalError: Could not analyze garbage collection behavior` when differentiating `GCNConv` on `:dense`/`:sparse` adjacency graphs: the adjacency-matrix→COO conversion (shared with `SGConv` and `TAGConv`) now goes through `GNNGraphs._to_coo_graph`, which the new `GNNGraphsEnzymeCoreExt` extension marks as Enzyme-inactive. Requires GNNGraphs ≥ 1.6 ([#703]).
+
+## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
+
+**Changed**
+- The recurrent temporal cells now delegate their forward-pass math to shared `GNNlib` functions (requires GNNlib ≥ 1.4); the layer behaviour is unchanged ([#696]).
+
+## GNNlib.jl 1.4.0 — 2026-07-22
 
 **Added**
 - Added framework-agnostic forward passes for the recurrent temporal cells — `tgcn`, `gconv_gru`, `gconv_lstm`, `dcgru` — shared by the Flux and Lux frontends ([#696]).
 
 **Fixed**
 - Worked around a Julia 1.12 code-generation segfault that crashed `CGConv` and `GMMConv` gradients: the layers' `@warn` (in the residual branch) is now wrapped in `ignore_derivatives` to keep the logging macro out of the AD-differentiated code path. Root cause reported upstream as [FluxML/Zygote.jl#1662]; re-enables the previously disabled `CGConv`/`GMMConv` gradient tests ([#695]).
-
-## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
-
-**Changed**
-- The recurrent temporal cells now delegate their forward-pass math to shared `GNNlib` functions (requires GNNlib ≥ 1.4); the layer behaviour is unchanged ([#696]).
 
 ## GNNGraphs.jl 1.5.1 — 2026-07-22
 
@@ -219,4 +229,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#623]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/623
 [#695]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/695
 [#696]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/696
+[#703]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/703
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662

@@ -116,6 +116,19 @@ function to_coo(adj_list::ADJLIST_T; dir = :out, num_nodes = nothing, weighted =
     (s, t, nothing), num_nodes, num_edges
 end
 
+# Positional equivalent of `GNNGraph(g, graph_type = :coo)`. Must stay kwarg-free:
+# GNNGraphsEnzymeCoreExt marks it EnzymeRules.inactive, and the rule only covers
+# the body of a positional method.
+function _to_coo_graph(g::GNNGraph)
+    graph, num_nodes, num_edges = to_coo(g.graph; num_nodes = g.num_nodes)
+    @assert num_nodes == g.num_nodes
+    @assert num_edges == g.num_edges
+    return GNNGraph(graph,
+                    g.num_nodes, g.num_edges, g.num_graphs,
+                    g.graph_indicator,
+                    g.ndata, g.edata, g.gdata)
+end
+
 ### CONVERT TO ADJACENCY MATRIX ################
 
 ### DENSE ####################
