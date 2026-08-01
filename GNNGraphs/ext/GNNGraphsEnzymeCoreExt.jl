@@ -3,8 +3,10 @@ module GNNGraphsEnzymeCoreExt
 using GNNGraphs
 using EnzymeCore: EnzymeRules
 
-# Storage conversion is structural and non-differentiable, matching its ChainRules
-# treatment; the rule also keeps Enzyme out of Union-heavy code it cannot compile.
-EnzymeRules.inactive(::typeof(GNNGraphs._to_coo_graph), ::GNNGraph) = nothing
+# Structure extraction returns integer indices only, hence inactive (matching the
+# ChainRules `@non_differentiable` annotations). Edge weights and features are left
+# to Enzyme's normal differentiation.
+EnzymeRules.inactive(::typeof(GNNGraphs._findnz_idx), ::Any...) = nothing
+EnzymeRules.inactive(::typeof(GNNGraphs._sparse_structure), ::Any...) = nothing
 
 end # module

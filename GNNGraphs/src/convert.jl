@@ -116,14 +116,35 @@ function to_coo(adj_list::ADJLIST_T; dir = :out, num_nodes = nothing, weighted =
     (s, t, nothing), num_nodes, num_edges
 end
 
-# Positional equivalent of `GNNGraph(g, graph_type = :coo)`. Must stay kwarg-free:
-# GNNGraphsEnzymeCoreExt marks it EnzymeRules.inactive, and the rule only covers
-# the body of a positional method.
-function _to_coo_graph(g::GNNGraph)
-    graph, num_nodes, num_edges = to_coo(g.graph; num_nodes = g.num_nodes)
-    @assert num_nodes == g.num_nodes
-    @assert num_edges == g.num_edges
-    return GNNGraph(graph,
+function _sparse_structure(A::AbstractSparseMatrix)
+    s, t, _ = findnz(A)
+    return s, t
+end
+
+CRC.@non_differentiable _sparse_structure(A)
+
+# Equivalent of `GNNGraph(g, graph_type = :coo)`, restructured for AD: the integer
+# structure extraction is non-differentiable (`_findnz_idx`/`_sparse_structure`),
+# while edge weights and features flow through plain differentiable code.
+function _to_coo_graph(g::GNNGraph{<:ADJMAT_T})
+    A = g.graph
+    s, t, nz = _findnz_idx(A)
+    v = A[nz]
+    return _rebuild_coo_graph(g, s, t, v)
+end
+
+function _to_coo_graph(g::GNNGraph{<:SPARSE_T})
+    A = g.graph
+    s, t = _sparse_structure(A)
+    v = copy(nonzeros(A))
+    return _rebuild_coo_graph(g, s, t, v)
+end
+
+_to_coo_graph(g::GNNGraph{<:COO_T}) = _rebuild_coo_graph(g, g.graph[1], g.graph[2], g.graph[3])
+
+function _rebuild_coo_graph(g::GNNGraph, s, t, v)
+    @assert length(s) == g.num_edges
+    return GNNGraph((s, t, v),
                     g.num_nodes, g.num_edges, g.num_graphs,
                     g.graph_indicator,
                     g.ndata, g.edata, g.gdata)

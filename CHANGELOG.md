@@ -13,7 +13,7 @@ Entries link to the pull request that introduced them.
 ## GNNGraphs.jl — Unreleased (towards 1.6.0)
 
 **Added**
-- Added a package extension `GNNGraphsEnzymeCoreExt` that marks the new internal graph-storage conversion helper `_to_coo_graph` as `EnzymeRules.inactive`, so Enzyme treats the adjacency-matrix→COO conversion as a non-differentiable primitive instead of crashing during differentiation ([#703]).
+- Added a package extension `GNNGraphsEnzymeCoreExt` that marks the integer graph-structure extraction (`_findnz_idx`, `_sparse_structure`) as `EnzymeRules.inactive`, and a new internal conversion helper `_to_coo_graph` that keeps edge weights and features on the differentiable path, so Enzyme no longer crashes converting adjacency-matrix graphs ([#703]).
 
 ## GNNLux.jl — Unreleased (towards 0.2.0)
 
@@ -32,7 +32,7 @@ Entries link to the pull request that introduced them.
 ## GNNlib.jl — Unreleased (towards 1.5.0)
 
 **Fixed**
-- Fixed `Enzyme.gradient` crashing with `EnzymeInternalError: Could not analyze garbage collection behavior` when differentiating `GCNConv` on `:dense`/`:sparse` adjacency graphs: the adjacency-matrix→COO conversion (shared with `SGConv` and `TAGConv`) now goes through `GNNGraphs._to_coo_graph`, which the new `GNNGraphsEnzymeCoreExt` extension marks as Enzyme-inactive. Requires GNNGraphs ≥ 1.6 ([#703]).
+- Fixed `Enzyme.gradient` crashing with `EnzymeInternalError: Could not analyze garbage collection behavior` when differentiating `GCNConv` on `:dense`/`:sparse` adjacency graphs: the adjacency-matrix→COO conversion (shared with `SGConv` and `TAGConv`) now goes through `GNNGraphs._to_coo_graph`, which keeps only the integer structure extraction Enzyme-inactive (via the new `GNNGraphsEnzymeCoreExt` extension) while edge weights and features stay differentiable. Requires GNNGraphs ≥ 1.6 ([#703]).
 
 ## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
 

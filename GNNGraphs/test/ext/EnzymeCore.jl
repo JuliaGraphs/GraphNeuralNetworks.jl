@@ -19,30 +19,34 @@
     end
 
     # Zygote keeps differentiating through the helper (no ChainRules rule on it).
-    g = rand_graph(rng, 6, 10, graph_type = :dense)
-    x = randn(rng, Float32, 3, g.num_nodes)
     loss(x, g) = sum(abs2, NNlib.gather(x, edge_index(GNNGraphs._to_coo_graph(g))[1]))
-    gz = gradient(x -> loss(x, g), x)[1]
-    gfd = ngradient(x -> loss(x, g), x)[1]
-    @test gz ≈ gfd rtol = 1e-4
+    for graph_type in (:dense, :sparse)
+        g = rand_graph(rng, 6, 10; graph_type)
+        x = randn(rng, Float32, 3, g.num_nodes)
+        gz = gradient(x -> loss(x, g), x)[1]
+        gfd = ngradient(x -> loss(x, g), x)[1]
+        @test gz ≈ gfd rtol = 1e-4
+    end
 end
 
-@testitem "GNNGraphsEnzymeCoreExt marks _to_coo_graph inactive" setup=[GraphsTestModule] begin
+@testitem "GNNGraphsEnzymeCoreExt structure extraction inactive" setup=[GraphsTestModule] begin
     using .GraphsTestModule
     using EnzymeCore: EnzymeRules
     using Enzyme: Enzyme, Const
     import NNlib
 
-    # Loading EnzymeCore triggers the extension, which registers the rule.
+    # Loading EnzymeCore triggers the extension, which registers the rules.
     @test hasmethod(EnzymeRules.inactive,
-                    Tuple{typeof(GNNGraphs._to_coo_graph), GNNGraph})
+                    Tuple{typeof(GNNGraphs._findnz_idx), Matrix{Int}})
+    @test hasmethod(EnzymeRules.inactive,
+                    Tuple{typeof(GNNGraphs._sparse_structure), SparseMatrixCSC{Int, Int}})
 
     # On Julia 1.10 Enzyme itself fails in its activity analysis for this pattern
     # (MethodError: active_reg(::TypeVar, ::UInt64)), so differentiate only on >= 1.12.
     if VERSION >= v"1.12"
         rng = MersenneTwister(17)
         loss(x, g) = sum(abs2, NNlib.gather(x, edge_index(GNNGraphs._to_coo_graph(g))[1]))
-        # Differentiating through the conversion crashed Enzyme before the inactive rule.
+        # Differentiating through the conversion crashed Enzyme before these rules.
         for graph_type in (:dense, :sparse)
             g = rand_graph(rng, 6, 10; graph_type)
             x = randn(rng, Float32, 3, g.num_nodes)
