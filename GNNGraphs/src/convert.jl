@@ -116,38 +116,20 @@ function to_coo(adj_list::ADJLIST_T; dir = :out, num_nodes = nothing, weighted =
     (s, t, nothing), num_nodes, num_edges
 end
 
-function _sparse_structure(A::AbstractSparseMatrix)
-    s, t, _ = findnz(A)
-    return s, t
+# Keyword-free equivalent of `GNNGraph(g, graph_type = :coo)`: Enzyme's type analysis
+# cannot compile the union-typed keyword bodies of the GNNGraph constructor and `to_coo`.
+function _to_coo_graph(g::GNNGraph{<:SPARSE_T})
+    s, t, v = findnz(g.graph)
+    return GNNGraph((s, t, v), g.num_nodes, g.num_edges, g.num_graphs,
+                    g.graph_indicator, g.ndata, g.edata, g.gdata)
 end
 
-CRC.@non_differentiable _sparse_structure(A)
-
-# Equivalent of `GNNGraph(g, graph_type = :coo)`, restructured for AD: the integer
-# structure extraction is non-differentiable (`_findnz_idx`/`_sparse_structure`),
-# while edge weights and features flow through plain differentiable code.
 function _to_coo_graph(g::GNNGraph{<:ADJMAT_T})
     A = g.graph
     s, t, nz = _findnz_idx(A)
     v = A[nz]
-    return _rebuild_coo_graph(g, s, t, v)
-end
-
-function _to_coo_graph(g::GNNGraph{<:SPARSE_T})
-    A = g.graph
-    s, t = _sparse_structure(A)
-    v = copy(nonzeros(A))
-    return _rebuild_coo_graph(g, s, t, v)
-end
-
-_to_coo_graph(g::GNNGraph{<:COO_T}) = _rebuild_coo_graph(g, g.graph[1], g.graph[2], g.graph[3])
-
-function _rebuild_coo_graph(g::GNNGraph, s, t, v)
-    @assert length(s) == g.num_edges
-    return GNNGraph((s, t, v),
-                    g.num_nodes, g.num_edges, g.num_graphs,
-                    g.graph_indicator,
-                    g.ndata, g.edata, g.gdata)
+    return GNNGraph((s, t, v), g.num_nodes, g.num_edges, g.num_graphs,
+                    g.graph_indicator, g.ndata, g.edata, g.gdata)
 end
 
 ### CONVERT TO ADJACENCY MATRIX ################

@@ -10,10 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
-## GNNGraphs.jl — Unreleased (towards 1.6.0)
+## GNNGraphs.jl — Unreleased (towards 1.5.2)
 
-**Added**
-- Added a package extension `GNNGraphsEnzymeCoreExt` that marks the integer graph-structure extraction (`_findnz_idx`, `_sparse_structure`) as `EnzymeRules.inactive`, and a new internal conversion helper `_to_coo_graph` that keeps edge weights and features on the differentiable path, so Enzyme no longer crashes converting adjacency-matrix graphs ([#703]).
+**Fixed**
+- Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
 
 ## GNNLux.jl — Unreleased (towards 0.2.0)
 
@@ -29,10 +29,10 @@ Entries link to the pull request that introduced them.
 **Removed**
 - Removed the `A3TGCN` layer, mirroring its removal from the Flux frontend ([#696]).
 
-## GNNlib.jl — Unreleased (towards 1.5.0)
+## GNNlib.jl — Unreleased (towards 1.4.1)
 
 **Fixed**
-- Fixed `Enzyme.gradient` crashing with `EnzymeInternalError: Could not analyze garbage collection behavior` when differentiating `GCNConv` on `:dense`/`:sparse` adjacency graphs: the adjacency-matrix→COO conversion (shared with `SGConv` and `TAGConv`) now goes through `GNNGraphs._to_coo_graph`, which keeps only the integer structure extraction Enzyme-inactive (via the new `GNNGraphsEnzymeCoreExt` extension) while edge weights and features stay differentiable. Requires GNNGraphs ≥ 1.6 ([#703]).
+- Fixed `Enzyme.gradient` failing when differentiating `GCNConv`, `SGConv` and `TAGConv` on `:dense`/`:sparse` adjacency graphs: their adjacency-matrix fallbacks now convert via the Enzyme-differentiable `GNNGraphs._to_coo_graph` instead of the keyword `GNNGraph` constructor. Requires GNNGraphs ≥ 1.5.2 and, for Enzyme, Enzyme ≥ 0.13.197 ([#703]).
 
 ## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
 
