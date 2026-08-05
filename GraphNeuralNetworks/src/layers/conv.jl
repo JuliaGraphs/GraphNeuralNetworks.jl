@@ -718,6 +718,8 @@ end
 
 (l::NNConv)(g, x, e) = GNNlib.nn_conv(l, g, x, e)
 
+(l::NNConv)(g, x) = GNNlib.nn_conv(l, g, x, edge_features(g))
+
 (l::NNConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, node_features(g), edge_features(g)))
 
 function Base.show(io::IO, l::NNConv)
