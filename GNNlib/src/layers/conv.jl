@@ -74,7 +74,7 @@ end
 # when we also have edge_weight we need to convert the graph to COO
 function gcn_conv(l, g::GNNGraph{<:ADJMAT_T}, x, edge_weight::EW, norm_fn::F, conv_weight::CW) where 
         {EW <: Union{Nothing, AbstractVector}, CW<:Union{Nothing,AbstractMatrix}, F} 
-    g = GNNGraph(g, graph_type = :coo)
+    g = _to_coo_graph(g)
     return gcn_conv(l, g, x, edge_weight, norm_fn, conv_weight)
 end
 
@@ -460,7 +460,7 @@ end
 # when we also have edge_weight we need to convert the graph to COO
 function sgc_conv(l, g::GNNGraph{<:ADJMAT_T}, x::AbstractMatrix,
                      edge_weight::AbstractVector)
-    g = GNNGraph(g; graph_type=:coo)
+    g = _to_coo_graph(g)
     return sgc_conv(l, g, x, edge_weight)
 end
 
@@ -554,7 +554,7 @@ end
 # when we also have edge_weight we need to convert the graph to COO
 function sg_conv(l, g::GNNGraph{<:ADJMAT_T}, x::AbstractMatrix,
                      edge_weight::AbstractVector)
-    g = GNNGraph(g; graph_type=:coo)
+    g = _to_coo_graph(g)
     return sg_conv(l, g, x, edge_weight)
 end
 
@@ -697,7 +697,7 @@ end
 # when we also have edge_weight we need to convert the graph to COO
 function tag_conv(l, g::GNNGraph{<:ADJMAT_T}, x::AbstractMatrix,
                      edge_weight::AbstractVector)
-    g = GNNGraph(g; graph_type = :coo)
+    g = _to_coo_graph(g)
     return l(g, x, edge_weight)
 end
 

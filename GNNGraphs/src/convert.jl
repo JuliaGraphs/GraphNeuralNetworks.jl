@@ -116,6 +116,22 @@ function to_coo(adj_list::ADJLIST_T; dir = :out, num_nodes = nothing, weighted =
     (s, t, nothing), num_nodes, num_edges
 end
 
+# Keyword-free equivalent of `GNNGraph(g, graph_type = :coo)`: Enzyme's type analysis
+# cannot compile the union-typed keyword bodies of the GNNGraph constructor and `to_coo`.
+function _to_coo_graph(g::GNNGraph{<:SPARSE_T})
+    s, t, v = findnz(g.graph)
+    return GNNGraph((s, t, v), g.num_nodes, g.num_edges, g.num_graphs,
+                    g.graph_indicator, g.ndata, g.edata, g.gdata)
+end
+
+function _to_coo_graph(g::GNNGraph{<:ADJMAT_T})
+    A = g.graph
+    s, t, nz = _findnz_idx(A)
+    v = A[nz]
+    return GNNGraph((s, t, v), g.num_nodes, g.num_edges, g.num_graphs,
+                    g.graph_indicator, g.ndata, g.edata, g.gdata)
+end
+
 ### CONVERT TO ADJACENCY MATRIX ################
 
 ### DENSE ####################
