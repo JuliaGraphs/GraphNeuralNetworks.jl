@@ -8,6 +8,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MLDataDevices = "7e8f7934-dd98-4c1a-8fe8-92b47a384d40"
 MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
 MLUtils = "f1d291b0-491e-4a28-83b9-f70985020b54"
+Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -26,5 +27,6 @@ GNNGraphs = {path = ".."}
 
 [compat]
 Enzyme = "0.13.197"
+Mooncake = "0.5.24"
 NNlib = "0.9.38"
 StableRNGs = "1.0.4"

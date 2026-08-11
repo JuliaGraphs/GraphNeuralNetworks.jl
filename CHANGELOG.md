@@ -10,7 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
-## GNNGraphs.jl — Unreleased (towards 1.5.2)
+## GNNGraphs.jl — Unreleased (towards 1.6.0)
+
+**Added**
+- Added a package extension `GNNGraphsMooncakeExt` that marks the integer graph-structure extraction (`add_self_loops`, `_findnz_idx`) as zero-derivative for Mooncake, mirroring the existing ChainRules `@non_differentiable` annotations. Together with an AD-friendly rewrite of the edge-weight extraction in `to_coo`/`_to_coo_graph` (linear instead of CartesianIndex indexing, keeping edge weights differentiable), Mooncake can now differentiate on CUDA through layers using self-loops and through adjacency-matrix graphs ([#704]).
 
 **Fixed**
 - Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
@@ -229,5 +232,6 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#623]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/623
 [#695]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/695
 [#696]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/696
+[#704]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/704
 [#703]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/703
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
