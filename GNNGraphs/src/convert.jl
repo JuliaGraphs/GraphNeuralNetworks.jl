@@ -80,10 +80,8 @@ end
 
 CRC.@non_differentiable _findnz_idx(A)
 
-# Values of `A` at the extracted edge positions, via AD-friendly linear indexing
-# (works on GPU, unlike CartesianIndex indexing). The integer-adjacency method is
-# non-differentiable (Mooncake rule in GNNGraphsMooncakeExt); float values stay
-# on the AD path.
+# Values of `A` at the extracted edge positions. Linear indexing keeps float edge
+# weights differentiable on GPU, unlike `A[nz]` with CartesianIndex.
 _edge_values(A::AbstractMatrix, s, t) = vec(A)[s .+ (t .- 1) .* size(A, 1)]
 
 function to_coo(A::ADJMAT_T; dir = :out, num_nodes = nothing, weighted = true)
