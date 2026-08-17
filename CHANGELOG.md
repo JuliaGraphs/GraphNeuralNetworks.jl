@@ -10,7 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
-## GNNGraphs.jl — Unreleased (towards 1.5.2)
+## GNNGraphs.jl — Unreleased (towards 1.6.0)
+
+**Added**
+- Added a `Mooncake` package extension, so that Mooncake can differentiate on CUDA through `add_self_loops` and through adjacency-matrix graphs. Float edge weights of adjacency-matrix graphs stay differentiable ([#704]).
 
 **Fixed**
 - Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
@@ -230,4 +233,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#695]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/695
 [#696]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/696
 [#703]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/703
+[#704]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/704
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662

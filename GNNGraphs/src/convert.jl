@@ -80,9 +80,13 @@ end
 
 CRC.@non_differentiable _findnz_idx(A)
 
+# Values of `A` at the extracted edge positions. Linear indexing keeps float edge
+# weights differentiable on GPU, unlike `A[nz]` with CartesianIndex.
+_edge_values(A::AbstractMatrix, s, t) = vec(A)[s .+ (t .- 1) .* size(A, 1)]
+
 function to_coo(A::ADJMAT_T; dir = :out, num_nodes = nothing, weighted = true)
-    s, t, nz = _findnz_idx(A)
-    v = A[nz]
+    s, t, _ = _findnz_idx(A)
+    v = _edge_values(A, s, t)
     if dir == :in
         s, t = t, s
     end
@@ -126,8 +130,8 @@ end
 
 function _to_coo_graph(g::GNNGraph{<:ADJMAT_T})
     A = g.graph
-    s, t, nz = _findnz_idx(A)
-    v = A[nz]
+    s, t, _ = _findnz_idx(A)
+    v = _edge_values(A, s, t)
     return GNNGraph((s, t, v), g.num_nodes, g.num_edges, g.num_graphs,
                     g.graph_indicator, g.ndata, g.edata, g.gdata)
 end
