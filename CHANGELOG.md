@@ -40,6 +40,7 @@ Entries link to the pull request that introduced them.
 ## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
 
 **Changed**
+- `GNNRecurrence` now hands each cell an indexed time slice instead of an `eachslice` view, matching the Lux frontend. Enzyme's type analysis fails on `SubArray` cell inputs, so this unblocks `DCGRU`, `EvolveGCNO`, `GConvGRU` and `GConvLSTM` under Enzyme ([#707]).
 - The recurrent temporal cells now delegate their forward-pass math to shared `GNNlib` functions (requires GNNlib ≥ 1.4); the layer behaviour is unchanged ([#696]).
 
 ## GNNlib.jl 1.4.0 — 2026-07-22
@@ -234,4 +235,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#696]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/696
 [#703]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/703
 [#704]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/704
+[#707]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/707
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662

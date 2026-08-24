@@ -1,7 +1,9 @@
 function scan(cell, g::GNNGraph, x::AbstractArray{T,3}, state) where {T}
     y = []
-    for xt in eachslice(x, dims = 2)
-        yt, state = cell(g, xt, state)
+    for t in 1:size(x, 2)
+        # slice by indexing, not `eachslice`: Enzyme's type analysis fails on
+        # `SubArray` cell inputs. The Lux frontend slices the same way.
+        yt, state = cell(g, x[:, t, :], state)
         y = vcat(y, [yt])
     end
     return stack(y, dims = 2)
