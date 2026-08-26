@@ -23,17 +23,20 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+EnzymeCore = "f151be2c-9106-41f4-ab19-57ee4f262869"
 Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 
 [extensions]
 GNNGraphsCUDAExt = "CUDA"
+GNNGraphsEnzymeCoreExt = "EnzymeCore"
 GNNGraphsMooncakeExt = "Mooncake"
 GNNGraphsSimpleWeightedGraphsExt = "SimpleWeightedGraphs"
 
 [compat]
 CUDA = "5, 6"
 ChainRulesCore = "1"
+EnzymeCore = "0.8"
 Functors = "0.5"
 Graphs = "1.4"
 KrylovKit = "0.8, 0.9, 0.10"
