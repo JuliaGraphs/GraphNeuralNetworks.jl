@@ -23,7 +23,7 @@ using GraphNeuralNetworks
 using Test
 using Statistics, Random
 using Flux
-using Functors: fmapstructure_with_path
+using Functors: fmap, fmapstructure_with_path
 using Graphs
 using ChainRulesTestUtils, FiniteDifferences
 using Zygote: Zygote
@@ -163,7 +163,10 @@ function test_gradients(
             f64 = f |> Flux.f64
             ps, re = Flux.destructure(f64)
             y_fd, g_fd = finitediff_withgradient(ps -> loss(re(ps), graph, xs...), ps)
-            y_fd, (re(g_fd[1]),)
+            # Rebuild from a zeroed model, so non-trainable arrays (e.g. BatchNorm's
+            # running stats) compare as zero gradients instead of as model values.
+            _, re0 = Flux.destructure(fmap(x -> x isa AbstractArray ? zero(x) : x, f64))
+            y_fd, (re0(g_fd[1]),)
         else
             Flux.withgradient(f -> loss(f, graph, xs...), reference, f)
         end
