@@ -130,18 +130,17 @@ end
     using .TestModuleGNNlib
     using Flux: Flux
 
-    # On :dense graphs the `copy_xj`/`+` specialization multiplies by
-    # `adjacency_matrix(g, T; weighted = false)`, whose result is union-typed
-    # (`to_dense` rebinds `A` across its branches), and Enzyme fails there with an
-    # IllegalTypeAnalysisException. The other storage types are fine.
-    enzyme_backends(g) = get_graph_type(g) == :dense ?
-                         [Flux.AutoZygote(), Flux.AutoMooncake()] :
-                         [Flux.AutoZygote(), Flux.AutoMooncake(), Flux.AutoEnzyme()]
-
     @testset "copy_xj +" begin
         for g in TEST_GRAPHS
             f(g, x) = propagate(copy_xj, g, +, xj = x)
-            test_gradients(f, g, g.x; test_grad_f=false, ad_backends = enzyme_backends(g))
+            # On :dense graphs the `copy_xj`/`+` specialization multiplies by
+            # `adjacency_matrix(g, T; weighted = false)`, whose result is union-typed
+            # (`to_dense` rebinds `A` across its branches), and Enzyme fails there
+            # with an IllegalTypeAnalysisException. The other storage types are fine.
+            test_gradients(f, g, g.x; test_grad_f=false,
+                           ad_backends = get_graph_type(g) == :dense ?
+                                         [Flux.AutoZygote(), Flux.AutoMooncake()] :
+                                         [Flux.AutoZygote(), Flux.AutoMooncake(), Flux.AutoEnzyme()])
         end
     end
 
