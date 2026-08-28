@@ -30,7 +30,9 @@ end
     # sigmoid gates (`Dense(_, sigmoid)`) on a fraction of inputs, so the check is
     # flaky (Zygote and finite differences agree). Upstream Mooncake bug with
     # NNlib.sigmoid: https://github.com/chalk-lab/Mooncake.jl/issues/1257.
-    # Reference against Zygote only, matching the other temporal cells.
+    # Enzyme is also skipped: compiling the gradient of the packaged cell hangs
+    # (25+ minutes with no output), so enabling it would stall the whole suite.
+    # Reference against Zygote only.
     ad_backends = [Flux.AutoZygote()]
 
     # Test with default activation function
@@ -62,7 +64,8 @@ end
 
     # Mooncake is skipped here (see the TGCNCell test item and
     # https://github.com/chalk-lab/Mooncake.jl/issues/1257): it returns wrong
-    # gradients through the cell's sigmoid gates on some inputs. Zygote only.
+    # gradients through the cell's sigmoid gates on some inputs. Enzyme is also
+    # skipped: it inherits TGCNCell's compile hang. Zygote only.
     ad_backends = [Flux.AutoZygote()]
 
     # Test with default activation function
@@ -105,9 +108,9 @@ end
     @test size(h) == (out_channel, g.num_nodes)
     @test size(c) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
     # with initial state
-    test_gradients(cell, g, g.x, (h, c), loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(cell, g, g.x, (h, c), loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
 end
 
 @testitem "GConvLSTM" setup=[TemporalConvTestModule, TestModule] begin
@@ -119,15 +122,15 @@ end
     y = layer(g, x)
     @test size(y) == (out_channel, timesteps, g.num_nodes)
     # with no initial state
-    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
     # with initial state
-    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
 
     # interplay with GNNChain
     model = GNNChain(GConvLSTM(in_channel => out_channel, 2), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
 end
 
 @testitem "GConvGRUCell" setup=[TemporalConvTestModule, TestModule] begin
@@ -137,9 +140,9 @@ end
     @test y === h
     @test size(h) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
     # with initial state
-    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
 end
 
 
@@ -152,27 +155,29 @@ end
     y = layer(g, x)
     @test size(y) == (out_channel, timesteps, g.num_nodes)
     # with no initial state
-    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
     # with initial state
-    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
 
     # interplay with GNNChain
     model = GNNChain(GConvGRU(in_channel => out_channel, 2), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
 end
 
 @testitem "DCGRUCell" setup=[TemporalConvTestModule, TestModule] begin
     using .TemporalConvTestModule, .TestModule
+    ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()]
+
     cell = DCGRUCell(in_channel => out_channel, 2)
     y, h = cell(g, g.x)
     @test y === h
     @test size(h) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW; ad_backends)
     # with initial state
-    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW; ad_backends)
 end
 
 @testitem "DCGRU" setup=[TemporalConvTestModule, TestModule] begin
@@ -184,15 +189,15 @@ end
     y = layer(g, x)
     @test size(y) == (out_channel, timesteps, g.num_nodes)
     # with no initial state
-    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
     # with initial state
-    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
 
     # interplay with GNNChain
     model = GNNChain(DCGRU(in_channel => out_channel, 2), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
 end
 
 @testitem "EvolveGCNOCell" setup=[TemporalConvTestModule, TestModule] begin
@@ -201,9 +206,14 @@ end
     y, state = cell(g, g.x)
     @test size(y) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
-    # with initial state
-    test_gradients(cell, g, g.x, state, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW,
+                   ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
+    # with initial state: the cell returns the same array in the output and in the
+    # state, and Enzyme accumulates both paths into the one shadow that aliased
+    # primal memory must share (EnzymeAD/Enzyme.jl#3408), so it disagrees with the
+    # per-slot partials Zygote and finite differences report.
+    test_gradients(cell, g, g.x, state, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW,
+                   ad_backends = [Flux.AutoZygote()])
 end
 
 @testitem "EvolveGCNO" setup=[TemporalConvTestModule, TestModule] begin

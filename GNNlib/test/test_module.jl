@@ -48,10 +48,18 @@ if TEST_MOONCAKE
     import Mooncake
 end
 
+# Enzyme.jl requires Julia >= 1.12 for the graph code paths exercised here:
+# on 1.10 it recurses forever through `fieldnames(::UnionAll)` in GNNGraph's
+# property sugar (https://github.com/EnzymeAD/Enzyme.jl/issues/3423).
+const TEST_ENZYME = VERSION >= v"1.12"
+if TEST_ENZYME
+    import Enzyme # loads FluxEnzymeExt, which backs Flux.AutoEnzyme()
+end
+
 # from this module
 export D_IN, D_OUT, GRAPH_TYPES, TEST_GRAPHS,
-       test_gradients, finitediff_withgradient, 
-       check_equal_leaves, gpu_backend, TEST_MOONCAKE
+       test_gradients, finitediff_withgradient,
+       check_equal_leaves, gpu_backend, TEST_MOONCAKE, TEST_ENZYME
 
 
 const D_IN = 3
@@ -95,13 +103,19 @@ function test_gradients(
             test_grad_x = true,
             # Reference AD: finite differences for CPU tests, Zygote (on CPU) for GPU tests.
             reference = test_gpu ? Flux.AutoZygote() : :finitediff,
-            ad_backends = test_gpu ? [] : [Flux.AutoZygote(), Flux.AutoMooncake()],
+            ad_backends = test_gpu ? [] :
+                          [Flux.AutoZygote(), Flux.AutoMooncake(), Flux.AutoEnzyme()],
             loss = (f, g, xs...) -> mean(f(g, xs...)),
             )
 
     # Mooncake requires Julia >= 1.12 and errors on sparse graph internals.
     if !TEST_MOONCAKE || graph.graph isa AbstractSparseMatrix
         ad_backends = filter(b -> !(b isa Flux.AutoMooncake), ad_backends)
+    end
+
+    # Enzyme requires Julia >= 1.12. Layers it cannot handle opt out per call site.
+    if !TEST_ENZYME
+        ad_backends = filter(b -> !(b isa Flux.AutoEnzyme), ad_backends)
     end
 
     ## Let's make sure first that the forward pass works.
