@@ -168,16 +168,14 @@ end
 
 @testitem "DCGRUCell" setup=[TemporalConvTestModule, TestModule] begin
     using .TemporalConvTestModule, .TestModule
-    ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()]
-
     cell = DCGRUCell(in_channel => out_channel, 2)
     y, h = cell(g, g.x)
     @test y === h
     @test size(h) == (out_channel, g.num_nodes)
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW; ad_backends)
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
     # with initial state
-    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW; ad_backends)
+    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
 end
 
 @testitem "DCGRU" setup=[TemporalConvTestModule, TestModule] begin
