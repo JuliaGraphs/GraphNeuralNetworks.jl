@@ -136,7 +136,8 @@ function gat_conv(l, g::AbstractGNNGraph, x, e::Union{Nothing, AbstractMatrix} =
     message = Fix1(gat_message, l)
     m = apply_edges(message, g, Wxi, Wxj, e)
     α = softmax_edge_neighbors(g, m.logα)
-    α = dropout(α, l.dropout)
+    # Skip at p == 0: NNlib.dropout fetches the (CUDA) RNG before checking p, which Mooncake cannot trace.
+    iszero(l.dropout) || (α = dropout(α, l.dropout))
     β = α .* m.Wxj
     x = aggregate_neighbors(g, +, β)
 
@@ -188,7 +189,7 @@ function gatv2_conv(l, g::AbstractGNNGraph, x, e::Union{Nothing, AbstractMatrix}
     message = Fix1(gatv2_message, l)
     m = apply_edges(message, g, Wxi, Wxj, e)
     α = softmax_edge_neighbors(g, m.logα)
-    α = dropout(α, l.dropout)
+    iszero(l.dropout) || (α = dropout(α, l.dropout))
     β = α .* m.Wxj
     x = aggregate_neighbors(g, +, β)
 

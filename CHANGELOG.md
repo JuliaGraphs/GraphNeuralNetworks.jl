@@ -37,6 +37,7 @@ Entries link to the pull request that introduced them.
 
 **Fixed**
 - Fixed `Enzyme.gradient` failing when differentiating `GCNConv`, `SGConv` and `TAGConv` on `:dense`/`:sparse` adjacency graphs: their adjacency-matrix fallbacks now convert via the Enzyme-differentiable `GNNGraphs._to_coo_graph` instead of the keyword `GNNGraph` constructor. Requires GNNGraphs ≥ 1.5.2 and, for Enzyme, Enzyme ≥ 0.13.197 ([#703]).
+- `GATConv` and `GATv2Conv` skip attention dropout when `dropout == 0`, which also makes them differentiable with Mooncake on CUDA ([#XXX]).
 
 ## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
 
@@ -238,4 +239,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#704]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/704
 [#707]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/707
 [#706]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/706
+[#709]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/709
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
