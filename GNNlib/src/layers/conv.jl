@@ -121,13 +121,15 @@ function gat_conv(l, g::AbstractGNNGraph, x, e::Union{Nothing, AbstractMatrix} =
         g = add_self_loops(g)
     end
 
+    _, n_stackj = size(xj)
+    _, n_stacki = size(xi)
     _, chout = l.channel
     heads = l.heads
 
     Wxj = l.dense_x(xj)
-    Wxj = reshape(Wxj, chout, heads, :)
+    Wxj = reshape(Wxj, chout, heads, n_stackj)
     Wxi = l.dense_x(xi)
-    Wxi = reshape(Wxi, chout, heads, :)
+    Wxi = reshape(Wxi, chout, heads, n_stacki)
 
     # a hand-written message passing
     message = Fix1(gat_message, l)
