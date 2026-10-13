@@ -85,16 +85,22 @@ function cheb_conv(l, g::GNNGraph, X::AbstractMatrix{T}) where {T}
     @assert size(X, 1) == size(l.weight, 2) "Input feature size must match input channel size."
 
     L̃ = scaled_laplacian(g, eltype(X))
+    return _cheb_core(l.weight, l.bias, X, L̃)
+end
 
+# Array core of `cheb_conv`: `Y = Σₖ W[:, :, k] * Zₖ .+ b` over the Chebyshev terms
+# `Z₁ = X`, `Z₂ = X * L`, `Zₖ = 2 Zₖ₋₁ L - Zₖ₋₂`. Kept separate so that
+# `GNNlibEnzymeCoreExt` can give Enzyme a reverse rule for it.
+function _cheb_core(W::AbstractArray{<:Any, 3}, b, X::AbstractMatrix, L::AbstractMatrix)
     Z_prev = X
-    Z = X * L̃
-    Y = view(l.weight, :, :, 1) * Z_prev
-    Y = Y .+ view(l.weight, :, :, 2) * Z
-    for k in 3:(l.k)
-        Z, Z_prev = 2 * Z * L̃ - Z_prev, Z
-        Y = Y .+ view(l.weight, :, :, k) * Z
+    Z = X * L
+    Y = view(W, :, :, 1) * Z_prev
+    Y = Y .+ view(W, :, :, 2) * Z
+    for k in 3:size(W, 3)
+        Z, Z_prev = 2 * Z * L - Z_prev, Z
+        Y = Y .+ view(W, :, :, k) * Z
     end
-    return Y .+ l.bias
+    return Y .+ b
 end
 
 ####################### GraphConv ######################################

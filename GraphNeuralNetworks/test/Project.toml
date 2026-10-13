@@ -1,5 +1,6 @@
 [deps]
 ChainRulesTestUtils = "cdddcdb0-9152-4a09-a978-84456f9df70a"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 Functors = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
@@ -9,6 +10,7 @@ GraphNeuralNetworks = "cffab07f-9bc2-4db1-8861-388f63bf7694"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
 Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
+NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
@@ -19,3 +21,6 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [sources]
 GraphNeuralNetworks = {path = ".."}
+
+[compat]
+NNlib = "0.9.45"
