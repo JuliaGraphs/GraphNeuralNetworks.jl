@@ -90,6 +90,16 @@ end
                        ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
     end
 
+    # k = 3 runs the Chebyshev recursion, and its reverse in GNNlib's Enzyme rule
+    # for `cheb_conv`; without a bias the rule receives a constant `false`.
+    l = ChebConv(D_IN => D_OUT, 3, bias = false)
+    for g in TEST_GRAPHS
+        g = add_self_loops(g)
+        @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
+        test_gradients(l, g, g.x, rtol = RTOL_LOW,
+                       ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
+    end
+
     @testset "bias=false" begin
         @test length(Flux.trainables(ChebConv(2 => 3, 3))) == 2
         @test length(Flux.trainables(ChebConv(2 => 3, 3, bias = false))) == 1
