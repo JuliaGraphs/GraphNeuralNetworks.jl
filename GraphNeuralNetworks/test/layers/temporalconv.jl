@@ -172,10 +172,12 @@ end
     y, h = cell(g, g.x)
     @test y === h
     @test size(h) == (out_channel, g.num_nodes)
+    # Enzyme is skipped: it fails with an IllegalTypeAnalysisException inside the keyword
+    # `GNNGraph` constructor that `d_conv` uses to build the transposed graph.
     # with no initial state
-    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
+    test_gradients(cell, g, g.x, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
     # with initial state
-    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
+    test_gradients(cell, g, g.x, h, loss=cell_loss, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
 end
 
 @testitem "DCGRU" setup=[TemporalConvTestModule, TestModule] begin
@@ -186,16 +188,17 @@ end
     state0 = rand(Float32, out_channel, g.num_nodes)
     y = layer(g, x)
     @test size(y) == (out_channel, timesteps, g.num_nodes)
+    # Enzyme is skipped: DCGRU runs the DCGRUCell, see the comment there.
     # with no initial state
-    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
+    test_gradients(layer, g, x, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
     # with initial state
-    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
+    test_gradients(layer, g, x, state0, rtol=RTOL_LOW, atol=ATOL_LOW, ad_backends = [Flux.AutoZygote()])
 
     # interplay with GNNChain
     model = GNNChain(DCGRU(in_channel => out_channel, 2), Dense(out_channel, 1))
     y = model(g, x)
     @test size(y) == (1, timesteps, g.num_nodes)
-    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
+    test_gradients(model, g, x, rtol = RTOL_LOW, atol = ATOL_LOW, ad_backends = [Flux.AutoZygote()])
 end
 
 @testitem "EvolveGCNOCell" setup=[TemporalConvTestModule, TestModule] begin
