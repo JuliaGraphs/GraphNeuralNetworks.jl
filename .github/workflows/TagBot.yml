@@ -26,7 +26,7 @@ jobs:
           - GraphNeuralNetworks
           - GNNLux
     steps:
-      - uses: JuliaRegistries/TagBot@d8d3e8f45a4cd9839f1d6d8798ca246431564418 # v1.25.12
+      - uses: JuliaRegistries/TagBot@a3a48fad3c1d6c2abbb874970a3f9032493a7473 # v1.25.14
         with:
           subdir: ${{ matrix.subdir }}
           token: ${{ secrets.GITHUB_TOKEN }}
