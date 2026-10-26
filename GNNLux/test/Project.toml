@@ -23,6 +23,8 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [sources]
 GNNLux = {path = ".."}
+# TODO: remove once https://github.com/LuxDL/Lux.jl/pull/1778 is merged and released
+LuxTestUtils = {url = "https://github.com/simsurace/Lux.jl", rev = "patch-1", subdir = "lib/LuxTestUtils"}
 
 [compat]
 NNlib = "0.9.38"
