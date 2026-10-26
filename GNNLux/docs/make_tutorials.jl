@@ -1,7 +1,16 @@
 using Literate
 
-Literate.markdown("src_tutorials/gnn_intro.jl", "src/tutorials/"; execute = true)
+# Run this script from `GNNLux/docs` with
+#   julia --project=. make_tutorials.jl
+function tutorial(name, section)
+    Literate.markdown(joinpath("src_tutorials", "$name.jl"), joinpath("src", "tutorials", section);
+                      execute = true)
+end
 
-Literate.markdown("src_tutorials/graph_classification.jl", "src/tutorials/"; execute = true)
+tutorial("gnn_intro", "beginner_tutorials")
 
-Literate.markdown("src_tutorials/node_classification.jl", "src/tutorials/"; execute = true)
+tutorial("graph_classification", "beginner_tutorials")
+
+tutorial("node_classification", "beginner_tutorials")
+
+tutorial("traffic_prediction", "intermediate_tutorials")

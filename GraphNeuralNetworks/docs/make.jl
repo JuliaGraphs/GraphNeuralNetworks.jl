@@ -1,5 +1,4 @@
 using Documenter
-using DemoCards: DemoCards
 using GraphNeuralNetworks
 using Flux, GNNGraphs, GNNlib, Graphs
 using DocumenterInterLinks
@@ -35,21 +34,21 @@ cp(joinpath(@__DIR__, "../../GNNlib/docs/src"),
    joinpath(@__DIR__, "src/GNNlib"), force=true)
 
 
-## DEMO CARDS AUTOMATICALLY DETECTS TUTORIALS FROM FOLDER STRUCTURE
-tutorials, tutorials_postprocess_cb, tutorials_assets = DemoCards.makedemos(joinpath(@__DIR__, "tutorials"))
-## UNCOMMENT TO DISABLE TUTORIALS AND SPEED UP DOCS BUILDING
-# tutorials, tutorials_postprocess_cb, tutorials_assets = 
-    # "Tutorials" => "index.md", () -> nothing, nothing
-
-assets = []
-isnothing(tutorials_assets) || push!(assets, tutorials_assets)
-
+tutorials = "Tutorials" => [
+    "Beginner tutorials" => [
+        "Hands on" => "tutorials/beginner_tutorials/gnn_intro.md",
+        "Node Classification" => "tutorials/beginner_tutorials/node_classification.md",
+        "Graph Classification" => "tutorials/beginner_tutorials/graph_classification.md",
+        ],
+    "Intermediate tutorials" => [
+        "Traffic Prediction" => "tutorials/intermediate_tutorials/traffic_prediction.md",
+        ],
+    ]
 makedocs(;
     modules = [GraphNeuralNetworks, GNNGraphs, GNNlib],
     plugins = [interlinks],
     format = Documenter.HTML(; mathengine, 
                             prettyurls = get(ENV, "CI", nothing) == "true", 
-                            assets,
                             size_threshold=nothing, 
                             size_threshold_warn=2000000,
                             example_size_threshold=2000000),
@@ -93,7 +92,6 @@ makedocs(;
     ],
 )
 
-tutorials_postprocess_cb()
 for (name, reason) in SyntheticDatasets.REPLACED
     @warn "Could not load the $name dataset, so its tutorial was built with synthetic data" reason
 end
