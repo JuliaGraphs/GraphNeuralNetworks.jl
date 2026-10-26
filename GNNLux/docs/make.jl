@@ -35,7 +35,6 @@ makedocs(;
     plugins = [interlinks],
     format = Documenter.HTML(; mathengine, 
                     prettyurls = get(ENV, "CI", nothing) == "true", 
-                    assets = [],
                     size_threshold=nothing, 
                     size_threshold_warn=2000000),
     sitename = "GNNLux.jl",
@@ -53,10 +52,13 @@ makedocs(;
         ],
 
         "Tutorials" => [
-            "Introductory tutorials" => [
-                "Hands on" => "tutorials/gnn_intro.md",
-                "Node Classification" => "tutorials/node_classification.md",
-                "Graph Classification" => "tutorials/graph_classification.md",
+            "Beginner tutorials" => [
+                "Hands on" => "tutorials/beginner_tutorials/gnn_intro.md",
+                "Node Classification" => "tutorials/beginner_tutorials/node_classification.md",
+                "Graph Classification" => "tutorials/beginner_tutorials/graph_classification.md",
+                ],
+            "Intermediate tutorials" => [
+                "Traffic Prediction" => "tutorials/intermediate_tutorials/traffic_prediction.md",
                 ],
             ],
 
@@ -85,7 +87,7 @@ makedocs(;
         # "Developer guide" => "dev.md",
     ],
 )
-     
+
 rm(joinpath(@__DIR__, "src/GNNGraphs"), force=true, recursive=true)
 rm(joinpath(@__DIR__, "src/GNNlib"), force=true, recursive=true)
 
