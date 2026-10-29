@@ -3,7 +3,7 @@ module GNNlibAMDGPUExt
 using AMDGPU: AnyROCMatrix
 using Random, Statistics, LinearAlgebra
 using GNNlib: GNNlib, propagate, copy_xj, e_mul_xj, w_mul_xj
-using GNNGraphs: GNNGraph, COO_T, SPARSE_T
+using GNNGraphs: GNNGraph, COO_T, SPARSE_T, get_edge_weight
 
 ###### PROPAGATE SPECIALIZATIONS ####################
 
@@ -28,7 +28,9 @@ end
 ## avoid the fast path on gpu until we have better support
 function GNNlib.propagate(::typeof(w_mul_xj), g::GNNGraph{<:Union{COO_T, SPARSE_T}}, ::typeof(+),
         xi, xj::AnyROCMatrix, e::Nothing)
-    propagate((xi, xj, e) -> w_mul_xj(xi, xj, e), g, +, xi, xj, e)
+    # The weights come from the graph here, so they have to be passed on explicitly:
+    # `w_mul_xj` with `e = nothing` would return unweighted messages.
+    propagate((xi, xj, e) -> w_mul_xj(xi, xj, e), g, +, xi, xj, get_edge_weight(g))
 end
 
 end #module
