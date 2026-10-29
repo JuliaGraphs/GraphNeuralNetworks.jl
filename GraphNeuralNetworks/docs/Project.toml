@@ -28,3 +28,4 @@ GraphNeuralNetworks = {path = ".."}
 
 [compat]
 DocumenterInterLinks = "1.1.0"
+MLDatasets = "0.7"
