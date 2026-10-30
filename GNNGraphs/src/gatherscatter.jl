@@ -11,7 +11,7 @@ _scatter(aggr, src::Dict, idx, n) = Dict([k => _scatter(aggr, v, idx, n) for (k,
 
 function _scatter(aggr,
                   src::AbstractArray,
-                  idx::AbstractVector{<:Integer},
+                  idx::AbstractVector,
                   n::Integer)
     dstsize = (size(src)[1:(end - 1)]..., n)
     return NNlib.scatter(aggr, src, idx; dstsize)

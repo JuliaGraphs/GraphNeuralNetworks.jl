@@ -17,6 +17,14 @@
 
         r2 = reduce_nodes(mean, graph_indicator(g), x)
         @test r2 == r
+
+        # trailing graphs without nodes or edges still get an output column
+        gs = [rand_graph(4, 6, ndata = rand(Dx, 4), edata = rand(De, 6)),
+              GNNGraph(Int[], Int[]; num_nodes = 2, ndata = rand(Dx, 2), edata = rand(De, 0)),
+              GNNGraph(Int[], Int[]; num_nodes = 0, ndata = rand(Dx, 0), edata = rand(De, 0))]
+        gb = MLUtils.batch(gs)
+        @test size(reduce_nodes(+, gb, gb.ndata.x)) == (Dx, 3)
+        @test size(reduce_edges(+, gb, gb.edata.e)) == (De, 3)
     end
 
     @testset "reduce_nodes" begin
