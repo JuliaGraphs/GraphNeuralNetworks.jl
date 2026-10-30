@@ -6,6 +6,9 @@ using DocumenterInterLinks
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for MLDatasets
 
+## SYNTHETIC FALLBACKS FOR THE TUTORIAL DATASETS, USED WHEN A DOWNLOAD FAILS
+include("synthetic_datasets.jl")
+
 DocMeta.setdocmeta!(GNNGraphs, :DocTestSetup, :(using GNNGraphs, MLUtils); recursive = true)
 DocMeta.setdocmeta!(GNNlib, :DocTestSetup, :(using GNNlib); recursive = true)
 DocMeta.setdocmeta!(GraphNeuralNetworks, :DocTestSetup, :(using GraphNeuralNetworks); recursive = true)
@@ -91,6 +94,9 @@ makedocs(;
 )
 
 tutorials_postprocess_cb()
+for (name, reason) in SyntheticDatasets.REPLACED
+    @warn "Could not load the $name dataset, so its tutorial was built with synthetic data" reason
+end
 rm(joinpath(@__DIR__, "src/GNNGraphs"), force=true, recursive=true)
 rm(joinpath(@__DIR__, "src/GNNlib"), force=true, recursive=true)
 

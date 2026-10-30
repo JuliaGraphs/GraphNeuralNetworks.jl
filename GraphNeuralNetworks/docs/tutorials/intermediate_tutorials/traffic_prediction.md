@@ -22,7 +22,13 @@ Random.seed!(42); # for reproducibility
 We use the `METR-LA` dataset from the paper [Diffusion Convolutional Recurrent Neural Network: Data-driven Traffic Forecasting](https://arxiv.org/pdf/1707.01926.pdf), which contains traffic data from loop detectors in the highway of Los Angeles County. The dataset contains traffic speed data from March 1, 2012 to June 30, 2012. The data is collected every 5 minutes, resulting in 12 observations per hour, from 207 sensors. Each sensor is a node in the graph, and the edge weights are the distances between the sensor locations.
 
 ```@example traffic
+dataset_metrla, synthetic_data_note = Main.SyntheticDatasets.load("METR-LA", Main.SyntheticDatasets.metrla) do # hide
 dataset_metrla = METRLA(; num_timesteps = 3)
+end # hide
+dataset_metrla # hide
+```
+```@example traffic
+synthetic_data_note # hide
 ```
 ```@example traffic
 g = dataset_metrla[1]
