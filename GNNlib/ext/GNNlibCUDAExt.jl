@@ -3,7 +3,7 @@ module GNNlibCUDAExt
 using CUDA
 using Random, Statistics, LinearAlgebra
 using GNNlib: GNNlib, propagate, copy_xj, e_mul_xj, w_mul_xj
-using GNNGraphs: GNNGraph, COO_T, SPARSE_T, to_dense, to_sparse, adjacency_matrix
+using GNNGraphs: GNNGraph, COO_T, SPARSE_T, to_dense, to_sparse, adjacency_matrix, get_edge_weight
 using ChainRulesCore: @non_differentiable
 
 const CUDA_COO_T = Tuple{T, T, V} where {T <: AnyCuArray{<:Integer}, V <: Union{Nothing, AnyCuArray}}
@@ -40,7 +40,9 @@ end
 ## avoid the fast path on gpu until we have better cuda support
 function GNNlib.propagate(::typeof(w_mul_xj), g::GNNGraph{<:COO_T}, ::typeof(+),
         xi, xj::AnyCuMatrix, e::Nothing)
-    propagate((xi, xj, e) -> w_mul_xj(xi, xj, e), g, +, xi, xj, e)
+    # The weights come from the graph here, so they have to be passed on explicitly:
+    # `w_mul_xj` with `e = nothing` would return unweighted messages.
+    propagate((xi, xj, e) -> w_mul_xj(xi, xj, e), g, +, xi, xj, get_edge_weight(g))
 end
 
 # function GNNlib.propagate(::typeof(copy_xj), g::GNNGraph, ::typeof(mean), xi, xj::AbstractMatrix, e)

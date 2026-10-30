@@ -219,7 +219,7 @@ end
             end
             # @show get_graph_type(g) has_isolated_nodes(g)
             # broken = get_graph_type(g) == :sparse
-            broken = true
+            broken = false
             @test test_gradients(
                 f, g, g.x, w; test_gpu=true, test_grad_f=false
             ) broken=broken

@@ -36,6 +36,7 @@ Entries link to the pull request that introduced them.
 ## GNNlib.jl — Unreleased (towards 1.4.1)
 
 **Fixed**
+- Fixed `propagate(w_mul_xj, g, +)` ignoring the edge weights on CUDA and AMDGPU: the GPU fallback passed no weights to `w_mul_xj`, so layers using edge weights (e.g. `GCNConv` with `use_edge_weight = true`) computed unweighted messages on the GPU ([#718]).
 - Fixed `Enzyme.gradient` failing when differentiating `GCNConv`, `SGConv` and `TAGConv` on `:dense`/`:sparse` adjacency graphs: their adjacency-matrix fallbacks now convert via the Enzyme-differentiable `GNNGraphs._to_coo_graph` instead of the keyword `GNNGraph` constructor. Requires GNNGraphs ≥ 1.5.2 and, for Enzyme, Enzyme ≥ 0.13.197 ([#703]).
 
 ## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
@@ -238,4 +239,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#704]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/704
 [#707]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/707
 [#706]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/706
+[#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
