@@ -379,6 +379,27 @@ end
     end 
 end
 
+@testitem "remove_nodes on batched graph" setup=[GraphsTestModule] begin
+    using .GraphsTestModule
+    g1 = GNNGraph([1, 2], [2, 3], ndata = [1.0, 2.0, 3.0])
+    g2 = GNNGraph([1, 2, 3], [2, 3, 4], ndata = [4.0, 5.0, 6.0, 7.0])
+    g = MLUtils.batch([g1, g2])
+
+    gnew = remove_nodes(g, [2, 5])
+    @test gnew.num_nodes == 5
+    @test gnew.num_graphs == 2
+    @test gnew.graph_indicator == [1, 1, 2, 2, 2]
+    @test gnew.ndata.x == [1.0, 3.0, 4.0, 6.0, 7.0]
+
+    gs = MLUtils.unbatch(gnew)
+    @test gs[1].num_nodes == 2
+    @test gs[1].num_edges == 0
+    @test gs[2].num_nodes == 3
+    @test edge_index(gs[2]) == ([2], [3])
+    @test gs[2].ndata.x == [4.0, 6.0, 7.0]
+    @test getgraph(gnew, 2).ndata.x == [4.0, 6.0, 7.0]
+end
+
 @testitem "remove_nodes(g, p)" setup=[GraphsTestModule] begin
     using .GraphsTestModule
     for GRAPH_T in GRAPH_TYPES

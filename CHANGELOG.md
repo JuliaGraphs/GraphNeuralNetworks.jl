@@ -16,6 +16,7 @@ Entries link to the pull request that introduced them.
 - Added a `Mooncake` package extension, so that Mooncake can differentiate on CUDA through `add_self_loops` and through adjacency-matrix graphs. Float edge weights of adjacency-matrix graphs stay differentiable ([#704]).
 
 **Fixed**
+- `remove_nodes` now updates the `graph_indicator` of batched graphs. It was previously left unchanged, so calling `unbatch` or `getgraph` on the result threw a `BoundsError` ([#717]).
 - Added an `EnzymeCore` package extension marking `scaled_laplacian` inactive for Enzyme, matching its existing `@non_differentiable` ChainRules declaration. Enzyme previously differentiated the Krylov eigensolve inside it and failed; this unblocks `ChebConv`, `GConvGRUCell` and `GConvLSTMCell` ([#706]).
 - Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
 
@@ -238,4 +239,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#704]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/704
 [#707]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/707
 [#706]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/706
+[#717]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/717
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
