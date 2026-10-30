@@ -23,10 +23,18 @@ using MLDatasets
 using LinearAlgebra, Random, Statistics
 import GraphMakie
 import CairoMakie as Makie
-using Zygote, Optimisers, OneHotArrays
+using Reactant, Enzyme, Optimisers, OneHotArrays
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"  # don't ask for dataset download confirmation
 rng = Random.seed!(10) # for reproducibility
+
+# Following the standard practice in Lux, we compile our models with [Reactant.jl](https://github.com/EnzymeAD/Reactant.jl) and differentiate them with [Enzyme.jl](https://github.com/EnzymeAD/Enzyme.jl).
+# Reactant traces the Julia code of the model into an [XLA](https://openxla.org/) program and runs it on the best available device: a GPU if one is functional, the CPU otherwise
+# (call `Reactant.set_default_backend("cpu")` before the device is created to force the CPU).
+# Data, graphs, parameters and states are moved to that device with `xdev`, and results are brought back to the host with `cdev`:
+
+const xdev = reactant_device()
+const cdev = cpu_device()
 
 
 # Following [Kipf et al. (2017)](https://arxiv.org/abs/1609.02907), let's dive into the world of GNNs by looking at a simple graph-structured example, the well-known [**Zachary's karate club network**](https://en.wikipedia.org/wiki/Zachary%27s_karate_club). This graph describes a social network of 34 members of a karate club and documents links between members who interacted outside the club. Here, we are interested in detecting communities that arise from the member's interaction. 
@@ -149,15 +157,14 @@ function GCN(num_features, num_classes, hidden_dim1, hidden_dim2; use_bias = tru
 end
 
 function (gcn::GCN)(g::GNNGraph, x, ps, st) # forward pass
-    dense = StatefulLuxLayer{true}(gcn.dense, ps.dense, GNNLux._getstate(st, :dense))
     x, stconv1 = gcn.conv1(g, x, ps.conv1, st.conv1)
     x = tanh.(x)
     x, stconv2 = gcn.conv2(g, x, ps.conv2, st.conv2)
     x = tanh.(x)
     x, stconv3 = gcn.conv3(g, x, ps.conv3, st.conv3)
-    x = tanh.(x) 
-    out = dense(x)
-    return (out, x), (conv1 = stconv1, conv2 = stconv2, conv3 = stconv3)
+    x = tanh.(x)
+    out, stdense = gcn.dense(x, ps.dense, st.dense)
+    return (out, x), (conv1 = stconv1, conv2 = stconv2, conv3 = stconv3, dense = stdense)
 end
               
 
@@ -194,12 +201,22 @@ hidden_dim2 = 2
 gcn = GCN(num_features, num_classes, hidden_dim1, hidden_dim2)
 ps, st = LuxCore.setup(rng, gcn)
 
-(ŷ, emb_init), st = gcn(g, g.x, ps, st)
+
+# Before running the model, we move the graph (including its node features), the parameters and the states to the device.
+# Then we compile the forward pass with `Reactant.@compile`, and call the compiled function as we would call the model itself.
+# The result is brought back to the host for plotting.
+
+g_dev = g |> xdev
+ps_dev, st_dev = (ps, st) |> xdev
+
+gcn_compiled = @compile gcn(g_dev, g_dev.x, ps_dev, st_dev)
+(ŷ, emb_init), _ = gcn_compiled(g_dev, g_dev.x, ps_dev, st_dev)
+emb_init = cdev(emb_init)
 
 function visualize_embeddings(h; colors = nothing)
     xs = h[1, :] |> vec
     ys = h[2, :] |> vec
-    Makie.scatter(xs, ys, color = labels, markersize = 20)
+    Makie.scatter(xs, ys, color = colors, markersize = 20)
 end
  
 visualize_embeddings(emb_init, colors = labels)
@@ -223,40 +240,44 @@ visualize_embeddings(emb_init, colors = labels)
 
 # Note that our semi-supervised learning scenario is achieved by the following line:
 # ```julia
-# logitcrossentropy(ŷ[:,train_mask], y[:,train_mask])
+# logitcrossentropy(ŷ[:, train_idx], y[:, train_idx])
 # ```
 # While we compute node embeddings for all of our nodes, we **only make use of the training nodes for computing the loss**.
-# Here, this is implemented by filtering the output of the classifier `out` and ground-truth labels `data.y` to only contain the nodes in the `train_mask`.
+# Here, this is implemented by filtering the output of the classifier `ŷ` and ground-truth labels `y` to only contain the training nodes.
+# We select them by their integer indices `train_idx = findall(train_mask)` rather than by the mask itself: Reactant currently gives wrong results when a boolean mask indexes the one-hot labels ([Reactant.jl#3087](https://github.com/EnzymeAD/Reactant.jl/issues/3087)).
 
 # Let us now start training and see how our node embeddings evolve over time (best experienced by explicitly running the code):
 
-function custom_loss(gcn, ps, st, tuple)
-    g, x, y = tuple
-    logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
-    (ŷ, _) ,st = gcn(g, x, ps, st)  
-    return  logitcrossentropy(ŷ[:, train_mask], y[:, train_mask]), (st), 0
+# We use `Lux.Training.single_train_step!` with the `AutoEnzyme()` backend. Since the parameters live on a Reactant device, the first call compiles the whole training step (forward pass, Enzyme gradient and Adam update) into a single XLA program, which is then reused in all following iterations.
+# The trained parameters and states are returned in the `train_state`.
+
+function custom_loss(gcn, ps, st, (g, x, y, train_idx))
+    logitcrossentropy = CrossEntropyLoss(; logits = Val(true))
+    (ŷ, _), st = gcn(g, x, ps, st)
+    return logitcrossentropy(ŷ[:, train_idx], y[:, train_idx]), st, (;)
 end
 
-function train_model!(gcn, ps, st, g)
-    train_state = Lux.Training.TrainState(gcn, ps, st, Adam(1e-2))
+function train_model(gcn, ps, st, g, train_idx)
+    train_state = Training.TrainState(gcn, ps, st, Adam(1.0f-2))
     for iter in 1:2000
-            _, loss, _, train_state = Lux.Training.single_train_step!(AutoZygote(), custom_loss,(g, g.x, g.y), train_state)
+        _, loss, _, train_state = Training.single_train_step!(AutoEnzyme(), custom_loss,
+            (g, g.x, g.y, train_idx), train_state)
 
         if iter % 100 == 0
-            println("Epoch: $(iter) Loss: $(loss)")
+            println("Epoch: $(iter) Loss: $(Float32(loss))")
         end
     end
 
-    return gcn, ps, st
+    return train_state.parameters, train_state.states
 end
 
-gcn, ps, st = train_model!(gcn, ps, st, g);
-
-
+train_idx = findall(train_mask) |> xdev
+ps_dev, st_dev = train_model(gcn, ps_dev, st_dev, g_dev, train_idx);
 
 # Train accuracy:
-(ŷ, emb_final), st = gcn(g, g.x, ps, st)
-mean(onecold(ŷ[:, train_mask]) .== onecold(g.y[:, train_mask]))
+(ŷ, emb_final), _ = gcn_compiled(g_dev, g_dev.x, ps_dev, st_dev)
+ŷ, emb_final = cdev((ŷ, emb_final))
+mean(onecold(ŷ[:, train_mask]) .== onecold(y[:, train_mask]))
 
 # Test accuracy:
 

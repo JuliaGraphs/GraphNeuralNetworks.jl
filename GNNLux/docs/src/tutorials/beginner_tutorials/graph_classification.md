@@ -11,6 +11,7 @@ EditURL = "../../../src_tutorials/graph_classification.jl"
 In this tutorial session we will have a closer look at how to apply **Graph Neural Networks (GNNs) to the task of graph classification**.
 Graph classification refers to the problem of classifying entire graphs (in contrast to nodes), given a **dataset of graphs**, based on some structural graph properties and possibly on some input node features.
 Here, we want to embed entire graphs, and we want to embed those graphs in such a way so that they are linearly separable given a task at hand.
+We will use a graph convolutional network to create a vector embedding of the input graph, and the apply a simple linear classification head to perform the final classification.
 
 A common graph classification task is **molecular property prediction**, in which molecules are represented as graphs, and the task may be to infer whether a molecule inhibits HIV virus replication or not.
 
@@ -21,10 +22,20 @@ Let's import the necessary packages. Then we'll load and inspect one of the smal
 using Lux, GNNLux
 using MLDatasets, MLUtils
 using LinearAlgebra, Random, Statistics
-using Zygote, Optimisers, OneHotArrays
+using Reactant, Enzyme, Optimisers, OneHotArrays
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"  # don't ask for dataset download confirmation
-rng = Random.seed!(42); # for reproducibility
+Random.seed!(42); # for reproducibility
+rng = Xoshiro(42); # for the model parameters and states
+````
+
+We compile the model with [Reactant.jl](https://github.com/EnzymeAD/Reactant.jl) and differentiate it with [Enzyme.jl](https://github.com/EnzymeAD/Enzyme.jl).
+Reactant runs the compiled programs on a GPU if one is functional, and on the CPU otherwise.
+We move data, graphs, parameters and states to the device with `xdev` and bring results back to the host with `cdev`:
+
+````julia
+const xdev = reactant_device()
+const cdev = cpu_device();
 
 dataset = TUDataset("MUTAG")
 ````
@@ -119,7 +130,7 @@ test_loader = DataLoader(test_data, batchsize = 32, shuffle = false)
 ````
 
 ````
-2-element DataLoader(::Tuple{Vector{GNNGraphs.GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}}, OneHotArrays.OneHotMatrix{UInt32, Vector{UInt32}}}, batchsize=32)
+2-element DataLoader(data::Tuple{Vector{GNNGraphs.GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}}, OneHotArrays.OneHotMatrix{UInt32, Vector{UInt32}}}, batchsize=32)
   with first element:
   (32-element Vector{GNNGraphs.GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}}, 2×32 OneHotMatrix(::Vector{UInt32}) with eltype Bool,)
 ````
@@ -148,7 +159,7 @@ vec_gs, _ = first(train_loader)
 ````
 
 ````
-(GNNGraphs.GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}[GNNGraph(11, 22) with x: 7×11 data, GNNGraph(22, 50) with x: 7×22 data, GNNGraph(19, 44) with x: 7×19 data, GNNGraph(22, 50) with x: 7×22 data, GNNGraph(16, 36) with x: 7×16 data, GNNGraph(20, 44) with x: 7×20 data, GNNGraph(19, 42) with x: 7×19 data, GNNGraph(20, 44) with x: 7×20 data, GNNGraph(13, 26) with x: 7×13 data, GNNGraph(19, 40) with x: 7×19 data, GNNGraph(25, 56) with x: 7×25 data, GNNGraph(16, 34) with x: 7×16 data, GNNGraph(28, 66) with x: 7×28 data, GNNGraph(19, 40) with x: 7×19 data, GNNGraph(19, 44) with x: 7×19 data, GNNGraph(17, 36) with x: 7×17 data, GNNGraph(12, 24) with x: 7×12 data, GNNGraph(16, 34) with x: 7×16 data, GNNGraph(27, 66) with x: 7×27 data, GNNGraph(17, 38) with x: 7×17 data, GNNGraph(19, 42) with x: 7×19 data, GNNGraph(17, 36) with x: 7×17 data, GNNGraph(12, 26) with x: 7×12 data, GNNGraph(24, 50) with x: 7×24 data, GNNGraph(20, 46) with x: 7×20 data, GNNGraph(19, 42) with x: 7×19 data, GNNGraph(11, 22) with x: 7×11 data, GNNGraph(16, 34) with x: 7×16 data, GNNGraph(13, 28) with x: 7×13 data, GNNGraph(13, 28) with x: 7×13 data, GNNGraph(13, 28) with x: 7×13 data, GNNGraph(16, 36) with x: 7×16 data], Bool[1 0 0 0 0 0 0 0 1 1 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 1 1 1 1 1 0; 0 1 1 1 1 1 1 1 0 0 1 1 1 1 1 0 1 0 1 1 1 1 1 1 1 1 0 0 0 0 0 1])
+(GNNGraphs.GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}[GNNGraph(16, 34) with x: 7×16 data, GNNGraph(11, 22) with x: 7×11 data, GNNGraph(20, 46) with x: 7×20 data, GNNGraph(18, 40) with x: 7×18 data, GNNGraph(17, 38) with x: 7×17 data, GNNGraph(18, 38) with x: 7×18 data, GNNGraph(14, 30) with x: 7×14 data, GNNGraph(16, 36) with x: 7×16 data, GNNGraph(23, 54) with x: 7×23 data, GNNGraph(19, 40) with x: 7×19 data, GNNGraph(22, 50) with x: 7×22 data, GNNGraph(12, 24) with x: 7×12 data, GNNGraph(20, 46) with x: 7×20 data, GNNGraph(10, 20) with x: 7×10 data, GNNGraph(20, 44) with x: 7×20 data, GNNGraph(17, 38) with x: 7×17 data, GNNGraph(13, 28) with x: 7×13 data, GNNGraph(11, 22) with x: 7×11 data, GNNGraph(20, 46) with x: 7×20 data, GNNGraph(20, 46) with x: 7×20 data, GNNGraph(22, 50) with x: 7×22 data, GNNGraph(23, 54) with x: 7×23 data, GNNGraph(21, 44) with x: 7×21 data, GNNGraph(14, 28) with x: 7×14 data, GNNGraph(23, 54) with x: 7×23 data, GNNGraph(24, 50) with x: 7×24 data, GNNGraph(20, 44) with x: 7×20 data, GNNGraph(23, 54) with x: 7×23 data, GNNGraph(19, 44) with x: 7×19 data, GNNGraph(23, 54) with x: 7×23 data, GNNGraph(19, 44) with x: 7×19 data, GNNGraph(23, 54) with x: 7×23 data], Bool[1 1 0 0 0 0 1 0 0 1 0 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0; 0 0 1 1 1 1 0 1 1 0 1 1 1 0 1 1 0 0 1 1 1 1 1 0 1 1 1 1 1 1 1 1])
 ````
 
 ````julia
@@ -157,11 +168,11 @@ MLUtils.batch(vec_gs)
 
 ````
 GNNGraph:
-  num_nodes: 570
-  num_edges: 1254
+  num_nodes: 591
+  num_edges: 1316
   num_graphs: 32
   ndata:
-    x = 7×570 Matrix{Float32}
+    x = 7×591 Matrix{Float32}
 ````
 
 Each batched graph object is equipped with a **`graph_indicator` vector**, which maps each node to its respective graph in the batch:
@@ -203,85 +214,80 @@ nh = 64
 nout = 2
 model = create_model(nin, nh, nout)
 
-ps, st = LuxCore.initialparameters(rng, model), LuxCore.initialstates(rng, model);
-````
-
-````
-┌ Warning: `replicate` doesn't work for `TaskLocalRNG`. Returning the same `TaskLocalRNG`.
-└ @ LuxCore ~/.julia/packages/LuxCore/GlbG3/src/LuxCore.jl:18
-
+ps, st = Lux.setup(rng, model) |> xdev;
 ````
 
 Here, we again make use of the `GCNConv` with $\mathrm{ReLU}(x) = \max(x, 0)$ activation for obtaining localized node embeddings, before we apply our final classifier on top of a graph readout layer.
 
-Let's train our network for a few epochs to see how well it performs on the training as well as test set:
+### Compiling with fixed shapes
+
+Reactant compiles a program for fixed array shapes, and `Lux.Training.single_train_step!` compiles the training step once, on its first call, and reuses it for all subsequent calls.
+A mini-batch of graphs, however, has a different number of nodes and edges every time, so it cannot be fed to a training step compiled for another mini-batch.
+The general solution is to pad every batch to the same size. Since MUTAG is small, here we simply batch all training graphs (and, separately, all test graphs) into one giant graph and perform full-batch training:
 
 ````julia
-function custom_loss(model, ps, st, tuple)
-    g, x, y = tuple
-    logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
+g_train = MLUtils.batch(train_data[1]) |> xdev
+y_train = train_data[2] |> xdev
+g_test = MLUtils.batch(test_data[1]) |> xdev
+y_test = test_data[2] |> xdev;
+````
+
+Let's train our network to see how well it performs on the training as well as test set.
+For evaluation, we compile the forward pass in inference mode once for each of the two giant graphs:
+
+````julia
+function custom_loss(model, ps, st, (g, x, y))
+    logitcrossentropy = CrossEntropyLoss(; logits = Val(true))
     st = Lux.trainmode(st)
     ŷ, st = model(g, x, ps, st)
-    return  logitcrossentropy(ŷ, y), st, 0
+    return logitcrossentropy(ŷ, y), st, (;)
 end
 
-function eval_loss_accuracy(model, ps, st, data_loader)
-    loss = 0.0
-    acc = 0.0
-    ntot = 0
-    logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
-    for (g, y) in data_loader
-        g = MLUtils.batch(g)
-        n = length(y)
-        ŷ, _ = model(g, g.ndata.x, ps, st)
-        loss += logitcrossentropy(ŷ, y) * n
-        acc += mean((ŷ .> 0) .== y) * n
-        ntot += n
-    end
-    return (loss = round(loss / ntot, digits = 4),
-            acc = round(acc * 100 / ntot, digits = 2))
+function eval_loss_accuracy(model_compiled, ps, st, g, y)
+    ŷ, _ = model_compiled(g, g.x, ps, st)
+    ŷ, y = cdev((ŷ, y))
+    logitcrossentropy = CrossEntropyLoss(; logits = Val(true))
+    return (loss = round(logitcrossentropy(ŷ, y), digits = 4),
+            acc = round(mean((ŷ .> 0) .== y) * 100, digits = 2))
 end
 
-function train_model!(model, ps, st; epochs = 500, infotime = 100)
-    train_state = Lux.Training.TrainState(model, ps, st, Adam(1e-2))
+function train_model(model, ps, st; epochs = 500, infotime = 100)
+    st_test = Lux.testmode(st)
+    model_train = @compile model(g_train, g_train.x, ps, st_test)
+    model_test = @compile model(g_test, g_test.x, ps, st_test)
 
-    function report(epoch)
-        train = eval_loss_accuracy(model, ps, st, train_loader)
+    function report(epoch, ps, st)
         st = Lux.testmode(st)
-        test = eval_loss_accuracy(model, ps, st, test_loader)
-        st = Lux.trainmode(st)
+        train = eval_loss_accuracy(model_train, ps, st, g_train, y_train)
+        test = eval_loss_accuracy(model_test, ps, st, g_test, y_test)
         @info (; epoch, train, test)
     end
-    report(0)
-    for iter in 1:epochs
-        for (g, y) in train_loader
-            g = MLUtils.batch(g)
-            _, loss, _, train_state = Lux.Training.single_train_step!(AutoZygote(), custom_loss,(g, g.ndata.x, y), train_state)
-        end
 
-        iter % infotime == 0 && report(iter)
+    train_state = Training.TrainState(model, ps, st, Adam(1.0f-2))
+    report(0, ps, st)
+    for epoch in 1:epochs
+        _, loss, _, train_state = Training.single_train_step!(AutoEnzyme(), custom_loss,
+            (g_train, g_train.x, y_train), train_state)
+
+        epoch % infotime == 0 && report(epoch, train_state.parameters, train_state.states)
     end
-    return model, ps, st
+    return train_state.parameters, train_state.states
 end
 
-model, ps, st = train_model!(model, ps, st);
+ps, st = train_model(model, ps, st);
 ````
 
 ````
-┌ Warning: `training` is set to `Val{true}()` but is not being used within an autodiff call (gradient, jacobian, etc...). This will be slow. If you are using a `Lux.jl` model, set it to inference (test) mode using `LuxCore.testmode`. Reliance on this behavior is discouraged, and is not guaranteed by Semantic Versioning, and might be removed without a deprecation cycle. It is recommended to fix this issue in your code.
-└ @ LuxLib.Utils ~/.julia/packages/LuxLib/ru5RQ/src/utils.jl:314
-┌ Warning: `replicate` doesn't work for `TaskLocalRNG`. Returning the same `TaskLocalRNG`.
-└ @ LuxCore ~/.julia/packages/LuxCore/GlbG3/src/LuxCore.jl:18
-[ Info: (epoch = 0, train = (loss = 0.6934, acc = 51.67), test = (loss = 0.6902, acc = 50.0))
-[ Info: (epoch = 100, train = (loss = 0.3979, acc = 81.33), test = (loss = 0.5769, acc = 69.74))
-[ Info: (epoch = 200, train = (loss = 0.3904, acc = 84.0), test = (loss = 0.6402, acc = 65.79))
-[ Info: (epoch = 300, train = (loss = 0.3813, acc = 85.33), test = (loss = 0.6331, acc = 69.74))
-[ Info: (epoch = 400, train = (loss = 0.3682, acc = 85.0), test = (loss = 0.7273, acc = 69.74))
-[ Info: (epoch = 500, train = (loss = 0.3561, acc = 86.67), test = (loss = 0.6825, acc = 73.68))
+[ Info: (epoch = 0, train = (loss = 0.6708f0, acc = 69.33), test = (loss = 0.6849f0, acc = 55.26))
+[ Info: (epoch = 100, train = (loss = 0.4564f0, acc = 77.33), test = (loss = 0.5876f0, acc = 73.68))
+[ Info: (epoch = 200, train = (loss = 0.4428f0, acc = 78.33), test = (loss = 0.5969f0, acc = 73.68))
+[ Info: (epoch = 300, train = (loss = 0.4002f0, acc = 85.33), test = (loss = 0.8212f0, acc = 71.05))
+[ Info: (epoch = 400, train = (loss = 0.3546f0, acc = 84.0), test = (loss = 0.7233f0, acc = 75.0))
+[ Info: (epoch = 500, train = (loss = 0.3374f0, acc = 85.33), test = (loss = 0.7399f0, acc = 76.32))
 
 ````
 
-As one can see, our model reaches around **74% test accuracy**.
+As one can see, our model reaches around **75% test accuracy**.
 Reasons for the fluctuations in accuracy can be explained by the rather small dataset (only 38 test graphs), and usually disappear once one applies GNNs to larger datasets.
 
 ## (Optional) Exercise

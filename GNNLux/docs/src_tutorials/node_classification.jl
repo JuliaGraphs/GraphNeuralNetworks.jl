@@ -12,11 +12,19 @@ using Lux, GNNLux
 using MLDatasets
 using Plots, TSne
 using Random, Statistics
-using Zygote, Optimisers, OneHotArrays, ConcreteStructs
+using Reactant, Enzyme, Optimisers, OneHotArrays, ConcreteStructs
 
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true" # don't ask for dataset download confirmation
-rng = Random.seed!(17); # for reproducibility
+Random.seed!(17); # for reproducibility
+rng = Xoshiro(17); # for the model parameters and states
+
+# We compile the models with [Reactant.jl](https://github.com/EnzymeAD/Reactant.jl) and differentiate them with [Enzyme.jl](https://github.com/EnzymeAD/Enzyme.jl).
+# Reactant runs the compiled programs on a GPU if one is functional, and on the CPU otherwise.
+# We move data, graphs, parameters and states to the device with `xdev` and bring results back to the host with `cdev`:
+
+const xdev = reactant_device()
+const cdev = cpu_device();
 
 # ## Visualize
 # We want to visualize our results using t-distributed stochastic neighbor embedding (tsne) to project our output onto a 2D plane.
@@ -86,7 +94,7 @@ MLP = Chain(Dense(num_features => hidden_channels, relu),
               Dropout(drop_rate),
               Dense(hidden_channels => num_classes))
 
-ps, st = Lux.setup(rng, MLP);
+ps, st = Lux.setup(rng, MLP) |> xdev;
 
 # ### Training a Multilayer Perceptron
 
@@ -96,37 +104,43 @@ ps, st = Lux.setup(rng, MLP);
 # Let's train our simple MLP by following a similar procedure as described in [the first part of this tutorial](https://juliagraphs.org/GraphNeuralNetworks.jl/docs/GNNLux.jl/stable/tutorials/gnn_intro/).
 # We again make use of the **cross entropy loss** and **Adam optimizer**.
 # This time, we also define a **`accuracy` function** to evaluate how well our final model performs on the test node set (which labels have not been observed during training).
+# The training step is compiled by Reactant the first time `single_train_step!` is called, and the trained parameters and states are returned in the `train_state`.
+# The loss selects the training nodes by their integer indices `findall(train_mask)` rather than by the mask itself: Reactant currently gives wrong results when a boolean mask indexes the one-hot labels ([Reactant.jl#3087](https://github.com/EnzymeAD/Reactant.jl/issues/3087)).
+# For evaluation, we compile and run the forward pass in one go with `Reactant.@jit`, and compute the accuracy on the host.
 
 
-function loss(model, ps, st, x)
-    logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
-    ŷ, st = model(x, ps, st)  
-    return  logitcrossentropy(ŷ[:, train_mask], y[:, train_mask]), (st), 0
+function loss(model, ps, st, (x, y, idx))
+    logitcrossentropy = CrossEntropyLoss(; logits = Val(true))
+    ŷ, st = model(x, ps, st)
+    return logitcrossentropy(ŷ[:, idx], y[:, idx]), st, (;)
 end
 
-function train_model!(MLP, ps, st, x, epochs)
-    train_state = Lux.Training.TrainState(MLP, ps, st, Adam(1e-3))
+function train_model(MLP, ps, st, data, epochs)
+    train_state = Training.TrainState(MLP, ps, st, Adam(1.0f-3))
     for iter in 1:epochs
-            _, loss_value, _, train_state = Lux.Training.single_train_step!(AutoZygote(), loss, x, train_state)
+        _, loss_value, _, train_state = Training.single_train_step!(AutoEnzyme(), loss, data, train_state)
 
         if iter % 100 == 0
-            println("Epoch: $(iter) Loss: $(loss_value)")
+            println("Epoch: $(iter) Loss: $(Float32(loss_value))")
         end
     end
+    return train_state.parameters, train_state.states
 end
 
 function accuracy(model, x, ps, st, y, mask)
     st = Lux.testmode(st)
-    ŷ, st = model(x, ps, st)  
-    mean(onecold(ŷ)[mask] .== onecold(y)[mask])
+    ŷ, _ = @jit model(x, ps, st)
+    mean(onecold(cdev(ŷ))[mask] .== onecold(y)[mask])
 end
 
-train_model!(MLP, ps, st, x,  2000)
+x_dev, y_dev, train_idx = (x, y, findall(train_mask)) |> xdev
+
+ps, st = train_model(MLP, ps, st, (x_dev, y_dev, train_idx), 2000);
 
 # After training the model, we can call the `accuracy` function to see how well our model performs on unseen labels.
 # Here, we are interested in the accuracy of the model, *i.e.*, the ratio of correctly classified nodes:
 
-accuracy(MLP, x, ps, st, y, .!train_mask)
+accuracy(MLP, x_dev, ps, st, y, .!train_mask)
 
 # As one can see, our MLP performs rather bad with only about ~50% test accuracy.
 # But why does the MLP do not perform better?
@@ -184,9 +198,10 @@ end;
 # Now let's visualize the node embeddings of our **untrained** GCN network.
 
 gcn = GCN(num_features, num_classes, hidden_channels, drop_rate)
-ps, st = Lux.setup(rng, gcn)
-h_untrained, st = gcn(g, x, ps, st)
-h_untrained = h_untrained |> transpose
+ps, st = Lux.setup(rng, gcn) |> xdev
+g_dev = g |> xdev
+h_untrained, _ = @jit gcn(g_dev, x_dev, ps, Lux.testmode(st))
+h_untrained = h_untrained |> cdev |> transpose
 visualize_tsne(h_untrained, g.ndata.targets)
 
 
@@ -195,38 +210,37 @@ visualize_tsne(h_untrained, g.ndata.targets)
 
 
 
-function loss(gcn, ps, st, tuple)
-    g, x, y = tuple
-    logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
-    ŷ, st = gcn(g, x, ps, st)  
-    return  logitcrossentropy(ŷ[:, train_mask], y[:, train_mask]), (st), 0
+function loss(gcn, ps, st, (g, x, y, idx))
+    logitcrossentropy = CrossEntropyLoss(; logits = Val(true))
+    ŷ, st = gcn(g, x, ps, st)
+    return logitcrossentropy(ŷ[:, idx], y[:, idx]), st, (;)
 end
 
-function train_model!(gcn, ps, st, g, x, y)
-    train_state = Lux.Training.TrainState(gcn, ps, st, Adam(1e-2))
+function train_model(gcn, ps, st, data)
+    train_state = Training.TrainState(gcn, ps, st, Adam(1.0f-2))
     for iter in 1:2000
-            _, loss_value, _, train_state = Lux.Training.single_train_step!(AutoZygote(), loss,(g, x, y), train_state)
+        _, loss_value, _, train_state = Training.single_train_step!(AutoEnzyme(), loss, data, train_state)
 
         if iter % 100 == 0
-            println("Epoch: $(iter) Loss: $(loss_value)")
+            println("Epoch: $(iter) Loss: $(Float32(loss_value))")
         end
     end
 
-    return gcn, ps, st
+    return train_state.parameters, train_state.states
 end
 
-gcn, ps, st = train_model!(gcn, ps, st, g, x, y);
+ps, st = train_model(gcn, ps, st, (g_dev, x_dev, y_dev, train_idx));
 
 # Now let's evaluate the loss of our trained GCN.
 
 function accuracy(model, g, x, ps, st, y, mask)
     st = Lux.testmode(st)
-    ŷ, st = model(g, x, ps, st)  
-    mean(onecold(ŷ)[mask] .== onecold(y)[mask])
+    ŷ, _ = @jit model(g, x, ps, st)
+    mean(onecold(cdev(ŷ))[mask] .== onecold(y)[mask])
 end
 
-train_accuracy = accuracy(gcn, g, g.ndata.features, ps, st, y, train_mask)
-test_accuracy = accuracy(gcn, g, g.ndata.features, ps, st, y, .!train_mask)
+train_accuracy = accuracy(gcn, g_dev, x_dev, ps, st, y, train_mask)
+test_accuracy = accuracy(gcn, g_dev, x_dev, ps, st, y, .!train_mask)
 
 println("Train accuracy: $(train_accuracy)")
 println("Test accuracy: $(test_accuracy)")
@@ -240,8 +254,8 @@ println("Test accuracy: $(test_accuracy)")
 
 st = Lux.testmode(st) # inference mode
 
-out_trained, st = gcn(g, x, ps, st) 
-out_trained = out_trained|> transpose
+out_trained, _ = @jit gcn(g_dev, x_dev, ps, st)
+out_trained = out_trained |> cdev |> transpose
 visualize_tsne(out_trained, g.ndata.targets)
 
 # ## (Optional) Exercises

@@ -11,12 +11,19 @@
 using Lux, GNNLux
 using MLDatasets: METRLA
 using Statistics, Plots, Random
-using Zygote, Optimisers
+using Reactant, Enzyme, Optimisers
 
 const mae = MAELoss()
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"  # don't ask for dataset download confirmation
 rng = Random.seed!(42); # for reproducibility
+
+# We compile the model with [Reactant.jl](https://github.com/EnzymeAD/Reactant.jl) and differentiate it with [Enzyme.jl](https://github.com/EnzymeAD/Enzyme.jl).
+# Reactant runs the compiled programs on a GPU if one is functional, and on the CPU otherwise.
+# We move data, graphs, parameters and states to the device with `xdev` and bring results back to the host with `cdev`:
+
+const xdev = reactant_device()
+const cdev = cpu_device();
 
 # ## Dataset: METR-LA
 
@@ -64,10 +71,10 @@ plot_data(features[1:288],1) # Plot the speed of the first sensor for the first 
 
 # Now let's construct the static graph, the `train_loader` and `data_loader`.
 
-graph = GNNGraph(g.edge_index; edata = g.edge_data, g.num_nodes);
+graph = GNNGraph(g.edge_index; edata = g.edge_data, g.num_nodes) |> xdev;
 
-train_loader = zip(features[1:288], targets[1:288]); # train on 24 hours
-test_loader = zip(features[289:577], targets[289:577]); # test on next 24 hours
+train_loader = zip(features[1:288], targets[1:288]) |> collect |> xdev; # train on 24 hours
+test_loader = zip(features[289:577], targets[289:577]) |> collect |> xdev; # test on next 24 hours
 
 # ## Model: T-GCN
 
@@ -78,10 +85,14 @@ model = GNNChain(TGCN(2 => 100; add_self_loops = false), Dense(100, 1))
 # Let's look at the output of the model for the first batch of the training data.
 # In Lux, the parameters and the state of the model are kept separate from the model itself, so we first initialize them.
 
-ps, st = Lux.setup(rng, model);
+ps, st = Lux.setup(rng, model) |> xdev;
 
-ŷ, _ = model(graph, features[1], ps, st);
-ŷ
+# All the inputs have the same shape, so we compile the forward pass once with `Reactant.@compile` and reuse it for all inputs:
+
+model_compiled = @compile model(graph, xdev(features[1]), ps, st)
+
+ŷ, _ = model_compiled(graph, xdev(features[1]), ps, st);
+cdev(ŷ)
 
 # The output of the model is a tensor of size `(1, 3, 207)`, which corresponds to the dimension of the feature (in this case speed), the number of time steps, and the number of nodes in the graph, respectively. The model outputs the predicted traffic speed for each sensor at each time step.
 
@@ -90,6 +101,7 @@ ps, st = Lux.setup(rng, model);
 # ## Training
 
 # We train the model for 100 epochs, using the Adam optimizer with a learning rate of 0.001. We use the mean absolute error (MAE) as the loss function.
+# The first call to `single_train_step!` compiles the whole training step (forward pass, Enzyme gradient and Adam update), which is then reused for all the following steps.
 
 function loss_function(model, ps, st, (graph, x, y))
     ŷ, st = model(graph, x, ps, st)
@@ -98,16 +110,17 @@ end
 
 function train(graph, train_loader, model, ps, st)
 
-    train_state = Lux.Training.TrainState(model, ps, st, Adam(0.001))
+    train_state = Training.TrainState(model, ps, st, Adam(0.001f0))
 
     for epoch in 1:100
+        losses = Float32[]
         for (x, y) in train_loader
-            _, _, _, train_state = Lux.Training.single_train_step!(AutoZygote(), loss_function, (graph, x, y), train_state)
+            _, loss, _, train_state = Training.single_train_step!(AutoEnzyme(), loss_function, (graph, x, y), train_state)
+            push!(losses, loss)
         end
 
         if epoch % 10 == 0
-            ps, st = train_state.parameters, train_state.states
-            loss = mean([mae(model(graph, x, ps, st)[1], y) for (x, y) in train_loader])
+            loss = mean(losses)
             @show epoch, loss
         end
     end
@@ -122,7 +135,7 @@ function plot_predicted_data(graph, features, targets, sensor)
     ground_truth = []
     for i in 1:3:length(features)
         push!(ground_truth,targets[i][1,:,sensor])
-        push!(prediction, model(graph, features[i], ps, st)[1][1,:,sensor])
+        push!(prediction, cdev(model_compiled(graph, xdev(features[i]), ps, st)[1])[1,:,sensor])
     end
     prediction = reduce(vcat,prediction)
     ground_truth = reduce(vcat, ground_truth)
@@ -137,7 +150,7 @@ accuracy(ŷ, y) = 1 - Statistics.norm(y-ŷ)/Statistics.norm(y)
 
 # Test accuracy:
 
-mean([accuracy(model(graph, x, ps, st)[1], y) for (x, y) in test_loader])
+mean([accuracy(cdev(model_compiled(graph, x, ps, st)[1]), cdev(y)) for (x, y) in test_loader])
 
 # The accuracy is not very good but can be improved by training using more data. We used a small subset of the dataset for this tutorial because of the computational cost of training the model. From the plot of the predictions, we can see that the model is able to capture the general trend of the traffic speed, but it is not able to capture the peaks of the traffic.
 

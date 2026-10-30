@@ -18,10 +18,18 @@
 using Lux, GNNLux
 using MLDatasets, MLUtils
 using LinearAlgebra, Random, Statistics
-using Zygote, Optimisers, OneHotArrays
+using Reactant, Enzyme, Optimisers, OneHotArrays
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"  # don't ask for dataset download confirmation
-rng = Random.seed!(42); # for reproducibility
+Random.seed!(42); # for reproducibility
+rng = Xoshiro(42); # for the model parameters and states
+
+# We compile the model with [Reactant.jl](https://github.com/EnzymeAD/Reactant.jl) and differentiate it with [Enzyme.jl](https://github.com/EnzymeAD/Enzyme.jl).
+# Reactant runs the compiled programs on a GPU if one is functional, and on the CPU otherwise.
+# We move data, graphs, parameters and states to the device with `xdev` and bring results back to the host with `cdev`:
+
+const xdev = reactant_device()
+const cdev = cpu_device();
 
 dataset = TUDataset("MUTAG")
 #
@@ -123,62 +131,65 @@ nh = 64
 nout = 2
 model = create_model(nin, nh, nout)
 
-ps, st = LuxCore.initialparameters(rng, model), LuxCore.initialstates(rng, model);
+ps, st = Lux.setup(rng, model) |> xdev;
 
 # Here, we again make use of the `GCNConv` with $\mathrm{ReLU}(x) = \max(x, 0)$ activation for obtaining localized node embeddings, before we apply our final classifier on top of a graph readout layer.
 
-# Let's train our network for a few epochs to see how well it performs on the training as well as test set:
+# ### Compiling with fixed shapes
 
-function custom_loss(model, ps, st, tuple)
-    g, x, y = tuple
-    logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
+# Reactant compiles a program for fixed array shapes, and `Lux.Training.single_train_step!` compiles the training step once, on its first call, and reuses it for all subsequent calls.
+# A mini-batch of graphs, however, has a different number of nodes and edges every time, so it cannot be fed to a training step compiled for another mini-batch.
+# The general solution is to pad every batch to the same size. Since MUTAG is small, here we simply batch all training graphs (and, separately, all test graphs) into one giant graph and perform full-batch training:
+
+g_train = MLUtils.batch(train_data[1]) |> xdev
+y_train = train_data[2] |> xdev
+g_test = MLUtils.batch(test_data[1]) |> xdev
+y_test = test_data[2] |> xdev;
+
+# Let's train our network to see how well it performs on the training as well as test set.
+# For evaluation, we compile the forward pass in inference mode once for each of the two giant graphs:
+
+function custom_loss(model, ps, st, (g, x, y))
+    logitcrossentropy = CrossEntropyLoss(; logits = Val(true))
     st = Lux.trainmode(st)
-    ŷ, st = model(g, x, ps, st)  
-    return logitcrossentropy(ŷ, y), st, 0
+    ŷ, st = model(g, x, ps, st)
+    return logitcrossentropy(ŷ, y), st, (;)
 end
 
-function eval_loss_accuracy(model, ps, st, data_loader)
-    loss = 0.0
-    acc = 0.0
-    ntot = 0
-    logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
-    for (g, y) in data_loader
-        g = MLUtils.batch(g) 
-        n = length(y)
-        ŷ, _ = model(g, g.ndata.x, ps, st)
-        loss += logitcrossentropy(ŷ, y) * n
-        acc += mean((ŷ .> 0) .== y) * n
-        ntot += n
-    end
-    return (loss = round(loss / ntot, digits = 4),
-            acc = round(acc * 100 / ntot, digits = 2))
+function eval_loss_accuracy(model_compiled, ps, st, g, y)
+    ŷ, _ = model_compiled(g, g.x, ps, st)
+    ŷ, y = cdev((ŷ, y))
+    logitcrossentropy = CrossEntropyLoss(; logits = Val(true))
+    return (loss = round(logitcrossentropy(ŷ, y), digits = 4),
+            acc = round(mean((ŷ .> 0) .== y) * 100, digits = 2))
 end
 
-function train_model!(model, ps, st; epochs = 500, infotime = 100)
-    train_state = Lux.Training.TrainState(model, ps, st, Adam(1e-2))
+function train_model(model, ps, st; epochs = 500, infotime = 100)
+    st_test = Lux.testmode(st)
+    model_train = @compile model(g_train, g_train.x, ps, st_test)
+    model_test = @compile model(g_test, g_test.x, ps, st_test)
 
-    function report(epoch)
-        train = eval_loss_accuracy(model, ps, st, train_loader)
+    function report(epoch, ps, st)
         st = Lux.testmode(st)
-        test = eval_loss_accuracy(model, ps, st, test_loader)
-        st = Lux.trainmode(st)
+        train = eval_loss_accuracy(model_train, ps, st, g_train, y_train)
+        test = eval_loss_accuracy(model_test, ps, st, g_test, y_test)
         @info (; epoch, train, test)
     end
-    report(0)
-    for iter in 1:epochs
-        for (g, y) in train_loader
-            g = MLUtils.batch(g)
-            _, loss, _, train_state = Lux.Training.single_train_step!(AutoZygote(), custom_loss,(g, g.ndata.x, y), train_state)
-        end
 
-        iter % infotime == 0 && report(iter)
+    train_state = Training.TrainState(model, ps, st, Adam(1.0f-2))
+    report(0, ps, st)
+    for epoch in 1:epochs
+        _, loss, _, train_state = Training.single_train_step!(AutoEnzyme(), custom_loss,
+            (g_train, g_train.x, y_train), train_state)
+
+        epoch % infotime == 0 && report(epoch, train_state.parameters, train_state.states)
     end
-    return model, ps, st
+    return train_state.parameters, train_state.states
 end
 
-model, ps, st = train_model!(model, ps, st);
+ps, st = train_model(model, ps, st);
 
-# As one can see, our model reaches around **74% test accuracy**.
+# As one can see, our model reaches around **75% test accuracy**.
 # Reasons for the fluctuations in accuracy can be explained by the rather small dataset (only 38 test graphs), and usually disappear once one applies GNNs to larger datasets.
 
 # ## (Optional) Exercise
