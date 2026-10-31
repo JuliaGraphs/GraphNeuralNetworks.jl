@@ -16,6 +16,7 @@ Entries link to the pull request that introduced them.
 - Added a `Mooncake` package extension, so that Mooncake can differentiate on CUDA through `add_self_loops` and through adjacency-matrix graphs. Float edge weights of adjacency-matrix graphs stay differentiable ([#704]).
 
 **Fixed**
+- Fixed `scaled_laplacian` (and so `ChebConv`) crashing with a segmentation fault on AMDGPU graphs: the eigensolver's start vector was created on the CPU, so CPU BLAS was handed GPU memory. It is now created on the same device as the graph.
 - Added an `EnzymeCore` package extension marking `scaled_laplacian` inactive for Enzyme, matching its existing `@non_differentiable` ChainRules declaration. Enzyme previously differentiated the Krylov eigensolve inside it and failed; this unblocks `ChebConv`, `GConvGRUCell` and `GConvLSTMCell` ([#706]).
 - Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
 
