@@ -1,106 +1,12 @@
+# Temporary pipeline for diagnosing the OpenBLAS segfault on the ROCm agent.
+# Not meant to be merged.
 steps:
-  - label: "GNN CUDA"
+  - label: "Diagnose OpenBLAS segfault on ROCm"
     plugins:
       - JuliaCI/julia#v1:
           version: "1"
-      - JuliaCI/julia-test#v1:
-            project: "GraphNeuralNetworks"
-      - JuliaCI/julia-coverage#v1:
-          dirs:
-            - GraphNeuralNetworks/src
-            - GraphNeuralNetworks/ext
-    agents:
-      queue: "cuda"
-    env:
-      GNN_TEST_CUDA: "true"
-      GNN_TEST_CPU: "false"
-    timeout_in_minutes: 60
-
-  - label: "GNN AMDGPU"
-    plugins:
-      - JuliaCI/julia#v1:
-          version: "1"
-      - JuliaCI/julia-test#v1:
-            project: "GraphNeuralNetworks"
-      - JuliaCI/julia-coverage#v1:
-          dirs:
-            - GraphNeuralNetworks/src
-            - GraphNeuralNetworks/ext
+    command: "julia --startup-file=no .buildkite/blas_diagnostic.jl"
     agents:
       queue: "rocm"
       rocmgpu: "*"
-    env:
-      GNN_TEST_AMDGPU: "true"
-      GNN_TEST_CPU: "false"
-    timeout_in_minutes: 60
-
-  - label: "GNNlib CUDA"
-    plugins:
-      - JuliaCI/julia#v1:
-          version: "1"
-      - JuliaCI/julia-test#v1:
-            project: "GNNlib"
-      - JuliaCI/julia-coverage#v1:
-          dirs:
-            - GNNlib/src
-            - GNNlib/ext
-    agents:
-      queue: "cuda"
-    env:
-      GNN_TEST_CUDA: "true"
-      GNN_TEST_CPU: "false"
-    timeout_in_minutes: 60
-
-  - label: "GNNlib AMDGPU"
-    plugins:
-      - JuliaCI/julia#v1:
-          version: "1"
-      - JuliaCI/julia-test#v1:
-            project: "GNNlib"
-      - JuliaCI/julia-coverage#v1:
-          dirs:
-            - GNNlib/src
-            - GNNlib/ext
-    agents:
-      queue: "rocm"
-      rocmgpu: "*"
-    env:
-      GNN_TEST_AMDGPU: "true"
-      GNN_TEST_CPU: "false"
-    timeout_in_minutes: 60
-
-  - label: "GNNGraphs CUDA"
-    plugins:
-      - JuliaCI/julia#v1:
-          version: "1"
-      - JuliaCI/julia-test#v1:
-            project: "GNNGraphs"
-      - JuliaCI/julia-coverage#v1:
-          codecov: true
-          dirs:
-            - GNNGraphs/src
-            - GNNGraphs/ext
-    agents:
-      queue: "cuda"
-    env:
-      GNN_TEST_CUDA: "true"
-      GNN_TEST_CPU: "false"
-    timeout_in_minutes: 60
-
-  - label: "GNNGraphs AMDGPU"
-    plugins:
-      - JuliaCI/julia#v1:
-          version: "1"
-      - JuliaCI/julia-test#v1:
-            project: "GNNGraphs"
-      - JuliaCI/julia-coverage#v1:
-          dirs:
-            - GNNGraphs/src
-            - GNNGraphs/ext
-    agents:
-      queue: "rocm"
-      rocmgpu: "*"
-    env:
-      GNN_TEST_AMDGPU: "true"
-      GNN_TEST_CPU: "false"
     timeout_in_minutes: 60
