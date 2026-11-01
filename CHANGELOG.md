@@ -19,7 +19,23 @@ Entries link to the pull request that introduced them.
 - Added an `EnzymeCore` package extension marking `scaled_laplacian` inactive for Enzyme, matching its existing `@non_differentiable` ChainRules declaration. Enzyme previously differentiated the Krylov eigensolve inside it and failed; this unblocks `ChebConv`, `GConvGRUCell` and `GConvLSTMCell` ([#706]).
 - Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
 
-## GNNLux.jl — Unreleased (towards 0.2.0)
+## GNNLux.jl — Unreleased (towards 0.3.0)
+
+**Fixed**
+- `GNNChain` now returns its state with the same structure it receives, `(; layers = (; layer_1, ...))`, as the Lux layer interface requires. It previously returned the per-layer states without the `layers` wrapper, so feeding the returned state back into the chain (as `Lux.Training.single_train_step!` does) failed with a `FieldError`. This is breaking for code that worked around the bug by re-wrapping the state as `(; layers = st)`, as the docs examples did: drop the wrapper.
+
+## GNNlib.jl — Unreleased (towards 1.4.1)
+
+**Fixed**
+- Fixed `Enzyme.gradient` failing when differentiating `GCNConv`, `SGConv` and `TAGConv` on `:dense`/`:sparse` adjacency graphs: their adjacency-matrix fallbacks now convert via the Enzyme-differentiable `GNNGraphs._to_coo_graph` instead of the keyword `GNNGraph` constructor. Requires GNNGraphs ≥ 1.5.2 and, for Enzyme, Enzyme ≥ 0.13.197 ([#703]).
+
+## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
+
+**Changed**
+- `GNNRecurrence` now hands each cell an indexed time slice instead of an `eachslice` view, matching the Lux frontend. Enzyme's type analysis fails on `SubArray` cell inputs, so this unblocks `DCGRU`, `EvolveGCNO`, `GConvGRU` and `GConvLSTM` under Enzyme ([#707]).
+- The recurrent temporal cells now delegate their forward-pass math to shared `GNNlib` functions (requires GNNlib ≥ 1.4); the layer behaviour is unchanged ([#696]).
+
+## GNNLux.jl 0.2.0 — 2026-07-22
 
 **Added**
 - Added pooling layers (`GlobalPool`, `GlobalAttentionPool`, `TopKPool`) ([#576]).
@@ -32,17 +48,6 @@ Entries link to the pull request that introduced them.
 
 **Removed**
 - Removed the `A3TGCN` layer, mirroring its removal from the Flux frontend ([#696]).
-
-## GNNlib.jl — Unreleased (towards 1.4.1)
-
-**Fixed**
-- Fixed `Enzyme.gradient` failing when differentiating `GCNConv`, `SGConv` and `TAGConv` on `:dense`/`:sparse` adjacency graphs: their adjacency-matrix fallbacks now convert via the Enzyme-differentiable `GNNGraphs._to_coo_graph` instead of the keyword `GNNGraph` constructor. Requires GNNGraphs ≥ 1.5.2 and, for Enzyme, Enzyme ≥ 0.13.197 ([#703]).
-
-## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
-
-**Changed**
-- `GNNRecurrence` now hands each cell an indexed time slice instead of an `eachslice` view, matching the Lux frontend. Enzyme's type analysis fails on `SubArray` cell inputs, so this unblocks `DCGRU`, `EvolveGCNO`, `GConvGRU` and `GConvLSTM` under Enzyme ([#707]).
-- The recurrent temporal cells now delegate their forward-pass math to shared `GNNlib` functions (requires GNNlib ≥ 1.4); the layer behaviour is unchanged ([#696]).
 
 ## GNNlib.jl 1.4.0 — 2026-07-22
 
