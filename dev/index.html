@@ -23,7 +23,7 @@ train_graphs, test_graphs = MLUtils.splitobs(all_graphs, at=0.8)</code></pre><h3
 ps, st = LuxCore.setup(rng, model)</code></pre><h3 id="Training"><a class="docs-heading-anchor" href="#Training">Training</a><a id="Training-1"></a><a class="docs-heading-anchor-permalink" href="#Training" title="Permalink"></a></h3><p>Finally, we use a standard Lux training pipeline to fit our dataset.</p><pre><code class="language-julia hljs">function custom_loss(model, ps, st, tuple)
     g,x,y = tuple
     y_pred,st = model(g, x, ps, st)  
-    return MSELoss()(y_pred, y), (layers = st,), 0
+    return MSELoss()(y_pred, y), st, 0
 end
 
 function train_model!(model, ps, st, train_graphs, test_graphs)
@@ -42,7 +42,6 @@ function train_model!(model, ps, st, train_graphs, test_graphs)
             test_loss =0
             for g in test_graphs
                 ŷ, st_ = model(g, g.x, train_state.parameters, st_)
-                st_ = (layers = st_,)
                 test_loss += MSELoss()(g.y,ŷ)
             end
             test_loss = test_loss/length(test_graphs)
@@ -54,4 +53,4 @@ function train_model!(model, ps, st, train_graphs, test_graphs)
     return model, ps, st
 end
 
-train_model!(model, ps, st, train_graphs, test_graphs)</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="GNNGraphs/guides/gnngraph/">Graphs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Friday 30 October 2026 19:53">Friday 30 October 2026</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+train_model!(model, ps, st, train_graphs, test_graphs)</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="GNNGraphs/guides/gnngraph/">Graphs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Sunday 1 November 2026 06:46">Sunday 1 November 2026</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
