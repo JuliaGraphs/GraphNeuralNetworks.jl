@@ -508,7 +508,10 @@ function _eigmax(A)
     KrylovKit.eigsolve(Symmetric(A), x0, 1, :LR)[1][1] # also eigs(A, x0, nev, mode) available 
 end
 
-_rand_dense_vector(A::AbstractMatrix{T}) where {T} = randn(float(T), size(A, 1))
+# On the same device as `A`, otherwise a GPU `A` would be passed to CPU BLAS.
+_rand_dense_vector(A::AbstractMatrix{T}) where {T} = randn!(similar(A, float(T), size(A, 1)))
+# `similar` would give a sparse vector here.
+_rand_dense_vector(A::AbstractSparseMatrix{T}) where {T} = randn(float(T), size(A, 1))
 
 # Eigenvalues for cuarray don't seem to be well supported. 
 # https://github.com/JuliaGPU/CUDA.jl/issues/154

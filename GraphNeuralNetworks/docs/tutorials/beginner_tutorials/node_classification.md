@@ -38,7 +38,13 @@ Each publication in the dataset is described by a 0/1-valued word vector indicat
 This dataset was first introduced by [Yang et al. (2016)](https://arxiv.org/abs/1603.08861) as one of the datasets of the `Planetoid` benchmark suite. We will be using [MLDatasets.jl](https://juliaml.github.io/MLDatasets.jl/stable/) for an easy access to this dataset.
 
 ```@example node_classification
+dataset, synthetic_data_note = Main.SyntheticDatasets.load("Cora", Main.SyntheticDatasets.cora) do # hide
 dataset = Cora()
+end # hide
+dataset # hide
+```
+```@example node_classification
+synthetic_data_note # hide
 ```
 
 Datasets in MLDatasets.jl have `metadata` containing information about the dataset itself.

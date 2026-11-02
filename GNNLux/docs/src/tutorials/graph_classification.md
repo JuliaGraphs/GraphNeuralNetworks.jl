@@ -216,7 +216,7 @@ function custom_loss(model, ps, st, tuple)
     logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
     st = Lux.trainmode(st)
     ŷ, st = model(g, x, ps, st)
-    return  logitcrossentropy(ŷ, y), (; layers = st), 0
+    return  logitcrossentropy(ŷ, y), st, 0
 end
 
 function eval_loss_accuracy(model, ps, st, data_loader)

@@ -26,7 +26,13 @@ Random.seed!(42); # for reproducibility
 ```
 
 ```@example classification
+dataset, synthetic_data_note = Main.SyntheticDatasets.load("MUTAG", Main.SyntheticDatasets.mutag) do # hide
 dataset = TUDataset("MUTAG")
+end # hide
+dataset # hide
+```
+```@example classification
+synthetic_data_note # hide
 ```
 
 
