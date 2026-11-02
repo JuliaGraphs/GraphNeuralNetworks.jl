@@ -16,6 +16,8 @@ GNNLux/docs/build
 GraphNeuralNetworks/docs/build
 GraphNeuralNetworks/docs/src/GNNGraphs
 GraphNeuralNetworks/docs/src/GNNlib
+# Copied from GraphNeuralNetworks/docs by GNNLux/docs/make.jl
+GNNLux/docs/src/tutorials/*/assets
 tutorials/docs/build
 prova.jl
 pyg.ipynb

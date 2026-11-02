@@ -30,6 +30,13 @@ cp(joinpath(@__DIR__, "../../GNNGraphs/docs/src"),
 cp(joinpath(@__DIR__, "../../GNNlib/docs/src"),
    joinpath(@__DIR__, "src/GNNlib"), force=true)
 
+# Copy the tutorial images from the GNN docs, whose tutorials share them. Also removed at the end
+const TUTORIAL_SECTIONS = ["beginner_tutorials", "intermediate_tutorials"]
+for section in TUTORIAL_SECTIONS
+    cp(joinpath(@__DIR__, "../../GraphNeuralNetworks/docs/src/tutorials", section, "assets"),
+       joinpath(@__DIR__, "src/tutorials", section, "assets"), force=true)
+end
+
 makedocs(;
     modules = [GNNLux, GNNGraphs, GNNlib],
     plugins = [interlinks],
@@ -90,6 +97,9 @@ makedocs(;
 
 rm(joinpath(@__DIR__, "src/GNNGraphs"), force=true, recursive=true)
 rm(joinpath(@__DIR__, "src/GNNlib"), force=true, recursive=true)
+for section in TUTORIAL_SECTIONS
+    rm(joinpath(@__DIR__, "src/tutorials", section, "assets"), force=true, recursive=true)
+end
 
 deploydocs(
     repo = "github.com/JuliaGraphs/GraphNeuralNetworks.jl", 
