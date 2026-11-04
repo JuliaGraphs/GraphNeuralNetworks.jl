@@ -25,12 +25,14 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 EnzymeCore = "f151be2c-9106-41f4-ab19-57ee4f262869"
 Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
+Reactant = "3c362404-f566-11ee-1572-e11a4b42c853"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 
 [extensions]
 GNNGraphsCUDAExt = "CUDA"
 GNNGraphsEnzymeCoreExt = "EnzymeCore"
 GNNGraphsMooncakeExt = "Mooncake"
+GNNGraphsReactantExt = "Reactant"
 GNNGraphsSimpleWeightedGraphsExt = "SimpleWeightedGraphs"
 
 [compat]
@@ -46,6 +48,7 @@ MLUtils = "0.4"
 Mooncake = "0.5.24"
 NNlib = "0.9"
 NearestNeighbors = "0.4"
+Reactant = "0.2"
 Random = "1"
 SimpleWeightedGraphs = "1.4.0"
 SparseArrays = "1"
