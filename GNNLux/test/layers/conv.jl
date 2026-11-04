@@ -123,6 +123,17 @@
         x = randn(Float32, n_in, g2.num_nodes)
         e = randn(Float32, n_in_edge, g2.num_edges)
         test_lux_layer(rng, l, g2, x; outputsize=(n_out,), e, container=true)
+
+        # The returned state has the same structure as the input state,
+        # so it can be fed back into the layer (as in a training loop).
+        nn = Chain(Dense(n_in_edge => n_out * n_in), BatchNorm(n_out * n_in))
+        l = NNConv(n_in => n_out, nn, tanh, aggr = +)
+        ps, st = LuxCore.setup(rng, l)
+        y, st′ = l(g2, x, e, ps, st)
+        @test typeof(st′) == typeof(st)
+        @test st′.nn.layer_2.running_mean != st.nn.layer_2.running_mean
+        y′, st″ = l(g2, x, e, ps, st′)
+        @test typeof(st″) == typeof(st)
     end
 
     @testset "GMMConv" begin
