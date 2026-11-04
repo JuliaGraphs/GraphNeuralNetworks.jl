@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="250px" height="250px" viewBox="0 0 250 250" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>V7</title>
+    <g id="V7" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#FFFFFF" x="0" y="0" width="250" height="250"></rect>
+        <g id="logo" transform="translate(15.000000, 19.000000)">
+            <g id="green_part">
+                <g id="blue_part" transform="translate(0.000000, 62.000000)">
+                    <line x1="107.5" y1="28.5" x2="30.5" y2="20.5" id="Edge" stroke="#4063D8" stroke-width="2" stroke-linecap="square"></line>
+                    <circle id="Node" fill="#4063D8" cx="20" cy="20" r="20"></circle>
+                </g>
+                <line x1="107.5" y1="90.5" x2="131.5" y2="18.5" id="Edge" stroke="#389726" stroke-width="2" stroke-linecap="square"></line>
+                <circle id="Node" fill="#389726" cx="132.5" cy="17.5" r="17.5"></circle>
+            </g>
+            <g id="purple_part" transform="translate(106.961380, 90.324532)">
+                <circle id="circle" fill="#9558B2" cx="59.5386203" cy="106.175468" r="17.5"></circle>
+                <circle id="circle" fill="#9558B2" cx="87.0386203" cy="55.675468" r="10"></circle>
+                <line x1="0.538620332" y1="0.175468002" x2="60.5386203" y2="110.175468" id="Edge" stroke="#9558B2" stroke-width="2" stroke-linecap="square"></line>
+            </g>
+            <g id="red_part" transform="translate(62.000000, 65.000000)">
+                <circle id="center_Red_Node" fill="#CB3C33" cx="45" cy="25" r="25"></circle>
+                <circle id="small_Red_Node" fill="#CB3C32" cx="10" cy="84" r="10"></circle>
+            </g>
+        </g>
+        <line x1="182.5" y1="215.5" x2="205.5" y2="172.5" id="Edge" stroke="#9558B2" stroke-width="2" stroke-linecap="square" stroke-dasharray="3,7"></line>
+        <line x1="122.5" y1="109.5" x2="91.5" y2="162.5" id="Edge" stroke="#CB3B33" stroke-width="2" fill="#CB3C33" stroke-linecap="square" stroke-dasharray="3,6"></line>
+        <polygon id="Rectangle" stroke="#4063D8" stroke-width="3" fill="#4063D8" transform="translate(76.409167, 104.733201) rotate(6.000000) translate(-76.409167, -104.733201) " points="73.9091668 101.733201 78.9091668 104.733201 73.9091668 107.733201"></polygon>
+        <polygon id="Rectangle" stroke="#389726" stroke-width="3" fill="#389726" transform="translate(136.352022, 67.933959) rotate(109.000000) translate(-136.352022, -67.933959) " points="133.852022 64.9339588 138.852022 67.9339588 133.852022 70.9339588"></polygon>
+        <polygon id="Rectangle" stroke="#9558B2" stroke-width="3" fill="#9558B2" transform="translate(154.275335, 167.603221) rotate(-120.000000) translate(-154.275335, -167.603221) " points="151.775335 164.603221 156.775335 167.603221 151.775335 170.603221"></polygon>
+    </g>
+</svg>
