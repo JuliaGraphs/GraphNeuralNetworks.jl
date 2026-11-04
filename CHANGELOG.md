@@ -20,7 +20,7 @@ Entries link to the pull request that introduced them.
 - Added an `EnzymeCore` package extension marking `scaled_laplacian` inactive for Enzyme, matching its existing `@non_differentiable` ChainRules declaration. Enzyme previously differentiated the Krylov eigensolve inside it and failed; this unblocks `ChebConv`, `GConvGRUCell` and `GConvLSTMCell` ([#706]).
 - Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
 
-## GNNLux.jl — Unreleased (towards 0.3.0)
+## GNNLux.jl 0.3.0 - 2026-11-04
 
 **Fixed**
 - `GNNChain` now returns its state with the same structure it receives, `(; layers = (; layer_1, ...))`, as the Lux layer interface requires. It previously returned the per-layer states without the `layers` wrapper, so feeding the returned state back into the chain (as `Lux.Training.single_train_step!` does) failed with a `FieldError`. This is breaking for code that worked around the bug by re-wrapping the state as `(; layers = st)`, as the docs examples did: drop the wrapper.
