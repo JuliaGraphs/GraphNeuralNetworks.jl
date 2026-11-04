@@ -31,7 +31,7 @@ Entries link to the pull request that introduced them.
 - Fixed `propagate(w_mul_xj, g, +)` ignoring the edge weights on CUDA and AMDGPU: the GPU fallback passed no weights to `w_mul_xj`, so layers using edge weights (e.g. `GCNConv` with `use_edge_weight = true`) computed unweighted messages on the GPU ([#718]).
 - Fixed `Enzyme.gradient` failing when differentiating `GCNConv`, `SGConv` and `TAGConv` on `:dense`/`:sparse` adjacency graphs: their adjacency-matrix fallbacks now convert via the Enzyme-differentiable `GNNGraphs._to_coo_graph` instead of the keyword `GNNGraph` constructor. Requires GNNGraphs ≥ 1.5.2 and, for Enzyme, Enzyme ≥ 0.13.197 ([#703]).
 
-## GraphNeuralNetworks.jl — Unreleased (towards 1.1.1)
+## GraphNeuralNetworks.jl 1.1.1 - 2026-11-04
 
 **Changed**
 - `GNNRecurrence` now hands each cell an indexed time slice instead of an `eachslice` view, matching the Lux frontend. Enzyme's type analysis fails on `SubArray` cell inputs, so this unblocks `DCGRU`, `EvolveGCNO`, `GConvGRU` and `GConvLSTM` under Enzyme ([#707]).
