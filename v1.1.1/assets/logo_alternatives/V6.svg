@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="250px" height="250px" viewBox="0 0 250 250" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>V6</title>
+    <g id="V6" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#FFFFFF" x="0" y="0" width="250" height="250"></rect>
+        <g id="logo" transform="translate(15.000000, 19.000000)">
+            <g id="green_part">
+                <g id="blue_part" transform="translate(0.000000, 62.000000)">
+                    <line x1="107.5" y1="28.5" x2="30.5" y2="20.5" id="Edge" stroke="#4063D8" stroke-width="2" stroke-linecap="square"></line>
+                    <circle id="Node" fill="#4063D8" cx="20" cy="20" r="20"></circle>
+                </g>
+                <line x1="107.5" y1="90.5" x2="131.5" y2="18.5" id="Edge" stroke="#389726" stroke-width="2" stroke-linecap="square"></line>
+                <circle id="Node" fill="#389726" cx="132.5" cy="17.5" r="17.5"></circle>
+            </g>
+            <g id="purple_part" transform="translate(106.961380, 90.324532)">
+                <circle id="circle" fill="#9558B2" cx="59.5386203" cy="106.175468" r="17.5"></circle>
+                <circle id="circle" fill="#9558B2" cx="87.0386203" cy="55.675468" r="10"></circle>
+                <line x1="0.538620332" y1="0.175468002" x2="60.5386203" y2="110.175468" id="Edge" stroke="#9558B2" stroke-width="2" stroke-linecap="square"></line>
+                <line x1="60.5386203" y1="106.175468" x2="83.5386203" y2="63.175468" id="Edge" stroke="#9558B2" stroke-width="2" stroke-linecap="square"></line>
+            </g>
+            <g id="red_part" transform="translate(62.000000, 65.000000)">
+                <circle id="center_Red_Node" fill="#CB3C33" cx="45" cy="25" r="25"></circle>
+                <line x1="45.5" y1="25.5" x2="14.5" y2="78.5" id="Edge" stroke="#CB3B33" stroke-width="2" fill="#CB3C33" stroke-linecap="square"></line>
+                <circle id="small_Red_Node" fill="#CB3C32" cx="10" cy="84" r="10"></circle>
+            </g>
+        </g>
+    </g>
+</svg>
