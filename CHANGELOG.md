@@ -25,7 +25,7 @@ Entries link to the pull request that introduced them.
 **Fixed**
 - `GNNChain` now returns its state with the same structure it receives, `(; layers = (; layer_1, ...))`, as the Lux layer interface requires. It previously returned the per-layer states without the `layers` wrapper, so feeding the returned state back into the chain (as `Lux.Training.single_train_step!` does) failed with a `FieldError`. This is breaking for code that worked around the bug by re-wrapping the state as `(; layers = st)`, as the docs examples did: drop the wrapper.
 
-## GNNlib.jl — Unreleased (towards 1.4.1)
+## GNNlib.jl 1.4.1 - 2026-11-04
 
 **Fixed**
 - Fixed `propagate(w_mul_xj, g, +)` ignoring the edge weights on CUDA and AMDGPU: the GPU fallback passed no weights to `w_mul_xj`, so layers using edge weights (e.g. `GCNConv` with `use_edge_weight = true`) computed unweighted messages on the GPU ([#718]).
