@@ -565,6 +565,89 @@ function add_nodes(g::GNNGraph{<:COO_T}, n::Integer; ndata = (;))
 end
 
 """
+    pad_graph(g::GNNGraph, num_nodes, num_edges, num_graphs = g.num_graphs + 1)
+
+Pad `g` to exactly `num_nodes` nodes, `num_edges` edges and `num_graphs` graphs.
+
+All padding nodes and edges are put in one extra graph, appended after the graphs of `g`.
+The padding edges are self-loops on the first padding node. Empty graphs are then
+appended until there are `num_graphs` graphs. Node, edge and graph features, and edge
+weights, are padded with zeros.
+
+Padding every mini-batch to the same size lets a compiler like Reactant.jl compile a
+model, or a training step, once and reuse it for all batches. The original graphs are
+the first `g.num_graphs` ones: mask out the others, e.g. in the loss.
+
+Requires `num_graphs > g.num_graphs`, and `num_nodes > g.num_nodes` if edges are added.
+
+# Examples
+
+```jldoctest
+julia> g = MLUtils.batch([rand_graph(3, 4), rand_graph(5, 6)])
+GNNGraph:
+  num_nodes: 8
+  num_edges: 10
+  num_graphs: 2
+
+julia> gp = pad_graph(g, 10, 12, 4)
+GNNGraph:
+  num_nodes: 10
+  num_edges: 12
+  num_graphs: 4
+
+julia> graph_indicator(gp)
+10-element Vector{Int64}:
+ 1
+ 1
+ 1
+ 2
+ 2
+ 2
+ 2
+ 2
+ 3
+ 3
+```
+"""
+function pad_graph(g::GNNGraph{<:COO_T}, num_nodes::Integer, num_edges::Integer,
+                   num_graphs::Integer = g.num_graphs + 1)
+    npad = num_nodes - g.num_nodes
+    epad = num_edges - g.num_edges
+    gpad = num_graphs - g.num_graphs
+    npad >= 0 ||
+        throw(ArgumentError("cannot pad a graph with $(g.num_nodes) nodes to $num_nodes nodes"))
+    epad >= 0 ||
+        throw(ArgumentError("cannot pad a graph with $(g.num_edges) edges to $num_edges edges"))
+    gpad >= 1 ||
+        throw(ArgumentError("`num_graphs` must exceed the $(g.num_graphs) graphs of `g`, to make room for the padding graph"))
+    (epad == 0 || npad >= 1) ||
+        throw(ArgumentError("padding edges need at least one padding node: `num_nodes` must exceed $(g.num_nodes)"))
+
+    s, t, w = edge_index(g)..., get_edge_weight(g)
+    s = vcat(s, fill_like(s, g.num_nodes + 1, epad))
+    t = vcat(t, fill_like(t, g.num_nodes + 1, epad))
+    w = isnothing(w) ? nothing : vcat(w, zeros_like(w, epad))
+    gi = graph_indicator(g)
+    gi = vcat(gi, fill_like(gi, g.num_graphs + 1, npad))
+
+    return GNNGraph((s, t, w),
+                    num_nodes, num_edges, num_graphs,
+                    gi,
+                    _pad_features(g.ndata, npad),
+                    _pad_features(g.edata, epad),
+                    _pad_features(g.gdata, gpad))
+end
+
+function _pad_features(ds::DataStore, n::Integer)
+    n0 = getn(ds) >= 0 ? getn(ds) : 1
+    return DataStore(n0 + n, Dict{Symbol, Any}(k => _pad_features(x, n) for (k, x) in ds))
+end
+
+function _pad_features(x::AbstractArray, n::Integer)
+    return cat(x, fill!(similar(x, size(x)[1:(end - 1)]..., n), 0); dims = ndims(x))
+end
+
+"""
     set_edge_weight(g::GNNGraph, w::AbstractVector)
 
 Set `w` as edge weights in the returned graph.

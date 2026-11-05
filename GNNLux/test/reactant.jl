@@ -65,3 +65,37 @@ end
     losses = train(ts, dev((g, x)), 10)
     @test losses[end] < losses[1]
 end
+
+@testitem "Reactant: padded mini-batches" setup=[TestModuleLux] begin
+    using Reactant
+    Reactant.set_default_backend("cpu")
+    dev = reactant_device(; force = true)
+    rng = StableRNG(1234)
+
+    model = GNNChain(GCNConv(3 => 5, relu), GlobalPool(mean), Dense(5 => 2))
+    ps, st = LuxCore.setup(rng, model)
+    # batches with different numbers of graphs, nodes and edges
+    batches = [batch([rand_graph(rng, k, 2k, ndata = randn(rng, Float32, 3, k)) for k in ks])
+               for ks in (5:8, 4:6, [9])]
+    pad(g) = pad_graph(g, 40, 80, 5)
+
+    # one compiled model gives the right result for every padded batch
+    gp = dev(pad(batches[1]))
+    compiled = @compile model(gp, gp.x, dev(ps), dev(st))
+    for g in batches
+        y, _ = model(g, g.x, ps, st)
+        gd = dev(pad(g))
+        yr, _ = compiled(gd, gd.x, dev(ps), dev(st))
+        @test Array(yr)[:, 1:g.num_graphs] ≈ y
+    end
+
+    # graphs of another size do not match the compiled shapes
+    for g in (batches[2], pad_graph(batches[1], 41, 80, 5), pad_graph(batches[1], 40, 82, 5))
+        gd = dev(g)
+        @test_throws "RuntimeProgramInputMismatch" compiled(gd, gd.x, dev(ps), dev(st))
+    end
+    # the number of graphs is not a shape but a constant baked into the compiled model,
+    # so a different one goes unnoticed
+    gp6 = dev(pad_graph(batches[1], 40, 80, 6))
+    @test_broken size(first(compiled(gp6, gp6.x, dev(ps), dev(st)))) == (2, 6)
+end

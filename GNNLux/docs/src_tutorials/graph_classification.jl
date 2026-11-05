@@ -135,52 +135,78 @@ ps, st = Lux.setup(rng, model) |> xdev;
 
 # Here, we again make use of the `GCNConv` with $\mathrm{ReLU}(x) = \max(x, 0)$ activation for obtaining localized node embeddings, before we apply our final classifier on top of a graph readout layer.
 
-# ### Compiling with fixed shapes
+# ### Padding the mini-batches
 
 # Reactant compiles a program for fixed array shapes, and `Lux.Training.single_train_step!` compiles the training step once, on its first call, and reuses it for all subsequent calls.
-# A mini-batch of graphs, however, has a different number of nodes and edges every time, so it cannot be fed to a training step compiled for another mini-batch.
-# The general solution is to pad every batch to the same size. Since MUTAG is small, here we simply batch all training graphs (and, separately, all test graphs) into one giant graph and perform full-batch training:
+# A mini-batch of graphs, however, has a different number of nodes and edges every time.
+# We therefore pad every mini-batch with [`pad_graph`](@ref) to the same number of nodes, edges and graphs: the padding nodes and edges are put in an extra graph, and empty graphs are added until there are `batchsize + 1` graphs.
+# Our node budget fits a batch of the largest graphs, plus one padding node:
 
-g_train = MLUtils.batch(train_data[1]) |> xdev
-y_train = train_data[2] |> xdev
-g_test = MLUtils.batch(test_data[1]) |> xdev
-y_test = test_data[2] |> xdev;
+batchsize = train_loader.batchsize
+max_nodes = batchsize * maximum(g.num_nodes for g in graphs) + 1
+max_edges = batchsize * maximum(g.num_edges for g in graphs)
+max_graphs = batchsize + 1
 
-# Let's train our network to see how well it performs on the training as well as test set.
-# For evaluation, we compile the forward pass in inference mode once for each of the two giant graphs:
+function pad_batch(gs, y)
+    g = MLUtils.batch(gs)
+    n = g.num_graphs
+    g = pad_graph(g, max_nodes, max_edges, max_graphs)
+    y = [Float32.(y) zeros(Float32, size(y, 1), max_graphs - n)]
+    mask = Float32.((1:max_graphs) .<= n)'   # the padding graphs are excluded from the loss
+    return g, y, mask, n
+end;
 
-function custom_loss(model, ps, st, (g, x, y))
-    logitcrossentropy = CrossEntropyLoss(; logits = Val(true))
+# The labels are padded too, and the `mask` restricts the loss to the original graphs.
+# Note that the mask is passed to the training step as data, i.e. moved to the device with the other arrays: values that are not device arrays would be fixed when the training step is compiled.
+
+# Let's train our network for a few epochs to see how well it performs on the training as well as test set:
+
+function custom_loss(model, ps, st, (g, x, y, mask))
+    logitcrossentropy = CrossEntropyLoss(; logits = Val(true), agg = l -> sum(l .* mask) / sum(mask))
     st = Lux.trainmode(st)
-    ŷ, st = model(g, x, ps, st)
-    return logitcrossentropy(ŷ, y), st, (;)
+    ŷ, st = model(g, x, ps, st)
+    return logitcrossentropy(ŷ, y), st, (;)
 end
 
-function eval_loss_accuracy(model_compiled, ps, st, g, y)
-    ŷ, _ = model_compiled(g, g.x, ps, st)
-    ŷ, y = cdev((ŷ, y))
+function eval_loss_accuracy(model_compiled, ps, st, data_loader)
+    loss = 0.0
+    acc = 0.0
+    ntot = 0
     logitcrossentropy = CrossEntropyLoss(; logits = Val(true))
-    return (loss = round(logitcrossentropy(ŷ, y), digits = 4),
-            acc = round(mean((ŷ .> 0) .== y) * 100, digits = 2))
+    for (g, y) in data_loader
+        g, y, _, n = pad_batch(g, y)
+        g = xdev(g)
+        ŷ, _ = model_compiled(g, g.x, ps, st)
+        ŷ, y = cdev(ŷ)[:, 1:n], y[:, 1:n]
+        loss += logitcrossentropy(ŷ, y) * n
+        acc += mean((ŷ .> 0) .== y) * n
+        ntot += n
+    end
+    return (loss = round(loss / ntot, digits = 4),
+            acc = round(acc * 100 / ntot, digits = 2))
 end
 
 function train_model(model, ps, st; epochs = 500, infotime = 100)
-    st_test = Lux.testmode(st)
-    model_train = @compile model(g_train, g_train.x, ps, st_test)
-    model_test = @compile model(g_test, g_test.x, ps, st_test)
+    g, _, _, _ = pad_batch(first(train_loader)...)
+    g = xdev(g)
+    model_compiled = @compile model(g, g.x, ps, Lux.testmode(st))
 
     function report(epoch, ps, st)
         st = Lux.testmode(st)
-        train = eval_loss_accuracy(model_train, ps, st, g_train, y_train)
-        test = eval_loss_accuracy(model_test, ps, st, g_test, y_test)
+        train = eval_loss_accuracy(model_compiled, ps, st, train_loader)
+        test = eval_loss_accuracy(model_compiled, ps, st, test_loader)
         @info (; epoch, train, test)
     end
 
     train_state = Training.TrainState(model, ps, st, Adam(1.0f-2))
     report(0, ps, st)
     for epoch in 1:epochs
-        _, loss, _, train_state = Training.single_train_step!(AutoEnzyme(), custom_loss,
-            (g_train, g_train.x, y_train), train_state)
+        for (g, y) in train_loader
+            g, y, mask, _ = pad_batch(g, y)
+            g, y, mask = (g, y, mask) |> xdev
+            _, loss, _, train_state = Training.single_train_step!(AutoEnzyme(), custom_loss,
+                (g, g.x, y, mask), train_state)
+        end
 
         epoch % infotime == 0 && report(epoch, train_state.parameters, train_state.states)
     end
@@ -189,7 +215,7 @@ end
 
 ps, st = train_model(model, ps, st);
 
-# As one can see, our model reaches around **75% test accuracy**.
+# As one can see, our model reaches around **70% test accuracy**.
 # Reasons for the fluctuations in accuracy can be explained by the rather small dataset (only 38 test graphs), and usually disappear once one applies GNNs to larger datasets.
 
 # ## (Optional) Exercise
