@@ -90,12 +90,9 @@ end
     end
 
     # graphs of another size do not match the compiled shapes
-    for g in (batches[2], pad_graph(batches[1], 41, 80, 5), pad_graph(batches[1], 40, 82, 5))
+    for g in (batches[2], pad_graph(batches[1], 41, 80, 5), pad_graph(batches[1], 40, 82, 5),
+              pad_graph(batches[1], 40, 80, 6))
         gd = dev(g)
         @test_throws "RuntimeProgramInputMismatch" compiled(gd, gd.x, dev(ps), dev(st))
     end
-    # the number of graphs is not a shape but a constant baked into the compiled model,
-    # so a different one goes unnoticed
-    gp6 = dev(pad_graph(batches[1], 40, 80, 6))
-    @test_broken size(first(compiled(gp6, gp6.x, dev(ps), dev(st)))) == (2, 6)
 end

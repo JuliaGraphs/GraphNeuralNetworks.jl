@@ -202,7 +202,7 @@ function sample_neighbors(g::GNNGraph{<:COO_T}, nodes, K = -1;
         gnew = GNNGraph(graph,
                         g.num_nodes, num_edges, g.num_graphs,
                         g.graph_indicator,
-                        g.ndata, edata, g.gdata)
+                        g.ndata, edata, g.gdata; graph_sizes = g.graph_sizes)
     else
         nodes_other = dir == :in ? setdiff(s, nodes) : setdiff(t, nodes)
         nodes_all = [nodes; nodes_other]

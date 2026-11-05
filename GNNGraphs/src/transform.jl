@@ -24,7 +24,7 @@ function add_self_loops(g::GNNGraph{<:COO_T})
     return GNNGraph((s, t, ew),
              g.num_nodes, length(s), g.num_graphs,
              g.graph_indicator,
-             g.ndata, g.edata, g.gdata)
+             g.ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 function add_self_loops(g::GNNGraph{<:ADJMAT_T})
@@ -35,7 +35,7 @@ function add_self_loops(g::GNNGraph{<:ADJMAT_T})
     return GNNGraph(A,
              g.num_nodes, num_edges, g.num_graphs,
              g.graph_indicator,
-             g.ndata, g.edata, g.gdata)
+             g.ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 """
@@ -60,7 +60,7 @@ function remove_self_loops(g::GNNGraph{<:COO_T})
     GNNGraph((s, t, w),
              g.num_nodes, length(s), g.num_graphs,
              g.graph_indicator,
-             g.ndata, edata, g.gdata)
+             g.ndata, edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 function remove_self_loops(g::GNNGraph{<:ADJMAT_T})
@@ -74,7 +74,7 @@ function remove_self_loops(g::GNNGraph{<:ADJMAT_T})
     return GNNGraph(A,
              g.num_nodes, num_edges, g.num_graphs,
              g.graph_indicator,
-             g.ndata, g.edata, g.gdata)
+             g.ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 """
@@ -137,7 +137,7 @@ function remove_edges(g::GNNGraph{<:COO_T}, edges_to_remove::AbstractVector{<:In
     return GNNGraph((s, t, w),
              g.num_nodes, length(s), g.num_graphs,
              g.graph_indicator,
-             g.ndata, edata, g.gdata)
+             g.ndata, edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 
@@ -185,7 +185,7 @@ function Base.coalesce(g::GNNGraph{<:COO_T}; aggr = +)
     return GNNGraph((s, t, w),
              g.num_nodes, num_edges, g.num_graphs,
              g.graph_indicator,
-             g.ndata, edata, g.gdata, true)
+             g.ndata, edata, g.gdata, true; graph_sizes = g.graph_sizes)
 end
 
 """
@@ -252,7 +252,7 @@ function remove_nodes(g::GNNGraph{<:COO_T}, nodes_to_remove::AbstractVector)
     return GNNGraph((s, t, w),
              num_nodes, length(s), g.num_graphs,
              g.graph_indicator,
-             ndata, edata, g.gdata)
+             ndata, edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 """
@@ -353,7 +353,7 @@ function add_edges(g::GNNGraph{<:COO_T}, data::COO_T; edata = nothing)
     return GNNGraph((s, t, w),
              num_nodes, length(s), g.num_graphs,
              g.graph_indicator,
-             ndata, edata, g.gdata)
+             ndata, edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 """
@@ -507,7 +507,7 @@ function to_bidirected(g::GNNGraph{<:COO_T})
     g = GNNGraph((snew, tnew, w),
                  g.num_nodes, length(snew), g.num_graphs,
                  g.graph_indicator,
-                 g.ndata, edata, g.gdata)
+                 g.ndata, edata, g.gdata; graph_sizes = g.graph_sizes)
 
     return coalesce(g; aggr = mean)
 end
@@ -527,7 +527,7 @@ function to_unidirected(g::GNNGraph{<:COO_T})
     g = GNNGraph((snew, tnew, w),
                  g.num_nodes, g.num_edges, g.num_graphs,
                  g.graph_indicator,
-                 g.ndata, g.edata, g.gdata)
+                 g.ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
 
     return coalesce(g; aggr = mean)
 end
@@ -561,7 +561,7 @@ function add_nodes(g::GNNGraph{<:COO_T}, n::Integer; ndata = (;))
     GNNGraph(g.graph,
              g.num_nodes + n, g.num_edges, g.num_graphs,
              g.graph_indicator,
-             ndata, g.edata, g.gdata)
+             ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 """
@@ -576,7 +576,9 @@ weights, are padded with zeros.
 
 Padding every mini-batch to the same size lets a compiler like Reactant.jl compile a
 model, or a training step, once and reuse it for all batches. The original graphs are
-the first `g.num_graphs` ones: mask out the others, e.g. in the loss.
+the first `g.num_graphs` ones: mask out the others, e.g. in the loss. A compiled function
+raises an error when called on a graph padded to different sizes, including a different
+number of graphs.
 
 Requires `num_graphs > g.num_graphs`, and `num_nodes > g.num_nodes` if edges are added.
 
@@ -660,7 +662,7 @@ function set_edge_weight(g::GNNGraph, w::AbstractVector)
     return GNNGraph((s, t, w),
                     g.num_nodes, g.num_edges, g.num_graphs,
                     g.graph_indicator,
-                    g.ndata, g.edata, g.gdata)
+                    g.ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 function SparseArrays.blockdiag(g1::GNNGraph, g2::GNNGraph)
@@ -1159,5 +1161,5 @@ function ppr_diffusion(g::GNNGraph{<:COO_T}; alpha = 0.85f0)
     return GNNGraph((s, t, new_w),
              g.num_nodes, length(s), g.num_graphs,
              g.graph_indicator,
-             g.ndata, g.edata, g.gdata)
+             g.ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
 end

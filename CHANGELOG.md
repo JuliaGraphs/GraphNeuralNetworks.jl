@@ -15,6 +15,7 @@ Entries link to the pull request that introduced them.
 **Added**
 - Graphs can be compiled with Reactant.jl: a `GNNGraph` can now be moved to a Reactant device (e.g. `g |> reactant_device()`) and traced. The COO index vectors and the `graph_indicator` of a `GNNGraph` are no longer required to have an `Integer` eltype, so that traced arrays (eltype `TracedRNumber{Int}`) can be stored in them, and a new `Reactant` package extension makes `degree` work inside a trace ([#730]).
 - Added `pad_graph`, which pads a graph to given numbers of nodes, edges and graphs, putting the padding in extra graphs. Padding every mini-batch to the same size lets Reactant.jl compile a model or a training step once and reuse it for all batches ([#730]).
+- Added the `graph_sizes` field to `GNNGraph`, holding the number of nodes in each graph of a batch (`nothing` for a single graph). Its length is the number of graphs, so a model compiled with Reactant.jl now raises an error when called on a batch with a different number of graphs, instead of silently returning wrong results ([#730]).
 
 ## GNNlib.jl — Unreleased (towards 1.5.0)
 

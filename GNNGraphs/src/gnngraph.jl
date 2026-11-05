@@ -29,7 +29,8 @@ as well, unless explicitly set by the keyword arguments
 A `GNNGraph` can also represent multiple graphs batched together
 (see [`MLUtils.batch`](@ref) or [`SparseArrays.blockdiag`](@ref)).
 The field `g.graph_indicator` contains the graph membership
-of each node.
+of each node, and `g.graph_sizes` the number of nodes in each graph.
+Both are `nothing` for a single graph.
 
 `GNNGraph`s are always directed graphs, therefore each edge is defined
 by a source node and a target node (see [`edge_index`](@ref)).
@@ -110,13 +111,16 @@ struct GNNGraph{T <: Union{COO_T, ADJMAT_T}} <: AbstractGNNGraph{T}
     num_edges::Int
     num_graphs::Int
     graph_indicator::Union{Nothing, AVecI}       # vector of ints or nothing
+    graph_sizes::Union{Nothing, AVecI}           # number of nodes in each graph, or nothing
     ndata::DataStore
     edata::DataStore
     gdata::DataStore
     is_coalesced::Bool # only for :coo, true if the graph is coalesced, i.e., no multi edges and indices ordered by target, then source
 end
 
-# GNNGraph constructor setting the is_coalesced field to false
+# GNNGraph constructor deriving the graph_sizes field from the graph indicator.
+# graph_sizes duplicates the graph indicator, but its length is the number of graphs,
+# which makes the number of graphs part of the array shapes seen by compilers like Reactant.
 function GNNGraph(graph::T,
                   num_nodes::Int,
                   num_edges::Int,
@@ -124,9 +128,16 @@ function GNNGraph(graph::T,
                   graph_indicator::Union{Nothing, AVecI},
                   ndata::DataStore,
                   edata::DataStore,
-                  gdata::DataStore) where {T <: Union{COO_T, ADJMAT_T}}
+                  gdata::DataStore,
+                  is_coalesced::Bool = false;
+                  graph_sizes = _graph_sizes(graph_indicator, num_graphs)) where {T <: Union{COO_T, ADJMAT_T}}
     return GNNGraph{T}(graph, num_nodes, num_edges, num_graphs,
-                       graph_indicator, ndata, edata, gdata, false)
+                       graph_indicator, graph_sizes, ndata, edata, gdata, is_coalesced)
+end
+
+_graph_sizes(graph_indicator::Nothing, num_graphs) = nothing
+function _graph_sizes(graph_indicator::AVecI, num_graphs)
+    return _scatter(+, ones_like(graph_indicator), graph_indicator, num_graphs)
 end
 
 function GNNGraph(data::D;
@@ -233,7 +244,7 @@ function GNNGraph(g::GNNGraph; ndata = g.ndata, edata = g.edata, gdata = g.gdata
     return GNNGraph(graph,
                 g.num_nodes, g.num_edges, g.num_graphs,
                 g.graph_indicator,
-                ndata, edata, gdata)
+                ndata, edata, gdata; graph_sizes = g.graph_sizes)
 end
 
 """
@@ -247,12 +258,12 @@ function Base.copy(g::GNNGraph; deep = false)
         GNNGraph(deepcopy(g.graph),
                  g.num_nodes, g.num_edges, g.num_graphs,
                  deepcopy(g.graph_indicator),
-                 deepcopy(g.ndata), deepcopy(g.edata), deepcopy(g.gdata))
+                 deepcopy(g.ndata), deepcopy(g.edata), deepcopy(g.gdata); graph_sizes = deepcopy(g.graph_sizes))
     else
         GNNGraph(g.graph,
                  g.num_nodes, g.num_edges, g.num_graphs,
                  g.graph_indicator,
-                 g.ndata, g.edata, g.gdata)
+                 g.ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
     end
 end
 
@@ -345,14 +356,14 @@ MLUtils.getobs(g::GNNGraph, i) = getgraph(g, i)
 function Base.:(==)(g1::GNNGraph, g2::GNNGraph)
     g1 === g2 && return true
     for k in fieldnames(typeof(g1))
-        k === :graph_indicator && continue
+        k in (:graph_indicator, :graph_sizes) && continue
         getfield(g1, k) != getfield(g2, k) && return false
     end
     return true
 end
 
 function Base.hash(g::T, h::UInt) where {T <: GNNGraph}
-    fs = (getfield(g, k) for k in fieldnames(T) if k !== :graph_indicator)
+    fs = (getfield(g, k) for k in fieldnames(T) if k ∉ (:graph_indicator, :graph_sizes))
     return foldl((h, f) -> hash(f, h), fs, init = hash(T, h))
 end
 

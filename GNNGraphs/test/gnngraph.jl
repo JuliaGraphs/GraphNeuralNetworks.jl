@@ -413,6 +413,36 @@ end
     end
 end
 
+@testitem "graph_sizes" setup=[GraphsTestModule] begin
+    using .GraphsTestModule
+    @test rand_graph(3, 4).graph_sizes === nothing
+    for GRAPH_T in GRAPH_TYPES
+        g = MLUtils.batch([rand_graph(n, m, graph_type = GRAPH_T) for (n, m) in [(3, 4), (5, 6)]])
+        @test g.graph_sizes == [3, 5]
+        @test add_self_loops(g).graph_sizes == [3, 5]
+        @test GNNGraph(g, ndata = rand(2, 8)).graph_sizes == [3, 5]
+        @test copy(g, deep = true).graph_sizes == [3, 5]
+        @test getgraph(g, 2).graph_sizes == [5]
+    end
+    g = MLUtils.batch([rand_graph(3, 4), rand_graph(5, 6)])
+    @test pad_graph(g, 10, 12, 4).graph_sizes == [3, 5, 2, 0]
+    # the nodes of a graph need not be contiguous
+    g = GNNGraph([1, 2, 3], [2, 3, 4], graph_indicator = [1, 2, 1, 2])
+    @test g.graph_sizes == [2, 2]
+end
+
+@testitem "graph_sizes GPU" setup=[GraphsTestModule] tags=[:gpu] begin
+    using .GraphsTestModule
+    dev = gpu_device(force=true)
+    gs = [rand_graph(3, 4), rand_graph(5, 6)]
+    g = MLUtils.batch(dev.(gs))
+    @test get_device(g.graph_sizes) isa AbstractGPUDevice
+    @test Array(g.graph_sizes) == [3, 5]
+    @test Array(dev(MLUtils.batch(gs)).graph_sizes) == [3, 5]
+    @test Array(add_self_loops(g).graph_sizes) == [3, 5]
+    @test Array(pad_graph(g, 10, 12, 4).graph_sizes) == [3, 5, 2, 0]
+end
+
 @testitem "show" begin
     # no throw when global data is not an array
     g = rand_graph(10, 20, gdata = "ciao")
