@@ -125,7 +125,7 @@ end
 function _to_coo_graph(g::GNNGraph{<:SPARSE_T})
     s, t, v = findnz(g.graph)
     return GNNGraph((s, t, v), g.num_nodes, g.num_edges, g.num_graphs,
-                    g.graph_indicator, g.ndata, g.edata, g.gdata)
+                    g.graph_indicator, g.ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 function _to_coo_graph(g::GNNGraph{<:ADJMAT_T})
@@ -133,7 +133,7 @@ function _to_coo_graph(g::GNNGraph{<:ADJMAT_T})
     s, t, _ = _findnz_idx(A)
     v = _edge_values(A, s, t)
     return GNNGraph((s, t, v), g.num_nodes, g.num_edges, g.num_graphs,
-                    g.graph_indicator, g.ndata, g.edata, g.gdata)
+                    g.graph_indicator, g.ndata, g.edata, g.gdata; graph_sizes = g.graph_sizes)
 end
 
 ### CONVERT TO ADJACENCY MATRIX ################

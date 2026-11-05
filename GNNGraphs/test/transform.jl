@@ -414,6 +414,61 @@ end
     end
 end
 
+@testitem "pad_graph" setup=[GraphsTestModule] begin
+    using .GraphsTestModule
+    gs = [rand_graph(n, m, ndata = rand(Float32, 2, n), edata = rand(Float32, 3, m),
+                     gdata = rand(Float32, 4)) for (n, m) in [(3, 4), (5, 6)]]
+    gs = [set_edge_weight(g, rand(Float32, g.num_edges)) for g in gs]
+    g = MLUtils.batch(gs)
+    gp = pad_graph(g, 10, 13, 4)
+
+    @test gp.num_nodes == 10
+    @test gp.num_edges == 13
+    @test gp.num_graphs == 4
+    @test graph_indicator(gp) == [1, 1, 1, 2, 2, 2, 2, 2, 3, 3]
+    s, t = edge_index(gp)
+    @test s[11:13] == t[11:13] == [9, 9, 9]
+    @test get_edge_weight(gp) == [get_edge_weight(g); zeros(Float32, 3)]
+    @test gp.ndata.x == [g.ndata.x zeros(Float32, 2, 2)]
+    @test gp.edata.e == [g.edata.e zeros(Float32, 3, 3)]
+    @test gp.gdata.u == [g.gdata.u zeros(Float32, 4, 2)]
+
+    # the original graphs are unchanged, and the extra ones are the padding
+    gsp = MLUtils.unbatch(gp)
+    @test gsp[1:2] == MLUtils.unbatch(g)
+    @test gsp[3].num_nodes == 2 && gsp[3].num_edges == 3
+    @test gsp[4].num_nodes == 0 && gsp[4].num_edges == 0
+
+    # a single graph, padded with nodes only
+    g1 = rand_graph(4, 6)
+    gp1 = pad_graph(g1, 5, 6)
+    @test gp1.num_graphs == 2
+    @test graph_indicator(gp1) == [1, 1, 1, 1, 2]
+    @test edge_index(gp1) == edge_index(g1)
+
+    @test_throws ArgumentError pad_graph(g, 7, 13, 4)   # fewer nodes
+    @test_throws ArgumentError pad_graph(g, 10, 9, 4)   # fewer edges
+    @test_throws ArgumentError pad_graph(g, 10, 13, 2)  # no room for the padding graph
+    @test_throws ArgumentError pad_graph(g, 8, 13, 4)   # padding edges without padding nodes
+end
+
+@testitem "pad_graph GPU" setup=[GraphsTestModule] tags=[:gpu] begin
+    using .GraphsTestModule
+    dev = gpu_device(force=true)
+    g = MLUtils.batch([rand_graph(n, m, ndata = rand(Float32, 2, n), edata = rand(Float32, 3, m))
+                       for (n, m) in [(3, 4), (5, 6)]])
+    gp = pad_graph(g, 10, 13, 4)
+    gp_gpu = pad_graph(g |> dev, 10, 13, 4)
+
+    @test get_device(gp_gpu.graph_indicator) isa AbstractGPUDevice
+    @test get_device(edge_index(gp_gpu)[1]) isa AbstractGPUDevice
+    @test Array(gp_gpu.graph_indicator) == gp.graph_indicator
+    @test Array(edge_index(gp_gpu)[1]) == edge_index(gp)[1]
+    @test Array(edge_index(gp_gpu)[2]) == edge_index(gp)[2]
+    @test Array(gp_gpu.ndata.x) == gp.ndata.x
+    @test Array(gp_gpu.edata.e) == gp.edata.e
+end
+
 @testitem "remove_self_loops" setup=[GraphsTestModule] begin
     using .GraphsTestModule 
     for GRAPH_T in GRAPH_TYPES 

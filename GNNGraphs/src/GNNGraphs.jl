@@ -84,6 +84,7 @@ export add_nodes,
        perturb_edges,
        remove_nodes,
        ppr_diffusion,
+       pad_graph,
 # from MLUtils.jl
        batch,
        unbatch,

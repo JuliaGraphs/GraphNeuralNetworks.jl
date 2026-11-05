@@ -10,7 +10,7 @@ using ChainRulesCore: @non_differentiable, ignore_derivatives
 using GNNGraphs
 using .GNNGraphs: COO_T, ADJMAT_T, SPARSE_T,
                   check_num_nodes, check_num_edges,
-                  _to_coo_graph,
+                  _to_coo_graph, _scatter,
                   EType, NType # for heteroconvs
 
 include("utils.jl")

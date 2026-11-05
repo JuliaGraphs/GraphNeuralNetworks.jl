@@ -10,6 +10,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
+## GNNGraphs.jl — Unreleased (towards 1.7.0)
+
+**Added**
+- Graphs can be compiled with Reactant.jl: a `GNNGraph` can now be moved to a Reactant device (e.g. `g |> reactant_device()`) and traced. The COO index vectors and the `graph_indicator` of a `GNNGraph` are no longer required to have an `Integer` eltype, so that traced arrays (eltype `TracedRNumber{Int}`) can be stored in them, and a new `Reactant` package extension makes `degree` work inside a trace ([#730]).
+- Added `pad_graph`, which pads a graph to given numbers of nodes, edges and graphs, putting the padding in extra graphs. Padding every mini-batch to the same size lets Reactant.jl compile a model or a training step once and reuse it for all batches ([#730]).
+- Added the `graph_sizes` field to `GNNGraph`, holding the number of nodes in each graph of a batch (`nothing` for a single graph). Its length is the number of graphs, so a model compiled with Reactant.jl now raises an error when called on a batch with a different number of graphs, instead of silently returning wrong results ([#730]).
+
+## GNNlib.jl — Unreleased (towards 1.5.0)
+
+**Added**
+- Added a `Reactant` package extension, so that layers relying on `propagate` (e.g. `GCNConv`) can be compiled with Reactant.jl and differentiated with Enzyme inside the compiled program. As on CUDA, the sparse adjacency-matrix fast paths of `propagate` are bypassed in favour of gather/scatter message passing. Requires GNNGraphs ≥ 1.7 ([#730]).
+
+**Fixed**
+- `reduce_nodes`, `reduce_edges`, `softmax_nodes`, `softmax_edges` and `softmax_edge_neighbors` now scatter into an output of explicit size (the number of graphs, or of nodes) instead of inferring it from the largest index. This makes `GlobalPool` and the attention layers compile with Reactant, and returns the correct number of columns for batched graphs whose trailing graphs have no nodes ([#730]).
+
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
 **Added**
@@ -247,4 +262,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#706]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/706
 [#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
+[#730]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/730
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662

@@ -12,7 +12,7 @@ See also: [`reduce_edges`](@ref).
 function reduce_nodes(aggr, g::GNNGraph, x)
     @assert size(x)[end] == g.num_nodes
     indexes = graph_indicator(g)
-    return NNlib.scatter(aggr, x, indexes)
+    return _scatter(aggr, x, indexes, g.num_graphs)
 end
 
 """
@@ -35,7 +35,7 @@ given a heterogeneous graph `g`. The aggregation operator `aggr` can be `+`,
 `mean`, `max`, or `min`.
 """
 function reduce_nodes(aggr, node_type, g::GNNHeteroGraph, x)
-    return NNlib.scatter(aggr, x[node_type], graph_indicator(g, node_type))
+    return _scatter(aggr, x[node_type], graph_indicator(g, node_type), g.num_graphs)
 end
 
 """
@@ -49,7 +49,7 @@ function reduce_edges(aggr, g::GNNGraph, e)
     @assert size(e)[end] == g.num_edges
     s, t = edge_index(g)
     indexes = graph_indicator(g)[s]
-    return NNlib.scatter(aggr, e, indexes)
+    return _scatter(aggr, e, indexes, g.num_graphs)
 end
 
 """
@@ -60,7 +60,7 @@ Graph-wise softmax of the node features `x`.
 function softmax_nodes(g::GNNGraph, x)
     @assert size(x)[end] == g.num_nodes
     gi = graph_indicator(g)
-    max_ = gather(scatter(max, x, gi), gi)
+    max_ = gather(_scatter(max, x, gi, g.num_graphs), gi)
     num = exp.(x .- max_)
     den = reduce_nodes(+, g, num)
     den = gather(den, gi)
@@ -75,7 +75,7 @@ Graph-wise softmax of the edge features `e`.
 function softmax_edges(g::GNNGraph, e)
     @assert size(e)[end] == g.num_edges
     gi = graph_indicator(g, edges = true)
-    max_ = gather(scatter(max, e, gi), gi)
+    max_ = gather(_scatter(max, e, gi, g.num_graphs), gi)
     num = exp.(e .- max_)
     den = reduce_edges(+, g, num)
     den = gather(den, gi)
@@ -104,9 +104,11 @@ function softmax_edge_neighbors(g::AbstractGNNGraph, e)
     if isempty(t)
         return zeros_like(e, eltype(e), (size(e)[1:end-1]..., 0))
     end
-    max_ = gather(scatter(max, e, t), t)
+    # An explicit destination size is needed when `t` is traced (e.g. by Reactant).
+    n = g isa GNNGraph ? g.num_nodes : maximum(t)
+    max_ = gather(_scatter(max, e, t, n), t)
     num = exp.(e .- max_)
-    den = gather(scatter(+, num, t), t)
+    den = gather(_scatter(+, num, t, n), t)
     return num ./ den
 end
 
