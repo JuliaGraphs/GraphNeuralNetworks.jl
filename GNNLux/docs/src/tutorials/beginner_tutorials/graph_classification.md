@@ -1,6 +1,12 @@
+```@meta
+EditURL = "../../../src_tutorials/graph_classification.jl"
+```
+
 # Graph Classification with Graph Neural Networks
 
 *This tutorial is a Julia adaptation of the Pytorch Geometric tutorial that can be found [here](https://pytorch-geometric.readthedocs.io/en/latest/notes/colabs.html).*
+
+![cover](assets/cover_graph_classification.png)
 
 In this tutorial session we will have a closer look at how to apply **Graph Neural Networks (GNNs) to the task of graph classification**.
 Graph classification refers to the problem of classifying entire graphs (in contrast to nodes), given a **dataset of graphs**, based on some structural graph properties and possibly on some input node features.
@@ -216,7 +222,7 @@ function custom_loss(model, ps, st, tuple)
     logitcrossentropy = CrossEntropyLoss(; logits=Val(true))
     st = Lux.trainmode(st)
     ŷ, st = model(g, x, ps, st)
-    return  logitcrossentropy(ŷ, y), (; layers = st), 0
+    return  logitcrossentropy(ŷ, y), st, 0
 end
 
 function eval_loss_accuracy(model, ps, st, data_loader)

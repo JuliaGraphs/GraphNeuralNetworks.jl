@@ -62,7 +62,7 @@ Finally, we use a standard Lux training pipeline to fit our dataset.
 function custom_loss(model, ps, st, tuple)
     g,x,y = tuple
     y_pred,st = model(g, x, ps, st)  
-    return MSELoss()(y_pred, y), (layers = st,), 0
+    return MSELoss()(y_pred, y), st, 0
 end
 
 function train_model!(model, ps, st, train_graphs, test_graphs)
@@ -81,7 +81,6 @@ function train_model!(model, ps, st, train_graphs, test_graphs)
             test_loss =0
             for g in test_graphs
                 ŷ, st_ = model(g, g.x, train_state.parameters, st_)
-                st_ = (layers = st_,)
                 test_loss += MSELoss()(g.y,ŷ)
             end
             test_loss = test_loss/length(test_graphs)

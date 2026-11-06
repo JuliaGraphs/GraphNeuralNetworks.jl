@@ -30,12 +30,18 @@ cp(joinpath(@__DIR__, "../../GNNGraphs/docs/src"),
 cp(joinpath(@__DIR__, "../../GNNlib/docs/src"),
    joinpath(@__DIR__, "src/GNNlib"), force=true)
 
+# Copy the tutorial images from the GNN docs, whose tutorials share them. Also removed at the end
+const TUTORIAL_SECTIONS = ["beginner_tutorials", "intermediate_tutorials"]
+for section in TUTORIAL_SECTIONS
+    cp(joinpath(@__DIR__, "../../GraphNeuralNetworks/docs/src/tutorials", section, "assets"),
+       joinpath(@__DIR__, "src/tutorials", section, "assets"), force=true)
+end
+
 makedocs(;
     modules = [GNNLux, GNNGraphs, GNNlib],
     plugins = [interlinks],
     format = Documenter.HTML(; mathengine, 
                     prettyurls = get(ENV, "CI", nothing) == "true", 
-                    assets = [],
                     size_threshold=nothing, 
                     size_threshold_warn=2000000),
     sitename = "GNNLux.jl",
@@ -53,10 +59,13 @@ makedocs(;
         ],
 
         "Tutorials" => [
-            "Introductory tutorials" => [
-                "Hands on" => "tutorials/gnn_intro.md",
-                "Node Classification" => "tutorials/node_classification.md",
-                "Graph Classification" => "tutorials/graph_classification.md",
+            "Beginner tutorials" => [
+                "Hands on" => "tutorials/beginner_tutorials/gnn_intro.md",
+                "Node Classification" => "tutorials/beginner_tutorials/node_classification.md",
+                "Graph Classification" => "tutorials/beginner_tutorials/graph_classification.md",
+                ],
+            "Intermediate tutorials" => [
+                "Traffic Prediction" => "tutorials/intermediate_tutorials/traffic_prediction.md",
                 ],
             ],
 
@@ -85,9 +94,12 @@ makedocs(;
         # "Developer guide" => "dev.md",
     ],
 )
-     
+
 rm(joinpath(@__DIR__, "src/GNNGraphs"), force=true, recursive=true)
 rm(joinpath(@__DIR__, "src/GNNlib"), force=true, recursive=true)
+for section in TUTORIAL_SECTIONS
+    rm(joinpath(@__DIR__, "src/tutorials", section, "assets"), force=true, recursive=true)
+end
 
 deploydocs(
     repo = "github.com/JuliaGraphs/GraphNeuralNetworks.jl", 

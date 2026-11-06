@@ -89,7 +89,10 @@ Base.firstindex(c::GNNChain) = firstindex(c.layers)
 
 LuxCore.outputsize(c::GNNChain) = LuxCore.outputsize(c.layers[end])
 
-(c::GNNChain)(g::GNNGraph, x, ps, st) = _applychain(c.layers, g, x, ps.layers, st.layers)
+function (c::GNNChain)(g::GNNGraph, x, ps, st)
+    x, st_layers = _applychain(c.layers, g, x, ps.layers, st.layers)
+    return x, (; layers = st_layers)
+end
 
 function _applychain(layers, g::GNNGraph, x, ps, st)  # type-unstable path, helps compile times
     newst = (;)
