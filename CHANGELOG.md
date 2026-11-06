@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
+## GNNGraphs.jl — Unreleased (towards 1.7.0)
+
+**Fixed**
+- Reactant traced scalar types are now converted to their underlying numeric type before graph-side degree and COO adjacency allocation. COO graph indices can also remain traced device inputs during compiled GNNLux model calls. Reactant remains an optional GNNGraphs integration ([#710]).
+
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
 **Added**
@@ -24,6 +29,11 @@ Entries link to the pull request that introduced them.
 
 **Fixed**
 - `GNNChain` now returns its state with the same structure it receives, `(; layers = (; layer_1, ...))`, as the Lux layer interface requires. It previously returned the per-layer states without the `layers` wrapper, so feeding the returned state back into the chain (as `Lux.Training.single_train_step!` does) failed with a `FieldError`. This is breaking for code that worked around the bug by re-wrapping the state as `(; layers = st)`, as the docs examples did: drop the wrapper.
+
+## GNNlib.jl — Unreleased (towards 1.5.0)
+
+**Fixed**
+- Reactant compiled message passing now uses gather/scatter with traced COO indices instead of building a sparse adjacency matrix, allowing one compiled GCNConv to run on different graphs with the same shapes ([#710]).
 
 ## GNNlib.jl 1.4.1 - 2026-11-04
 
@@ -247,4 +257,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#706]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/706
 [#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
+[#710]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/710
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
