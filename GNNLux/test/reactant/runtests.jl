@@ -47,3 +47,30 @@ end
     @test size(y_d) == (2, 6)
     @test Array(y_d) ≈ y_cpu rtol = 1.0f-4 atol = 1.0f-5
 end
+
+@testset "Reactant GCNConv keeps device graph indices dynamic" begin
+    rng = Xoshiro(42)
+    model = GCNConv(3 => 2, relu)
+    ps, st = Lux.setup(rng, model)
+    g1 = test_graph()
+    g2 = GNNGraph(
+        ([1, 1, 1, 2, 2, 3], [4, 5, 6, 5, 6, 6]);
+        num_nodes = 6,
+    )
+    x = randn(rng, Float32, 3, 6)
+    f(g, x, ps, st) = first(model(g, x, ps, st))
+
+    dev = reactant_device()
+    ps_d, st_d, x_d, g1_d, g2_d = (ps, st, x, g1, g2) |> dev
+    compiled = @compile f(g1_d, x_d, ps_d, st_d)
+
+    y1_cpu = f(g1, x, ps, st)
+    y2_cpu = f(g2, x, ps, st)
+    y1_compiled = Array(compiled(g1_d, x_d, ps_d, st_d))
+    y2_compiled = Array(compiled(g2_d, x_d, ps_d, st_d))
+
+    @test size(y1_compiled) == (2, 6)
+    @test y1_compiled ≈ y1_cpu rtol = 1.0f-4 atol = 1.0f-5
+    @test size(y2_compiled) == (2, 6)
+    @test y2_compiled ≈ y2_cpu rtol = 1.0f-4 atol = 1.0f-5
+end
