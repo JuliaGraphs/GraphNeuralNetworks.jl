@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
+## GNNlib.jl Unreleased
+
+**Fixed**
+- `GATConv` and `GATv2Conv` no longer fail on graphs (or heterograph relations) without edges for some edge categories, or with zero source/destination nodes: the forward pass crashed reshaping the empty output, and the gradient failed with a `DimensionMismatch`.
+
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
 **Added**

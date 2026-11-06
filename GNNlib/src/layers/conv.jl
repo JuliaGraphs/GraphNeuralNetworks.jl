@@ -134,10 +134,15 @@ function gat_conv(l, g::AbstractGNNGraph, x, e::Union{Nothing, AbstractMatrix} =
     # a hand-written message passing
     message = Fix1(gat_message, l)
     m = apply_edges(message, g, Wxi, Wxj, e)
-    α = softmax_edge_neighbors(g, m.logα)
-    α = dropout(α, l.dropout)
-    β = α .* m.Wxj
-    x = aggregate_neighbors(g, +, β)
+    if isempty(m.logα)
+        # no edges: Zygote computes a wrong-sized gradient for `α .* m.Wxj` on empty arrays
+        x = zero(Wxi)
+    else
+        α = softmax_edge_neighbors(g, m.logα)
+        α = dropout(α, l.dropout)
+        β = α .* m.Wxj
+        x = aggregate_neighbors(g, +, β)
+    end
 
     if !l.concat
         x = mean(x, dims = 2)
@@ -189,10 +194,15 @@ function gatv2_conv(l, g::AbstractGNNGraph, x, e::Union{Nothing, AbstractMatrix}
 
     message = Fix1(gatv2_message, l)
     m = apply_edges(message, g, Wxi, Wxj, e)
-    α = softmax_edge_neighbors(g, m.logα)
-    α = dropout(α, l.dropout)
-    β = α .* m.Wxj
-    x = aggregate_neighbors(g, +, β)
+    if isempty(m.logα)
+        # no edges: Zygote computes a wrong-sized gradient for `α .* m.Wxj` on empty arrays
+        x = zero(Wxi)
+    else
+        α = softmax_edge_neighbors(g, m.logα)
+        α = dropout(α, l.dropout)
+        β = α .* m.Wxj
+        x = aggregate_neighbors(g, +, β)
+    end
 
     if !l.concat
         x = mean(x, dims = 2)

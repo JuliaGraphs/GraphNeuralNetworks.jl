@@ -146,10 +146,28 @@
         x = (A = rand(Float32, 4, 2), B = rand(Float32, 4, 3))
         layers = HeteroGraphConv((:A, :to, :B) => GATv2Conv(4 => 2),
                                  (:B, :to, :A) => GATv2Conv(4 => 2));
-        y = layers(hg, x); 
+        y = layers(hg, x);
         @test size(y.A) == (2, 2) && size(y.B) == (2, 3)
     end
-    
+
+    @testset "$L with empty relations" for L in (GATConv, GATv2Conv)
+        g = GNNHeteroGraph(((:A, :to, :B) => ([1, 2], [3, 4]),
+                            (:B, :to, :A) => (Int[], Int[]),
+                            (:C, :to, :A) => (Int[], Int[]),
+                            (:A, :to, :C) => (Int[], Int[]));
+                           num_nodes = Dict(:A => 3, :B => 5, :C => 0))
+        x = (A = rand(Float32, 4, 3), B = rand(Float32, 4, 5), C = rand(Float32, 4, 0))
+        layers = HeteroGraphConv([et => L(4 => 2; heads = 2, dropout = 0) for et in g.etypes])
+        y = layers(g, x)
+        @test size(y.A) == (4, 3) && size(y.B) == (4, 5) && size(y.C) == (4, 0)
+        @test y.A == zeros(Float32, 4, 3)
+
+        f(x) = sum(sum, layers(g, x))
+        dx = gradient(f, x)[1]
+        _, (ndx,) = finitediff_withgradient(f, x)
+        @test dx.A ≈ ndx.A rtol = 1e-3
+    end
+
     @testset "GCNConv" begin
         g = rand_bipartite_heterograph((2,3), 6)
         x = (A = rand(Float32, 4,2), B = rand(Float32, 4, 3))
