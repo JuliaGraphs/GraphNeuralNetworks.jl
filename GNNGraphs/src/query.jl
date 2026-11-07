@@ -350,6 +350,7 @@ function Graphs.degree(g::GNNGraph{<:COO_T}, T::TT = nothing; dir = :out,
         else 
             T
         end
+    T = _graph_scalar_eltype(T)
     return _degree((s, t), T, dir, ew, g.num_nodes)
 end
 
@@ -371,9 +372,14 @@ function Graphs.degree(g::GNNGraph{<:ADJMAT_T}, T::TT = nothing; dir = :out,
             T = Nt
         end
     end
+    T = _graph_scalar_eltype(T)
     A = adjacency_matrix(g)
     return _degree(A, T, dir, edge_weight, g.num_nodes)
 end
+
+# Backends can specialize this hook when their scalar wrapper type should not be
+# used as the element type of ordinary graph-side allocations.
+_graph_scalar_eltype(::Type{T}) where {T} = T
 
 function _degree((s, t)::Tuple, T::Type, dir::Symbol, edge_weight::Nothing, num_nodes::Int)
     _degree((s, t), T, dir, ones_like(s, T), num_nodes)

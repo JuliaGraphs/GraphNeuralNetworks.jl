@@ -17,6 +17,7 @@ Entries link to the pull request that introduced them.
 
 **Fixed**
 - `remove_nodes` now updates the `graph_indicator` of batched graphs. It was previously left unchanged, so calling `unbatch` or `getgraph` on the result threw a `BoundsError` ([#717]).
+- Reactant traced scalar types are now converted to their underlying numeric type before graph-side degree and COO adjacency allocation. Reactant remains an optional GNNGraphs integration ([#710]).
 - Fixed `scaled_laplacian` (and so `ChebConv`) crashing with a segmentation fault on AMDGPU graphs: the eigensolver's start vector was created on the CPU, so CPU BLAS was handed GPU memory. It is now created on the same device as the graph ([#722]).
 - Added an `EnzymeCore` package extension marking `scaled_laplacian` inactive for Enzyme, matching its existing `@non_differentiable` ChainRules declaration. Enzyme previously differentiated the Krylov eigensolve inside it and failed; this unblocks `ChebConv`, `GConvGRUCell` and `GConvLSTMCell` ([#706]).
 - Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
@@ -251,4 +252,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
 [#728]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/728
+[#710]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/710
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
