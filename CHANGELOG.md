@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
+## GNNGraphs.jl 1.6.1-DEV
+
+**Fixed**
+- Fixed Zygote differentiation through `add_edges` with non-empty edge metadata by iterating over a collected vector of metadata keys. `sample_neighbors(...; replace=true)` now skips zero-degree nodes instead of trying to sample from an empty neighbor list ([#729]).
+
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
 **Added**
@@ -247,4 +252,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#706]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/706
 [#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
+[#729]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/729
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
