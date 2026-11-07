@@ -246,12 +246,13 @@ function remove_nodes(g::GNNGraph{<:COO_T}, nodes_to_remove::AbstractVector)
     nodes_to_keep = setdiff(1:g.num_nodes, nodes_to_remove)
     ndata = getobs(ndata, nodes_to_keep)
     edata = getobs(edata, mask_edges_to_keep)
+    graph_indicator = isnothing(g.graph_indicator) ? nothing : g.graph_indicator[nodes_to_keep]
 
     num_nodes = g.num_nodes - length(nodes_to_remove)
 
     return GNNGraph((s, t, w),
              num_nodes, length(s), g.num_graphs,
-             g.graph_indicator,
+             graph_indicator,
              ndata, edata, g.gdata)
 end
 
