@@ -1670,7 +1670,7 @@ function (l::NNConv)(g, x, e, ps, st)
     nn = StatefulLuxLayer{true}(l.nn, ps.nn, st.nn)
     m = (; nn, l.aggr, ps.weight, bias = _getbias(ps), l.σ)
     y = GNNlib.nn_conv(m, g, x, e)
-    stnew = _getstate(nn)
+    stnew = (; nn = _getstate(nn))
     return y, stnew
 end
 
