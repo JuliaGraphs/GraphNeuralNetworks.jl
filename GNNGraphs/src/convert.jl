@@ -30,6 +30,9 @@ function to_coo(coo::COO_T; dir = :out, num_nodes = nothing, weighted = true,
                 hetero = false)
     s, t, val = coo
 
+    _check_index_eltype(eltype(s))
+    _check_index_eltype(eltype(t))
+
     if isnothing(num_nodes)
         ns = maximum(s)
         nt = maximum(t)

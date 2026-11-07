@@ -1,6 +1,20 @@
 # TODO test that the graph type is preserved
 # when constructing a GNNGraph from another
 
+@testitem "Constructor: COO indices must be integers" setup=[GraphsTestModule] begin
+    @test GNNGraph(([1, 2], [2, 1]); num_nodes = 2).num_edges == 2
+    @test_throws ArgumentError GNNGraph(([1.0, 2.0], [2.0, 1.0]); num_nodes = 2)
+    @test_throws ArgumentError GNNGraph(([1.5, 2.0], [2.0, 1.0]); num_nodes = 2)
+    @test_throws ArgumentError GNNGraph((["1", "2"], ["2", "1"]); num_nodes = 2)
+
+    @test_throws ArgumentError GNNGraph(
+        ([1, 2], [2, 1]); num_nodes = 2, graph_indicator = [1.0, 1.0]
+    )
+    @test_throws ArgumentError GNNGraph(
+        ([1, 2], [2, 1]); num_nodes = 2, graph_indicator = ["1", "1"]
+    )
+end
+
 @testitem "Constructor: adjacency matrix" setup=[GraphsTestModule] begin
     using .GraphsTestModule
     for GRAPH_T in GRAPH_TYPES

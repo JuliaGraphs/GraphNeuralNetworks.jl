@@ -125,6 +125,9 @@ function GNNGraph(graph::T,
                   ndata::DataStore,
                   edata::DataStore,
                   gdata::DataStore) where {T <: Union{COO_T, ADJMAT_T}}
+    if !isnothing(graph_indicator)
+        _check_index_eltype(eltype(graph_indicator))
+    end
     return GNNGraph{T}(graph, num_nodes, num_edges, num_graphs,
                        graph_indicator, ndata, edata, gdata, false)
 end
@@ -154,6 +157,9 @@ function GNNGraph(data::D;
         graph, num_nodes, num_edges = to_sparse(data; num_nodes, dir)
     end
 
+    if !isnothing(graph_indicator)
+        _check_index_eltype(eltype(graph_indicator))
+    end
     num_graphs = !isnothing(graph_indicator) ? maximum(graph_indicator) : 1
 
     ndata = normalize_graphdata(ndata, default_name = :x, n = num_nodes)

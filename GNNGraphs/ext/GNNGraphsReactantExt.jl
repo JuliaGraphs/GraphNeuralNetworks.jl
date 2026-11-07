@@ -1,9 +1,10 @@
 module GNNGraphsReactantExt
 
 using GNNGraphs
-using Reactant
+using Reactant: TracedRNumber
 
-GNNGraphs._graph_scalar_eltype(::Type{Reactant.TracedRNumber{T}}) where {T} =
-    Reactant.unwrapped_eltype(Reactant.TracedRNumber{T})
+GNNGraphs._check_index_eltype(::Type{<:TracedRNumber{T}}) where {T <: Integer} = true
+
+GNNGraphs._graph_scalar_eltype(::Type{TracedRNumber{T}}) where {T} = T
 
 end
