@@ -177,6 +177,7 @@ function sample_neighbors(g::GNNGraph{<:COO_T}, nodes, K = -1;
     @assert dir ∈ (:in, :out)
     _, eidlist = adjacency_list(g, nodes; dir, with_eid = true)
     for i in 1:length(eidlist)
+        isempty(eidlist[i]) && continue
         if replace
             k = K > 0 ? K : length(eidlist[i])
         else
