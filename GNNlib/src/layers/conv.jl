@@ -121,29 +121,36 @@ function gat_conv(l, g::AbstractGNNGraph, x, e::Union{Nothing, AbstractMatrix} =
         g = add_self_loops(g)
     end
 
+    _, n_stackj = size(xj)
+    _, n_stacki = size(xi)
     _, chout = l.channel
     heads = l.heads
 
-    Wxi = Wxj = l.dense_x(xj)
-    Wxi = Wxj = reshape(Wxj, chout, heads, :)                   
-
-    if xi !== xj
-        Wxi = l.dense_x(xi)
-        Wxi = reshape(Wxi, chout, heads, :)                   
-    end
+    Wxj = l.dense_x(xj)
+    Wxj = reshape(Wxj, chout, heads, n_stackj)
+    Wxi = l.dense_x(xi)
+    Wxi = reshape(Wxi, chout, heads, n_stacki)
 
     # a hand-written message passing
     message = Fix1(gat_message, l)
     m = apply_edges(message, g, Wxi, Wxj, e)
-    α = softmax_edge_neighbors(g, m.logα)
-    α = dropout(α, l.dropout)
-    β = α .* m.Wxj
-    x = aggregate_neighbors(g, +, β)
+    if isempty(m.logα)
+        # no edges: Zygote computes a wrong-sized gradient for `α .* m.Wxj` on empty arrays
+        x = zero(Wxi)
+    else
+        α = softmax_edge_neighbors(g, m.logα)
+        α = dropout(α, l.dropout)
+        β = α .* m.Wxj
+        x = aggregate_neighbors(g, +, β)
+    end
 
     if !l.concat
         x = mean(x, dims = 2)
+        width = size(x, 1)
+    else
+        width = size(x, 1) * size(x, 2)
     end
-    x = reshape(x, :, size(x, 3))  # return a matrix
+    x = reshape(x, width, size(x, 3))  # return a matrix
     x = l.σ.(x .+ l.bias)
 
     return x
@@ -187,15 +194,23 @@ function gatv2_conv(l, g::AbstractGNNGraph, x, e::Union{Nothing, AbstractMatrix}
 
     message = Fix1(gatv2_message, l)
     m = apply_edges(message, g, Wxi, Wxj, e)
-    α = softmax_edge_neighbors(g, m.logα)
-    α = dropout(α, l.dropout)
-    β = α .* m.Wxj
-    x = aggregate_neighbors(g, +, β)
+    if isempty(m.logα)
+        # no edges: Zygote computes a wrong-sized gradient for `α .* m.Wxj` on empty arrays
+        x = zero(Wxi)
+    else
+        α = softmax_edge_neighbors(g, m.logα)
+        α = dropout(α, l.dropout)
+        β = α .* m.Wxj
+        x = aggregate_neighbors(g, +, β)
+    end
 
     if !l.concat
         x = mean(x, dims = 2)
+        width = size(x, 1)
+    else
+        width = size(x, 1) * size(x, 2)
     end
-    x = reshape(x, :, size(x, 3))
+    x = reshape(x, width, size(x, 3))
     x = l.σ.(x .+ l.bias)
     return x
 end
