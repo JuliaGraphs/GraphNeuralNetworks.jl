@@ -173,14 +173,8 @@ function cat_features(ds1::DataStore, ds2::DataStore)
     n1 = n1 >= 0 ? n1 : 1
     n2 = n2 >= 0 ? n2 : 1
     data1, data2 = getdata(ds1), getdata(ds2)
-    if CRC.ignore_derivatives() do
-        isempty(data1) && isempty(data2)
-    end
-        # Empty stores have no differentiable values; keep their structural
-        # reconstruction out of automatic differentiation.
-        return CRC.ignore_derivatives() do
-            DataStore(n1 + n2, Dict{Symbol, Any}())
-        end
+    if isempty(data1) && isempty(data2)
+        return CRC.ignore_derivatives(() -> DataStore(n1 + n2, Dict{Symbol, Any}()))
     end
     return DataStore(n1 + n2, cat_features(data1, data2))
 end
