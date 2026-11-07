@@ -1135,7 +1135,7 @@ function GMMConv(ch::Pair{NTuple{2, Int}, Int},
     GMMConv(mu, sigma_inv, b, σ, ch, K, dense_x, residual)
 end
 
-(l::GMMConv)(g::GNNGraph, x, e) = GNNlib.gmm_conv(l, g, x, e)
+(l::GMMConv)(g::AbstractGNNGraph, x, e = edge_features(g)) = GNNlib.gmm_conv(l, g, x, e)
 
 (l::GMMConv)(g::GNNGraph) = GNNGraph(g, ndata = l(g, node_features(g), edge_features(g)))
 
