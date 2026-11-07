@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
+## GNNGraphs.jl — Unreleased (towards 1.7.0)
+
+**Fixed**
+- Reactant traced scalar types are now converted to their underlying numeric type before graph-side degree and COO adjacency allocation. COO graph indices can also remain traced device inputs during compiled GNNLux model calls. Reactant remains an optional GNNGraphs integration ([#710]).
+
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
 **Added**
@@ -17,7 +22,6 @@ Entries link to the pull request that introduced them.
 
 **Fixed**
 - `remove_nodes` now updates the `graph_indicator` of batched graphs. It was previously left unchanged, so calling `unbatch` or `getgraph` on the result threw a `BoundsError` ([#717]).
-- Reactant traced scalar types are now converted to their underlying numeric type before graph-side degree and COO adjacency allocation. Reactant remains an optional GNNGraphs integration ([#710]).
 - Fixed `scaled_laplacian` (and so `ChebConv`) crashing with a segmentation fault on AMDGPU graphs: the eigensolver's start vector was created on the CPU, so CPU BLAS was handed GPU memory. It is now created on the same device as the graph ([#722]).
 - Added an `EnzymeCore` package extension marking `scaled_laplacian` inactive for Enzyme, matching its existing `@non_differentiable` ChainRules declaration. Enzyme previously differentiated the Krylov eigensolve inside it and failed; this unblocks `ChebConv`, `GConvGRUCell` and `GConvLSTMCell` ([#706]).
 - Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
@@ -27,6 +31,11 @@ Entries link to the pull request that introduced them.
 **Fixed**
 - `GNNChain` now returns its state with the same structure it receives, `(; layers = (; layer_1, ...))`, as the Lux layer interface requires. It previously returned the per-layer states without the `layers` wrapper, so feeding the returned state back into the chain (as `Lux.Training.single_train_step!` does) failed with a `FieldError`. This is breaking for code that worked around the bug by re-wrapping the state as `(; layers = st)`, as the docs examples did: drop the wrapper.
 - `NNConv` now returns its state as `(; nn = ...)`, the same structure it receives. It previously returned the inner network's state without the `nn` wrapper, so passing the returned state back into the layer (e.g. on the second step of `Lux.Training.single_train_step!`) failed with a `FieldError` ([#728]).
+
+## GNNlib.jl — Unreleased (towards 1.5.0)
+
+**Fixed**
+- Reactant compiled message passing now uses gather/scatter with traced COO indices instead of building a sparse adjacency matrix, allowing one compiled GCNConv to run on different graphs with the same shapes ([#710]).
 
 ## GNNlib.jl 1.4.1 - 2026-11-04
 
