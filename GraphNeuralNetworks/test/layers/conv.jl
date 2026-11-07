@@ -86,7 +86,8 @@ end
     for g in TEST_GRAPHS
         g = add_self_loops(g)
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_LOW, ad_backends = [Flux.AutoZygote()])
+        test_gradients(l, g, g.x, rtol = RTOL_LOW,
+                       ad_backends = [Flux.AutoZygote(), Flux.AutoEnzyme()])
     end
 
     @testset "bias=false" begin
@@ -124,7 +125,12 @@ end
     l = GraphConv(D_IN => D_OUT)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        # Enzyme fails with an IllegalTypeAnalysisException on :dense graphs, where
+        # `propagate(copy_xj, g, +)` multiplies by a union-typed adjacency matrix.
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH,
+                       ad_backends = get_graph_type(g) == :dense ?
+                                     [Flux.AutoZygote(), Flux.AutoMooncake()] :
+                                     [Flux.AutoZygote(), Flux.AutoMooncake(), Flux.AutoEnzyme()])
     end
 
     l = GraphConv(D_IN => D_OUT, tanh, bias = false, aggr = mean)
@@ -236,10 +242,14 @@ end
     num_layers = 3
     l = GatedGraphConv(D_OUT, num_layers)
     @test size(l.weight) == (D_OUT, D_OUT, num_layers)
-
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        # Enzyme fails with an IllegalTypeAnalysisException on :dense graphs, where
+        # `propagate(copy_xj, g, +)` multiplies by a union-typed adjacency matrix.
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH,
+                       ad_backends = get_graph_type(g) == :dense ?
+                                     [Flux.AutoZygote(), Flux.AutoMooncake()] :
+                                     [Flux.AutoZygote(), Flux.AutoMooncake(), Flux.AutoEnzyme()])
     end
 end
 
@@ -332,7 +342,12 @@ end
     l = SAGEConv(D_IN => D_OUT, tanh, bias = false, aggr = +)
     for g in TEST_GRAPHS
         @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-        test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+        # Enzyme fails with an IllegalTypeAnalysisException on :dense graphs, where
+        # `propagate(copy_xj, g, +)` multiplies by a union-typed adjacency matrix.
+        test_gradients(l, g, g.x, rtol = RTOL_HIGH,
+                       ad_backends = get_graph_type(g) == :dense ?
+                                     [Flux.AutoZygote(), Flux.AutoMooncake()] :
+                                     [Flux.AutoZygote(), Flux.AutoMooncake(), Flux.AutoEnzyme()])
     end
 end
 
@@ -433,8 +448,8 @@ end
         @test size(y[1]) == (D_OUT, g.num_nodes)
         @test size(y[2]) == (D_OUT, g.num_edges)
         function loss(l, g, x, e)
-            y = l(g, x, e)
-            return mean(y[1]) + sum(y[2])
+            ŷ = l(g, x, e)
+            return mean(ŷ[1]) + sum(ŷ[2])
         end
         test_gradients(l, g, g.x, g.e, rtol = RTOL_LOW; loss)
     end
@@ -484,18 +499,24 @@ end
 
 @testitem "SGConv" setup=[TolSnippet, TestModule] begin
     using .TestModule
-    K = [1, 2, 3] # for different number of hops       
+    K = [1, 2, 3] # for different number of hops
+    # Enzyme is skipped: it fails with an IllegalTypeAnalysisException on every
+    # storage type, because `degree(g, T; edge_weight = l.use_edge_weight)` returns
+    # a value whose type is only known at runtime (`Union{Nothing, AbstractVector}`)
+    # and the k-hop loop propagates that union through each `propagate` call.
     for k in K
         l = SGConv(D_IN => D_OUT, k, add_self_loops = true)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH,
+                           ad_backends = [Flux.AutoZygote(), Flux.AutoMooncake()])
         end
 
         l = SGConv(D_IN => D_OUT, k, add_self_loops = true)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH,
+                           ad_backends = [Flux.AutoZygote(), Flux.AutoMooncake()])
         end
     end
 end
@@ -514,17 +535,26 @@ end
 @testitem "TAGConv" setup=[TolSnippet, TestModule] begin
     using .TestModule
     K = [1, 2, 3]
+    # Enzyme runs only on :sparse graphs: the other storage types hit the same
+    # union-typed `degree(g, T; edge_weight = l.use_edge_weight)` problem as SGConv,
+    # while Enzyme's type analysis happens to recover on :sparse.
     for k in K
         l = TAGConv(D_IN => D_OUT, k, add_self_loops = true)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH,
+                           ad_backends = get_graph_type(g) == :sparse ?
+                                         [Flux.AutoZygote(), Flux.AutoMooncake(), Flux.AutoEnzyme()] :
+                                         [Flux.AutoZygote(), Flux.AutoMooncake()])
         end
 
         l = TAGConv(D_IN => D_OUT, k, add_self_loops = true)
         for g in TEST_GRAPHS
             @test size(l(g, g.x)) == (D_OUT, g.num_nodes)
-            test_gradients(l, g, g.x, rtol = RTOL_HIGH)
+            test_gradients(l, g, g.x, rtol = RTOL_HIGH,
+                           ad_backends = get_graph_type(g) == :sparse ?
+                                         [Flux.AutoZygote(), Flux.AutoMooncake(), Flux.AutoEnzyme()] :
+                                         [Flux.AutoZygote(), Flux.AutoMooncake()])
         end
     end
 end
@@ -609,7 +639,7 @@ end
 
 @testitem "DConv" setup=[TolSnippet, TestModule] begin
     using .TestModule
-    K = [1, 2, 3] # for different number of hops
+    K = [1, 2, 3] # for different number of hops       
     for k in K
         l = DConv(D_IN => D_OUT, k)
         for g in TEST_GRAPHS

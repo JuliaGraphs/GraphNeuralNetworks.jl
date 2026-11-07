@@ -37,7 +37,7 @@ import Reexport: @reexport
 @reexport using SparseArrays
 @reexport using Test, Random, Statistics
 @reexport using MLDataDevices
-using Functors: fmapstructure_with_path
+using Functors: fmap, fmapstructure_with_path
 using FiniteDifferences: FiniteDifferences
 using Zygote: Zygote
 using Flux: Flux
@@ -48,10 +48,18 @@ if TEST_MOONCAKE
     import Mooncake
 end
 
+# Enzyme.jl requires Julia >= 1.12 for the graph code paths exercised here:
+# on 1.10 it recurses forever through `fieldnames(::UnionAll)` in GNNGraph's
+# property sugar (https://github.com/EnzymeAD/Enzyme.jl/issues/3423).
+const TEST_ENZYME = VERSION >= v"1.12"
+if TEST_ENZYME
+    import Enzyme # loads FluxEnzymeExt, which backs Flux.AutoEnzyme()
+end
+
 # from this module
 export D_IN, D_OUT, GRAPH_TYPES, TEST_GRAPHS,
-       test_gradients, finitediff_withgradient, 
-       check_equal_leaves, gpu_backend, TEST_MOONCAKE
+       test_gradients, finitediff_withgradient,
+       check_equal_leaves, gpu_backend, TEST_MOONCAKE, TEST_ENZYME
 
 
 const D_IN = 3
@@ -95,13 +103,19 @@ function test_gradients(
             test_grad_x = true,
             # Reference AD: finite differences for CPU tests, Zygote (on CPU) for GPU tests.
             reference = test_gpu ? Flux.AutoZygote() : :finitediff,
-            ad_backends = test_gpu ? [] : [Flux.AutoZygote(), Flux.AutoMooncake()],
+            ad_backends = test_gpu ? [] :
+                          [Flux.AutoZygote(), Flux.AutoMooncake(), Flux.AutoEnzyme()],
             loss = (f, g, xs...) -> mean(f(g, xs...)),
             )
 
     # Mooncake requires Julia >= 1.12 and errors on sparse graph internals.
     if !TEST_MOONCAKE || graph.graph isa AbstractSparseMatrix
         ad_backends = filter(b -> !(b isa Flux.AutoMooncake), ad_backends)
+    end
+
+    # Enzyme requires Julia >= 1.12. Layers it cannot handle opt out per call site.
+    if !TEST_ENZYME
+        ad_backends = filter(b -> !(b isa Flux.AutoEnzyme), ad_backends)
     end
 
     ## Let's make sure first that the forward pass works.
@@ -149,7 +163,10 @@ function test_gradients(
             f64 = f |> Flux.f64
             ps, re = Flux.destructure(f64)
             y_fd, g_fd = finitediff_withgradient(ps -> loss(re(ps), graph, xs...), ps)
-            y_fd, (re(g_fd[1]),)
+            # Rebuild from a zeroed model, so non-trainable arrays (e.g. BatchNorm's
+            # running stats) compare as zero gradients instead of as model values.
+            _, re0 = Flux.destructure(fmap(x -> x isa AbstractArray ? zero(x) : x, f64))
+            y_fd, (re0(g_fd[1]),)
         else
             Flux.withgradient(f -> loss(f, graph, xs...), reference, f)
         end
