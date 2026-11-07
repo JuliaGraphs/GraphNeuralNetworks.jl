@@ -24,6 +24,7 @@ Entries link to the pull request that introduced them.
 
 **Fixed**
 - `GNNChain` now returns its state with the same structure it receives, `(; layers = (; layer_1, ...))`, as the Lux layer interface requires. It previously returned the per-layer states without the `layers` wrapper, so feeding the returned state back into the chain (as `Lux.Training.single_train_step!` does) failed with a `FieldError`. This is breaking for code that worked around the bug by re-wrapping the state as `(; layers = st)`, as the docs examples did: drop the wrapper.
+- `NNConv` now returns its state as `(; nn = ...)`, the same structure it receives. It previously returned the inner network's state without the `nn` wrapper, so passing the returned state back into the layer (e.g. on the second step of `Lux.Training.single_train_step!`) failed with a `FieldError` ([#728]).
 
 ## GNNlib.jl 1.4.1 - 2026-11-04
 
@@ -247,4 +248,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#706]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/706
 [#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
+[#728]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/728
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
