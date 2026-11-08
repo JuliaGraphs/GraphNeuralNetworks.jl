@@ -28,4 +28,11 @@ jobs:
       - name: Install Reactant test dependencies
         run: julia --project=GNNLux/test/reactant -e 'using Pkg; Pkg.instantiate()'
       - name: Run optional Reactant integration tests
-        run: julia --project=GNNLux/test/reactant GNNLux/test/reactant/runtests.jl
+        run: julia --code-coverage=all --project=GNNLux/test/reactant GNNLux/test/reactant/runtests.jl
+      - uses: julia-actions/julia-processcoverage@v1
+        with:
+          directories: GNNLux/src,GNNlib/src,GNNlib/ext,GNNGraphs/src,GNNGraphs/ext
+      - uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
