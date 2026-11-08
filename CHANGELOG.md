@@ -13,7 +13,7 @@ Entries link to the pull request that introduced them.
 ## GNNLux.jl 0.3.1-DEV
 
 **Fixed**
-- `MEGNetConv` now returns the updated state from its edge and node update layers, so stateful sublayers retain their state across calls.
+- `MEGNetConv` now returns the updated state from its edge and node update layers, so stateful sublayers retain their state across calls ([#734]).
 
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
@@ -256,4 +256,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
 [#728]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/728
+[#734]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/734
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
