@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
+## GNNLux.jl 0.3.1-DEV
+
+**Fixed**
+- `MEGNetConv` now returns the updated state from its edge and node update layers, so stateful sublayers retain their state across calls.
+
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
 **Added**

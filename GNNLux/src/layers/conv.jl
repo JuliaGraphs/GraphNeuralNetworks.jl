@@ -1541,9 +1541,11 @@ end
 
 function (l::MEGNetConv)(g, x, e, ps, st)
     ϕe = StatefulLuxLayer{true}(l.ϕe, ps.ϕe, _getstate(st, :ϕe))
-    ϕv = StatefulLuxLayer{true}(l.ϕv, ps.ϕv, _getstate(st, :ϕv))    
+    ϕv = StatefulLuxLayer{true}(l.ϕv, ps.ϕv, _getstate(st, :ϕv))
     m = (; ϕe, ϕv, aggr=l.aggr)
-    return GNNlib.megnet_conv(m, g, x, e), st
+    y = GNNlib.megnet_conv(m, g, x, e)
+    stnew = (; ϕe = _getstate(ϕe), ϕv = _getstate(ϕv))
+    return y, stnew
 end
 
 

@@ -107,6 +107,17 @@
     
         @test size(x_new) == (out_dims, g.num_nodes)
         @test size(e_new) == (out_dims, g.num_edges)
+
+        ϕe = Chain(Dense(3in_dims => out_dims), BatchNorm(out_dims))
+        ϕv = Chain(Dense(in_dims + out_dims => out_dims), Dense(out_dims => out_dims))
+        l = MEGNetConv(in_dims, out_dims, ϕe, ϕv)
+        ps, st = LuxCore.setup(rng, l)
+        _, st_new = l(g, x, e, ps, st)
+
+        @test typeof(st_new) == typeof(st)
+        @test st_new.ϕe.layer_2.running_mean != st.ϕe.layer_2.running_mean
+        _, st_newer = l(g, x, e, ps, st_new)
+        @test typeof(st_newer) == typeof(st)
     end
 
     @testset "NNConv" begin
