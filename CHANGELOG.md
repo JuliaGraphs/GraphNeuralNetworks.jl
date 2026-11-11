@@ -10,7 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
+## GNNLux.jl 0.3.1-DEV
+
+- `MEGNetConv` now returns the updated state from its edge and node update layers, so stateful sublayers retain their state across calls ([#734]).
+
 ## GNNGraphs.jl Unreleased
+
 **Fixed**
 - Reactant traced scalar types are now converted to their underlying numeric type before graph-side degree and COO adjacency allocation. COO graph indices can also remain traced device inputs during compiled GNNLux model calls. Reactant remains an optional GNNGraphs integration ([#710]).
 - Fixed Zygote differentiation through `add_edges` with non-empty edge metadata by iterating over a collected vector of metadata keys. `sample_neighbors(...; replace=true)` now skips zero-degree nodes instead of trying to sample from an empty neighbor list ([#729]).
@@ -263,4 +268,5 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#729]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/729
 [#728]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/728
 [#710]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/710
+[#734]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/734
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
