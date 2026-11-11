@@ -25,9 +25,9 @@
         g = rand_graph(10, 40, bidirected = false, graph_type = GRAPH_T)
         sg = sample_neighbors(g, nodes, K; dir, replace = true)
         @test sg.num_nodes == 10
-        @test sg.num_edges == sum(K for i in nodes)
-        @test size(sg.edata.EID) == (sg.num_edges,)
         adjlist = adjacency_list(g; dir)
+        @test sg.num_edges == sum(isempty(adjlist[i]) ? 0 : K for i in nodes)
+        @test size(sg.edata.EID) == (sg.num_edges,)
         s, t = edge_index(sg)
         @test all(s .∈ Ref(nodes))
         for i in nodes
@@ -46,6 +46,24 @@
         @test sg.edata.e1 == g.edata.e1[sg.edata.EID]
         @test sg.ndata.x1 == g.ndata.x1[sg.ndata.NID]
         @test length(union(sg.ndata.NID)) == length(sg.ndata.NID)
+    end
+
+    @testset "zero-degree nodes with replacement" begin
+        g = GNNGraph(([1], [2]); num_nodes = 3)
+
+        for (dir, node) in ((:in, 1), (:out, 2))
+            sg = sample_neighbors(g, [node], 2; dir, replace = true)
+            @test sg.num_nodes == 3
+            @test sg.num_edges == 0
+            @test isempty(sg.edata.EID)
+            @test edge_index(sg) == (Int[], Int[])
+        end
+
+        for (dir, node) in ((:in, 2), (:out, 1))
+            sg = sample_neighbors(g, [node], 2; dir, replace = true)
+            @test sg.num_edges == 2
+            @test sg.edata.EID == [1, 1]
+        end
     end
 end
 

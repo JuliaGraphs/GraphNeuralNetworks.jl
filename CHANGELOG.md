@@ -14,6 +14,10 @@ Entries link to the pull request that introduced them.
 
 **Fixed**
 - `MEGNetConv` now returns the updated state from its edge and node update layers, so stateful sublayers retain their state across calls ([#734]).
+## GNNGraphs.jl 1.6.1-DEV
+
+**Fixed**
+- Fixed Zygote differentiation through `add_edges` with non-empty edge metadata by iterating over a collected vector of metadata keys. `sample_neighbors(...; replace=true)` now skips zero-degree nodes instead of trying to sample from an empty neighbor list ([#729]).
 
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
@@ -255,6 +259,7 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#717]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/717
 [#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
+[#729]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/729
 [#728]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/728
 [#734]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/734
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662
