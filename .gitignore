@@ -6,8 +6,6 @@
 *.swo
 Manifest.toml
 .vscode
-.tools/
-.julia-depot/
 LocalPreferences.toml
 .DS_Store
 test.jl
