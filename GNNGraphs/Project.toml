@@ -1,6 +1,6 @@
 name = "GNNGraphs"
 uuid = "aed8fd31-079b-4b5a-b342-a13352159b8c"
-version = "1.6.0"
+version = "1.6.1-DEV"
 authors = ["Carlo Lucibello and contributors"]
 
 [workspace]

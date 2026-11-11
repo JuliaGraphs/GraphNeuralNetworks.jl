@@ -65,10 +65,13 @@ function cat_features(x1::NamedTuple, x2::NamedTuple)
 end
 
 function cat_features(x1::Dict{Symbol, T}, x2::Dict{Symbol, T}) where {T}
-    sort(collect(keys(x1))) == sort(collect(keys(x2))) ||
+    keys1, keys2 = CRC.ignore_derivatives() do
+        sort(collect(keys(x1))), sort(collect(keys(x2)))
+    end
+    keys1 == keys2 ||
         @error "cannot concatenate feature data with different keys"
 
-    return Dict{Symbol, T}([k => cat_features(x1[k], x2[k]) for k in keys(x1)]...)
+    return Dict{Symbol, T}([k => cat_features(x1[k], x2[k]) for k in keys1]...)
 end
 
 function cat_features(x::Dict)
