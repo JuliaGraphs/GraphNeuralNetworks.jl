@@ -172,7 +172,11 @@ function cat_features(ds1::DataStore, ds2::DataStore)
     n1, n2 = getn(ds1), getn(ds2)
     n1 = n1 >= 0 ? n1 : 1
     n2 = n2 >= 0 ? n2 : 1
-    return DataStore(n1 + n2, cat_features(getdata(ds1), getdata(ds2)))
+    data1, data2 = getdata(ds1), getdata(ds2)
+    if isempty(data1) && isempty(data2)
+        return CRC.ignore_derivatives(() -> DataStore(n1 + n2, Dict{Symbol, Any}()))
+    end
+    return DataStore(n1 + n2, cat_features(data1, data2))
 end
 
 function cat_features(dss::AbstractVector{DataStore}; kws...)
