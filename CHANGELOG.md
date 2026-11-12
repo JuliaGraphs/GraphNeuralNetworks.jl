@@ -10,10 +10,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the packages adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries link to the pull request that introduced them.
 
+## GNNLux.jl 0.3.1-DEV
+
+**Fixed**
+- `NNConv` now returns its state as `(; nn = ...)`, the same structure it receives. It previously returned the inner network's state without the `nn` wrapper, so passing the returned state back into the layer (e.g. on the second step of `Lux.Training.single_train_step!`) failed with a `FieldError` ([#728]).
+- `MEGNetConv` now returns the updated states of its edge and node update networks `ϕe` and `ϕv`. It previously returned the input state unchanged, so stateful sublayers (e.g. `BatchNorm` running statistics) lost their updates between calls ([#729]).
+
 ## GNNGraphs.jl — Unreleased (towards 1.7.0)
 
 **Fixed**
-- Reactant traced scalar types are now converted to their underlying numeric type before graph-side degree and COO adjacency allocation. COO graph indices can also remain traced device inputs during compiled GNNLux model calls. Reactant remains an optional GNNGraphs integration ([#710]).
+- `remove_nodes` now updates the `graph_indicator` of batched graphs. It was previously left unchanged, so calling `unbatch` or `getgraph` on the result threw a `BoundsError` ([#717]).
+- Fixed Zygote crashing with a segmentation fault when differentiating through `add_edges`. Gradients now flow through the added edge weights and edge features ([#729]).
+- `sample_neighbors(g, nodes, K; replace = true)` now skips nodes without neighbors instead of failing to sample from an empty neighbor list ([#729]).
+- Reactant traced scalar types are now converted to their underlying numeric type before graph-side degree and COO adjacency allocation. COO graph indices can also remain traced device inputs during compiled GNNLux model calls. Reactant remains an optional GNNGraphs integration ([#726]).
 
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
@@ -21,7 +30,6 @@ Entries link to the pull request that introduced them.
 - Added a `Mooncake` package extension, so that Mooncake can differentiate on CUDA through `add_self_loops` and through adjacency-matrix graphs. Float edge weights of adjacency-matrix graphs stay differentiable ([#704]).
 
 **Fixed**
-- `remove_nodes` now updates the `graph_indicator` of batched graphs. It was previously left unchanged, so calling `unbatch` or `getgraph` on the result threw a `BoundsError` ([#717]).
 - Fixed `scaled_laplacian` (and so `ChebConv`) crashing with a segmentation fault on AMDGPU graphs: the eigensolver's start vector was created on the CPU, so CPU BLAS was handed GPU memory. It is now created on the same device as the graph ([#722]).
 - Added an `EnzymeCore` package extension marking `scaled_laplacian` inactive for Enzyme, matching its existing `@non_differentiable` ChainRules declaration. Enzyme previously differentiated the Krylov eigensolve inside it and failed; this unblocks `ChebConv`, `GConvGRUCell` and `GConvLSTMCell` ([#706]).
 - Enzyme can now differentiate through the adjacency-matrix → COO graph conversion: a new internal keyword-free helper `_to_coo_graph` avoids the union-typed keyword handling of the `GNNGraph(g; graph_type)` constructor and of `to_coo`, which Enzyme's type analysis cannot compile. Together with upstream fixes in Enzyme ≥ 0.13.197 this removes the `EnzymeInternalError` crash on `:dense`/`:sparse` graphs ([#703]).
@@ -29,13 +37,12 @@ Entries link to the pull request that introduced them.
 ## GNNLux.jl 0.3.0 - 2026-11-04
 
 **Fixed**
-- `GNNChain` now returns its state with the same structure it receives, `(; layers = (; layer_1, ...))`, as the Lux layer interface requires. It previously returned the per-layer states without the `layers` wrapper, so feeding the returned state back into the chain (as `Lux.Training.single_train_step!` does) failed with a `FieldError`. This is breaking for code that worked around the bug by re-wrapping the state as `(; layers = st)`, as the docs examples did: drop the wrapper.
-- `NNConv` now returns its state as `(; nn = ...)`, the same structure it receives. It previously returned the inner network's state without the `nn` wrapper, so passing the returned state back into the layer (e.g. on the second step of `Lux.Training.single_train_step!`) failed with a `FieldError` ([#728]).
+- `GNNChain` now returns its state with the same structure it receives, `(; layers = (; layer_1, ...))`, as the Lux layer interface requires. It previously returned the per-layer states without the `layers` wrapper, so feeding the returned state back into the chain (as `Lux.Training.single_train_step!` does) failed with a `FieldError`. This is breaking for code that worked around the bug by re-wrapping the state as `(; layers = st)`, as the docs examples did: drop the wrapper ([#715]).
 
 ## GNNlib.jl — Unreleased (towards 1.5.0)
 
 **Fixed**
-- Reactant compiled message passing now uses gather/scatter with traced COO indices instead of building a sparse adjacency matrix, allowing one compiled GCNConv to run on different graphs with the same shapes ([#710]).
+- Reactant compiled message passing now uses gather/scatter with traced COO indices instead of building a sparse adjacency matrix, allowing one compiled GCNConv to run on different graphs with the same shapes ([#726]).
 
 ## GNNlib.jl 1.4.1 - 2026-11-04
 
@@ -49,7 +56,7 @@ Entries link to the pull request that introduced them.
 - `GNNRecurrence` now hands each cell an indexed time slice instead of an `eachslice` view, matching the Lux frontend. Enzyme's type analysis fails on `SubArray` cell inputs, so this unblocks `DCGRU`, `EvolveGCNO`, `GConvGRU` and `GConvLSTM` under Enzyme ([#707]).
 - The recurrent temporal cells now delegate their forward-pass math to shared `GNNlib` functions (requires GNNlib ≥ 1.4); the layer behaviour is unchanged ([#696]).
 
-## GNNLux.jl 0.2.0 — 2026-07-22
+## GNNLux.jl 0.2.0 - 2026-07-22
 
 **Added**
 - Added pooling layers (`GlobalPool`, `GlobalAttentionPool`, `TopKPool`) ([#576]).
@@ -63,7 +70,7 @@ Entries link to the pull request that introduced them.
 **Removed**
 - Removed the `A3TGCN` layer, mirroring its removal from the Flux frontend ([#696]).
 
-## GNNlib.jl 1.4.0 — 2026-07-22
+## GNNlib.jl 1.4.0 - 2026-07-22
 
 **Added**
 - Added framework-agnostic forward passes for the recurrent temporal cells — `tgcn`, `gconv_gru`, `gconv_lstm`, `dcgru` — shared by the Flux and Lux frontends ([#696]).
@@ -71,7 +78,7 @@ Entries link to the pull request that introduced them.
 **Fixed**
 - Worked around a Julia 1.12 code-generation segfault that crashed `CGConv` and `GMMConv` gradients: the layers' `@warn` (in the residual branch) is now wrapped in `ignore_derivatives` to keep the logging macro out of the AD-differentiated code path. Root cause reported upstream as [FluxML/Zygote.jl#1662]; re-enables the previously disabled `CGConv`/`GMMConv` gradient tests ([#695]).
 
-## GNNGraphs.jl 1.5.1 — 2026-07-22
+## GNNGraphs.jl 1.5.1 - 2026-07-22
 
 **Changed**
 - Relaxed the `CUDA` compat bound to `"5, 6"`, adding support for CUDA.jl v6 ([#690]).
@@ -82,9 +89,9 @@ Entries link to the pull request that introduced them.
 - Fixed `getgraph` failing on GPU graphs ([#691]).
 - Fixed `remove_self_loops` mutating the input for adjacency-matrix graphs ([#659]).
 - Fixed `unbatch` for COO batches containing zero-edge graphs ([#652]).
-- Fixed `sample_nbrs` when sampling without replacement ([#648]).
+- Fixed `NeighborLoader` sampling neighbors with replacement instead of without ([#648]).
 
-## GNNlib.jl 1.3.0 — 2026-07-22
+## GNNlib.jl 1.3.0 - 2026-07-22
 
 **Added**
 - Added Mooncake rules for the `propagate` `copy_xj`, `e_mul_xj`, and `w_mul_xj` fast paths ([#677], [#678], [#679]).
@@ -94,9 +101,9 @@ Entries link to the pull request that introduced them.
 - Bumped the NNlib compat bound ([#687]).
 
 **Fixed**
-- Fixed the `d_conv` (`DConv`) forward pass, which did not compute the diffusion convolution from the paper: the degree normalization was inverted (multiplying by degree instead of `D_O⁻¹`/`D_I⁻¹`), one weight slice was applied twice, and a spurious Chebyshev `2T − T₀` recurrence was used in place of the paper's bidirectional random-walk power series. Isolated nodes are now handled without producing `NaN` ([#592]).
+- Fixed the `d_conv` (`DConv`) forward pass, which did not compute the diffusion convolution from the paper: the degree normalization was inverted (multiplying by degree instead of `D_O⁻¹`/`D_I⁻¹`), one weight slice was applied twice, and a spurious Chebyshev `2T − T₀` recurrence was used in place of the paper's bidirectional random-walk power series. Isolated nodes are now handled without producing `NaN` ([#693]).
 
-## GNNlib.jl 1.2.1 — 2026-04-29
+## GNNlib.jl 1.2.1 - 2026-04-29
 
 **Changed**
 - Bumped the DataStructures compat bound ([#670]).
@@ -104,7 +111,7 @@ Entries link to the pull request that introduced them.
 **Fixed**
 - Fixed the `gmm_conv` (`GMMConv`) implementation ([#645]).
 
-## GNNlib.jl 1.2.0 — 2026-01-11
+## GNNlib.jl 1.2.0 - 2026-01-11
 
 **Added**
 - Added support for reducing nodes over heterogeneous graphs ([#634]).
@@ -112,7 +119,7 @@ Entries link to the pull request that introduced them.
 **Fixed**
 - Fixed empty-edge handling in `softmax_edge_neighbors` ([#636]).
 
-## GNNGraphs.jl 1.5.0 — 2025-12-24
+## GNNGraphs.jl 1.5.0 - 2025-12-24
 
 **Added**
 - Added `coalesce` and `is_coalesced` to sort and merge duplicate edges of COO graphs, and to query coalesced state ([#613], [#624], [#625]).
@@ -126,7 +133,7 @@ Entries link to the pull request that introduced them.
 **Fixed**
 - Fixed the NNlib CUDA extension ([#621]).
 
-## GNNlib.jl 1.1.0 — 2025-12-24
+## GNNlib.jl 1.1.0 - 2025-12-24
 
 **Added**
 - Added SpMM-based message passing with CUDA support for coalesced COO graphs ([#617]).
@@ -139,7 +146,7 @@ Entries link to the pull request that introduced them.
 **Fixed**
 - Fixed the NNlib CUDA extension ([#621]).
 
-## GraphNeuralNetworks.jl 1.1.0 — 2025-12-24
+## GraphNeuralNetworks.jl 1.1.0 - 2025-12-24
 
 **Added**
 - `TGCN` now supports non-linear activation functions ([#596]).
@@ -147,7 +154,7 @@ Entries link to the pull request that introduced them.
 **Fixed**
 - Fixed a Zygote differentiation error ([#579]).
 
-## GNNGraphs.jl 1.4.2 — 2025-02-07
+## GNNGraphs.jl 1.4.2 - 2025-02-07
 
 **Changed**
 - Improved type inference for `num_nodes` ([#588]).
@@ -157,16 +164,16 @@ Entries link to the pull request that introduced them.
 - Fixed a corner case in `normalize_graphdata` ([#589]).
 - Fixed a Zygote differentiation error ([#579]).
 
-## GNNlib.jl 1.0.1 — 2025-01-12
+## GNNlib.jl 1.0.1 - 2025-01-12
 
 Maintenance release: internal fixes and test-infrastructure updates, no user-facing API changes.
 
-## GNNGraphs.jl 1.4.1 — 2024-12-25
+## GNNGraphs.jl 1.4.1 - 2024-12-25
 
 **Changed**
 - Removed the constraint requiring an equal number of features across node/edge types in the `gdata` of heterographs ([#570]).
 
-## GNNGraphs.jl 1.4.0 — 2024-12-21
+## GNNGraphs.jl 1.4.0 - 2024-12-21
 
 **Added**
 - Added `broadcast`, `iterate`, and `setindex!` support for `TemporalSnapshotsGNNGraph` ([#563]).
@@ -177,7 +184,7 @@ Maintenance release: internal fixes and test-infrastructure updates, no user-fac
 **Fixed**
 - Fixed `show` for graphs whose features are not arrays ([#564]).
 
-## GNNlib.jl 1.0.0 — 2024-12-21
+## GNNlib.jl 1.0.0 - 2024-12-21
 
 First stable release of GNNlib.jl.
 
@@ -185,7 +192,7 @@ First stable release of GNNlib.jl.
 - Rewrote the recurrent temporal layers for Flux v0.16 ([#560]).
 - Updated for compatibility with Flux v0.15 ([#550]).
 
-## GraphNeuralNetworks.jl 1.0.0 — 2024-12-21
+## GraphNeuralNetworks.jl 1.0.0 - 2024-12-21
 
 First stable release of the Flux frontend.
 
@@ -193,11 +200,11 @@ First stable release of the Flux frontend.
 - Rewrote the recurrent temporal layers for Flux v0.16 ([#560]).
 - Updated for compatibility with Flux v0.15 ([#550]).
 
-## GNNLux.jl 0.1.1 — 2024-12-09
+## GNNLux.jl 0.1.1 - 2024-12-09
 
 Documentation release: added the "Hands On" tutorial, a version selector, and general docs improvements ([#549], [#543], [#542], [#539]). No API changes.
 
-## GNNLux.jl 0.1.0 — 2024-12-02
+## GNNLux.jl 0.1.0 - 2024-12-02
 
 Initial release of the Lux-based frontend for GraphNeuralNetworks.jl, providing
 Lux implementations of the graph convolutional, pooling, and temporal layers
@@ -219,7 +226,6 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#587]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/587
 [#588]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/588
 [#589]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/589
-[#592]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/592
 [#596]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/596
 [#601]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/601
 [#605]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/605
@@ -250,16 +256,18 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#687]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/687
 [#690]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/690
 [#691]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/691
-[#623]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/623
+[#693]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/693
 [#695]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/695
 [#696]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/696
 [#703]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/703
 [#704]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/704
-[#707]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/707
 [#706]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/706
+[#707]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/707
+[#715]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/715
 [#717]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/717
-[#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
+[#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#728]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/728
-[#710]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/issues/710
+[#726]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/726
+[#729]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/729
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662

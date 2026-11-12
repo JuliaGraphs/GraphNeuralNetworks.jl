@@ -295,6 +295,38 @@ end
                 gnew = add_edges(g, (snew, tnew, wnew))
                 @test get_edge_weight(gnew) == [w; wnew]
             end
+
+            @testset "differentiate through added edge weights" begin
+                s = [1, 2]
+                t = [2, 3]
+                w = Float32[0.5, 0.7]
+                g = GNNGraph((s, t, w))
+                snew = [1, 2]
+                tnew = [2, 3]
+                wnew = Float32[0.1, 0.2]
+
+                loss_fn(wnew) = sum(get_edge_weight(add_edges(g, (snew, tnew, wnew))))
+                gnew = add_edges(g, (snew, tnew, wnew))
+
+                @test gnew.num_edges == 4
+                @test edge_index(gnew) == ([1, 2, 1, 2], [2, 3, 2, 3])
+                @test get_edge_weight(gnew) == Float32[0.5, 0.7, 0.1, 0.2]
+                @test gradient(loss_fn, wnew)[1] == ones(Float32, 2)
+            end
+
+            @testset "differentiate through added edge data" begin
+                s = [1, 2]
+                t = [2, 3]
+                edata = (x = reshape(Float32[0.5, 0.7], 1, :),)
+                g = GNNGraph((s, t); edata)
+                snew = [1, 2]
+                tnew = [2, 3]
+                xnew = reshape(Float32[0.1, 0.2], 1, :)
+
+                loss_fn(xnew) = sum(add_edges(g, (snew, tnew); edata = (x = xnew,)).edata.x)
+
+                @test gradient(loss_fn, xnew)[1] == ones(Float32, size(xnew))
+            end
         end
     end
 end
