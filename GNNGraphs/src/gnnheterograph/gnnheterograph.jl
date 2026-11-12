@@ -117,6 +117,10 @@ function GNNHeteroGraph(data::EDict;
     @assert dir ∈ [:in, :out]
     @assert graph_type==:coo "only :coo graph_type is supported for now"
 
+    if !isnothing(graph_indicator)
+        foreach(gi -> _check_index_eltype(eltype(gi)), values(graph_indicator))
+    end
+
     if num_nodes !== nothing
         num_nodes = Dict(num_nodes)
     end

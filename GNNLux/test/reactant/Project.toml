@@ -1,0 +1,17 @@
+[deps]
+GNNGraphs = "aed8fd31-079b-4b5a-b342-a13352159b8c"
+GNNLux = "e8545f4d-a905-48ac-a8c4-ca114b98986d"
+GNNlib = "a6a84749-d869-43f8-aacc-be26a1996e48"
+Lux = "b2108857-7c20-44ae-9111-449ecde12c47"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Reactant = "3c362404-f566-11ee-1572-e11a4b42c853"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources]
+GNNGraphs = {path = "../../../GNNGraphs"}
+GNNLux = {path = "../.."}
+GNNlib = {path = "../../../GNNlib"}
+
+[compat]
+Reactant = "0.2"
+julia = "1.11"

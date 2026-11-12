@@ -1,0 +1,38 @@
+name: GNNLux Reactant
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Julia 1.11 - Reactant CPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.11'
+      - uses: julia-actions/cache@v3
+      - name: Install Reactant test dependencies
+        run: julia --project=GNNLux/test/reactant -e 'using Pkg; Pkg.instantiate()'
+      - name: Run optional Reactant integration tests
+        run: julia --code-coverage=all --project=GNNLux/test/reactant GNNLux/test/reactant/runtests.jl
+      - uses: julia-actions/julia-processcoverage@v1
+        with:
+          directories: GNNLux/src,GNNlib/src,GNNlib/ext,GNNGraphs/src,GNNGraphs/ext
+      - uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info

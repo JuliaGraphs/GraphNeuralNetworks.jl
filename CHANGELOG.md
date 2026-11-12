@@ -16,12 +16,13 @@ Entries link to the pull request that introduced them.
 - `NNConv` now returns its state as `(; nn = ...)`, the same structure it receives. It previously returned the inner network's state without the `nn` wrapper, so passing the returned state back into the layer (e.g. on the second step of `Lux.Training.single_train_step!`) failed with a `FieldError` ([#728]).
 - `MEGNetConv` now returns the updated states of its edge and node update networks `ϕe` and `ϕv`. It previously returned the input state unchanged, so stateful sublayers (e.g. `BatchNorm` running statistics) lost their updates between calls ([#729]).
 
-## GNNGraphs.jl 1.6.1-DEV
+## GNNGraphs.jl — Unreleased (towards 1.7.0)
 
 **Fixed**
 - `remove_nodes` now updates the `graph_indicator` of batched graphs. It was previously left unchanged, so calling `unbatch` or `getgraph` on the result threw a `BoundsError` ([#717]).
 - Fixed Zygote crashing with a segmentation fault when differentiating through `add_edges`. Gradients now flow through the added edge weights and edge features ([#729]).
 - `sample_neighbors(g, nodes, K; replace = true)` now skips nodes without neighbors instead of failing to sample from an empty neighbor list ([#729]).
+- Reactant traced scalar types are now converted to their underlying numeric type before graph-side degree and COO adjacency allocation. COO graph indices can also remain traced device inputs during compiled GNNLux model calls. Reactant remains an optional GNNGraphs integration ([#726]).
 
 ## GNNGraphs.jl 1.6.0 - 2026-11-04
 
@@ -37,6 +38,11 @@ Entries link to the pull request that introduced them.
 
 **Fixed**
 - `GNNChain` now returns its state with the same structure it receives, `(; layers = (; layer_1, ...))`, as the Lux layer interface requires. It previously returned the per-layer states without the `layers` wrapper, so feeding the returned state back into the chain (as `Lux.Training.single_train_step!` does) failed with a `FieldError`. This is breaking for code that worked around the bug by re-wrapping the state as `(; layers = st)`, as the docs examples did: drop the wrapper ([#715]).
+
+## GNNlib.jl — Unreleased (towards 1.5.0)
+
+**Fixed**
+- Reactant compiled message passing now uses gather/scatter with traced COO indices instead of building a sparse adjacency matrix, allowing one compiled GCNConv to run on different graphs with the same shapes ([#726]).
 
 ## GNNlib.jl 1.4.1 - 2026-11-04
 
@@ -262,5 +268,6 @@ Lux implementations of the graph convolutional, pooling, and temporal layers
 [#718]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/718
 [#722]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/722
 [#728]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/728
+[#726]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/726
 [#729]: https://github.com/JuliaGraphs/GraphNeuralNetworks.jl/pull/729
 [FluxML/Zygote.jl#1662]: https://github.com/FluxML/Zygote.jl/issues/1662

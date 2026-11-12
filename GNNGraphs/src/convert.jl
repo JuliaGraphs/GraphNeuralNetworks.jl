@@ -30,6 +30,9 @@ function to_coo(coo::COO_T; dir = :out, num_nodes = nothing, weighted = true,
                 hetero = false)
     s, t, val = coo
 
+    _check_index_eltype(eltype(s))
+    _check_index_eltype(eltype(t))
+
     if isnothing(num_nodes)
         ns = maximum(s)
         nt = maximum(t)
@@ -146,6 +149,7 @@ function to_dense(A::ADJMAT_T, T = nothing; dir = :out, num_nodes = nothing,
                   weighted = true)
     @assert dir ∈ [:out, :in]
     T = T === nothing ? eltype(A) : T
+    T = _graph_scalar_eltype(T)
     num_nodes = size(A, 1)
     @assert num_nodes == size(A, 2)
     # @assert all(x -> (x == 1) || (x == 0), A)
@@ -190,6 +194,7 @@ function to_dense(coo::COO_T, T = nothing; dir = :out, num_nodes = nothing, weig
     if T === nothing
         T = isnothing(val) ? eltype(s) : eltype(val)
     end
+    T = _graph_scalar_eltype(T)
     if val === nothing || !weighted
         val = ones_like(s, T)
     end
@@ -216,6 +221,7 @@ function to_sparse(A::ADJMAT_T, T = nothing; dir = :out, num_nodes = nothing,
     num_nodes = size(A, 1)
     @assert num_nodes == size(A, 2)
     T = T === nothing ? eltype(A) : T
+    T = _graph_scalar_eltype(T)
     num_edges = A isa AbstractSparseMatrix ? nnz(A) : count(!=(0), A)
     if dir == :in
         A = A'
@@ -242,6 +248,7 @@ function to_sparse(coo::COO_T, T = nothing; dir = :out, num_nodes = nothing,
                    weighted = true)
     s, t, eweight = coo
     T = T === nothing ? (eweight === nothing ? eltype(s) : eltype(eweight)) : T
+    T = _graph_scalar_eltype(T)
 
     if eweight === nothing || !weighted
         eweight = fill!(similar(s, T), 1)
