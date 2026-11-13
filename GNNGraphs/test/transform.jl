@@ -467,6 +467,40 @@ end
     end
 end
 
+@testitem "node growth and batched graph indicators" setup=[GraphsTestModule] begin
+    using .GraphsTestModule
+
+    g1 = GNNGraph(([1, 2], [2, 3]); num_nodes = 3)
+    g2 = GNNGraph(([1, 2], [2, 1]); num_nodes = 4)
+    g = batch([g1, g2])
+
+    @test g.num_nodes == length(g.graph_indicator) == 7
+    @test_throws ArgumentError add_nodes(g, 2)
+    @test_throws ArgumentError add_edges(g, [8], [1])
+    @test add_nodes(g, 0).graph_indicator == g.graph_indicator
+    @test add_edges(g, Int[], Int[]) === g
+
+    # Adding edges between existing nodes does not grow the batched graph.
+    g_with_edge = add_edges(g, [1], [2])
+    @test g_with_edge.num_nodes == length(g_with_edge.graph_indicator) == 7
+
+    # A single graph with explicit membership can safely extend that membership.
+    single = GNNGraph(([1], [2]); num_nodes = 2, graph_indicator = [1, 1])
+    single_with_nodes = add_nodes(single, 2)
+    single_with_edge = add_edges(single, [3], [1])
+    @test single_with_nodes.graph_indicator == [1, 1, 1, 1]
+    @test single_with_edge.graph_indicator == [1, 1, 1]
+
+    # Unbatched graphs represent membership implicitly, so their stored field stays `nothing`.
+    unbatched = GNNGraph(([1], [2]); num_nodes = 2)
+    unbatched_with_nodes = add_nodes(unbatched, 2)
+    unbatched_with_edge = add_edges(unbatched, [3], [1])
+    @test isnothing(unbatched_with_nodes.graph_indicator)
+    @test length(graph_indicator(unbatched_with_nodes)) == unbatched_with_nodes.num_nodes
+    @test isnothing(unbatched_with_edge.graph_indicator)
+    @test length(graph_indicator(unbatched_with_edge)) == unbatched_with_edge.num_nodes
+end
+
 @testitem "remove_self_loops" setup=[GraphsTestModule] begin
     using .GraphsTestModule 
     for GRAPH_T in GRAPH_TYPES 

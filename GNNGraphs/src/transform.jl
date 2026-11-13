@@ -280,6 +280,15 @@ function remove_nodes(g::GNNGraph, p::AbstractFloat)
     return remove_nodes(g, nodes_to_remove)
 end
 
+function _graph_indicator_after_node_growth(g::GNNGraph, n_new_nodes::Integer)
+    n_new_nodes <= 0 && return g.graph_indicator
+    g.num_graphs > 1 && throw(ArgumentError(
+        "Cannot add nodes to a batched graph without specifying which graph they belong to.",
+    ))
+    isnothing(g.graph_indicator) && return nothing
+    return cat_features(g.graph_indicator, ones_like(g.graph_indicator, n_new_nodes))
+end
+
 """
     add_edges(g::GNNGraph, s::AbstractVector, t::AbstractVector; [edata])
     add_edges(g::GNNGraph, (s, t); [edata])
@@ -290,7 +299,8 @@ Optionally, pass the edge weight `w` and the features  `edata` for the new edges
 Returns a new graph sharing part of the underlying data with `g`.
 
 If the `s` or `t` contain nodes that are not already present in the graph,
-they are added to the graph as well.
+they are added to the graph as well. Adding new nodes to a batched graph is
+not supported because their graph assignment is ambiguous.
 
 # Examples
 
@@ -333,6 +343,9 @@ function add_edges(g::GNNGraph{<:COO_T}, data::COO_T; edata = nothing)
     end
     @assert minimum(snew) >= 1
     @assert minimum(tnew) >= 1
+    num_nodes = max(maximum(snew), maximum(tnew), g.num_nodes)
+    graph_indicator = _graph_indicator_after_node_growth(g, num_nodes - g.num_nodes)
+
     num_new = length(snew)
     edata = normalize_graphdata(edata, default_name = :e, n = num_new)
     edata = cat_features(g.edata, edata)
@@ -343,7 +356,6 @@ function add_edges(g::GNNGraph{<:COO_T}, data::COO_T; edata = nothing)
     w = get_edge_weight(g)
     w = cat_features(w, wnew, g.num_edges, num_new)
 
-    num_nodes = max(maximum(snew), maximum(tnew), g.num_nodes)
     if num_nodes > g.num_nodes
         ndata_new = normalize_graphdata((;), default_name = :x, n = num_nodes - g.num_nodes)
         ndata = cat_features(g.ndata, ndata_new)
@@ -353,7 +365,7 @@ function add_edges(g::GNNGraph{<:COO_T}, data::COO_T; edata = nothing)
 
     return GNNGraph((s, t, w),
              num_nodes, length(s), g.num_graphs,
-             g.graph_indicator,
+             graph_indicator,
              ndata, edata, g.gdata)
 end
 
@@ -553,15 +565,17 @@ end
 
 Add `n` new nodes to graph `g`. In the
 new graph, these nodes will have indexes from `g.num_nodes + 1`
-to `g.num_nodes + n`.
+to `g.num_nodes + n`. Adding nodes to a batched graph is not supported
+because their graph assignment is ambiguous.
 """
 function add_nodes(g::GNNGraph{<:COO_T}, n::Integer; ndata = (;))
+    graph_indicator = _graph_indicator_after_node_growth(g, n)
     ndata = normalize_graphdata(ndata, default_name = :x, n = n)
     ndata = cat_features(g.ndata, ndata)
 
     GNNGraph(g.graph,
              g.num_nodes + n, g.num_edges, g.num_graphs,
-             g.graph_indicator,
+             graph_indicator,
              ndata, g.edata, g.gdata)
 end
 
