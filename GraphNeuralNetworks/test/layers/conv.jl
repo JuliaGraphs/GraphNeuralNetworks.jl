@@ -65,6 +65,49 @@ end
     end
 end
 
+@testitem "GCNConv trainable edge weights with GNNChain" setup=[TestModule] begin
+    using .TestModule
+    using GraphNeuralNetworks
+    using Zygote
+
+    s = [2, 3, 1, 3, 1, 2]
+    t = [1, 1, 2, 2, 3, 3]
+    g = GNNGraph((s, t))
+    x = Float32[1 2 4; 3 2 1]
+    edge_weights = Float32[0.7, 1.2, 0.9, 1.5, 0.8, 1.1]
+    model = GNNChain(
+        GCNConv(2 => 3, tanh, add_self_loops = false, use_edge_weight = true),
+        GCNConv(3 => 2, tanh, add_self_loops = false, use_edge_weight = true),
+    )
+
+    loss(weights, m) = sum(abs2, m(set_edge_weight(g, weights), x))
+    value, (edge_gradient, model_gradient) = Zygote.withgradient(loss, edge_weights, model)
+
+    @test isfinite(value)
+    @test edge_gradient isa AbstractVector{Float32}
+    @test size(edge_gradient) == size(edge_weights)
+    @test all(isfinite, edge_gradient)
+    @test any(x -> !iszero(x), edge_gradient)
+
+    @test model_gradient.layers[1].weight isa AbstractMatrix{Float32}
+    @test model_gradient.layers[2].weight isa AbstractMatrix{Float32}
+    @test all(isfinite, model_gradient.layers[1].weight)
+    @test all(isfinite, model_gradient.layers[2].weight)
+    @test any(x -> !iszero(x), model_gradient.layers[1].weight)
+    @test any(x -> !iszero(x), model_gradient.layers[2].weight)
+
+    weighted_graph = set_edge_weight(g, edge_weights)
+    y = model(weighted_graph, x)
+    @test get_edge_weight(weighted_graph) == edge_weights
+    @test !isapprox(y, model(set_edge_weight(g, edge_weights .+ 0.2f0), x))
+
+    updated_weights = edge_weights .- 1f-3 .* edge_gradient
+    updated_model = deepcopy(model)
+    updated_model.layers[1].weight .-= 1f-3 .* model_gradient.layers[1].weight
+    @test !isequal(y, updated_model(weighted_graph, x))
+    @test !isequal(y, model(set_edge_weight(g, updated_weights), x))
+end
+
 
 @testitem "GCNConv GPU" setup=[TolSnippet, TestModule] tags=[:gpu] begin
     using .TestModule
