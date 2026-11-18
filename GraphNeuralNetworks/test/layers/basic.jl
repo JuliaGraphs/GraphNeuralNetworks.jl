@@ -18,7 +18,11 @@
 
         Flux.testmode!(gnn)
 
-        test_gradients(gnn, g, x, rtol = 1e-5, ad_backends = [Flux.AutoZygote()])
+        # Enzyme fails with an IllegalTypeAnalysisException on :dense graphs, where
+        # `propagate(copy_xj, g, +)` multiplies by a union-typed adjacency matrix.
+        test_gradients(gnn, g, x, rtol = 1e-5,
+                       ad_backends = GRAPH_T == :dense ? [Flux.AutoZygote()] :
+                                     [Flux.AutoZygote(), Flux.AutoEnzyme()])
 
         @testset "constructor with names" begin
             m = GNNChain(GCNConv(din => d),
@@ -53,7 +57,10 @@
 
             Flux.trainmode!(gnn)
 
-            test_gradients(gnn, g, x, rtol = 1e-4, atol=1e-4, ad_backends = [Flux.AutoZygote()])
+            # Same :dense limitation as above; Enzyme handles the other graph types.
+            test_gradients(gnn, g, x, rtol = 1e-4, atol=1e-4,
+                           ad_backends = GRAPH_T == :dense ? [Flux.AutoZygote()] :
+                                         [Flux.AutoZygote(), Flux.AutoEnzyme()])
         end
     end
 
