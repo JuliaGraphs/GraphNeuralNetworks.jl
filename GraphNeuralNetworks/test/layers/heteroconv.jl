@@ -149,13 +149,25 @@
         y = layers(hg, x); 
         @test size(y.A) == (2, 2) && size(y.B) == (2, 3)
     end
-    
+
     @testset "GCNConv" begin
         g = rand_bipartite_heterograph((2,3), 6)
         x = (A = rand(Float32, 4,2), B = rand(Float32, 4, 3))
         layers = HeteroGraphConv( (:A, :to, :B) => GCNConv(4 => 2, tanh),
                                     (:B, :to, :A) => GCNConv(4 => 2, tanh));
-        y = layers(g, x); 
+        y = layers(g, x);
         @test size(y.A) == (2,2) && size(y.B) == (2,3)
+    end
+
+    @testset "GMMConv" begin
+        ein = 4
+        g = rand_bipartite_heterograph((2, 3), 6; 
+            edata=Dict((:A, :to, :B) => (x=rand(Float32, ein, 6),), 
+                       (:B, :to, :A) => (x=rand(Float32, ein, 6),)))
+        x = (A = rand(Float32, 4, 2), B = rand(Float32, 4, 3))
+        layers = HeteroGraphConv((:A, :to, :B) => GMMConv((4, ein) => 2, K=2),
+                                 (:B, :to, :A) => GMMConv((4, ein) => 2, K=2));
+        y = layers(g, x);
+        @test size(y.A) == (2, 2) && size(y.B) == (2, 3)
     end
 end
