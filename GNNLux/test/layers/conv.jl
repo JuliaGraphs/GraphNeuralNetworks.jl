@@ -1,3 +1,21 @@
+@testitem "GAT weight initialization" begin
+    using Lux, Random
+
+    for layer in (GATConv, GATv2Conv)
+        l = layer(3 => 4; heads = 2)
+        ps, _ = Lux.setup(Xoshiro(0), l)
+        @test ps.a == first(Lux.setup(Xoshiro(0), l)).a
+        @test ps.a != first(Lux.setup(Xoshiro(1), l)).a
+    end
+
+    init_weight(rng::AbstractRNG, dims...) = ones(Float32, dims...)
+    l = GATConv((3, 2) => 4; heads = 2, add_self_loops = false, init_weight)
+    ps, _ = Lux.setup(Xoshiro(0), l)
+    @test all(isone, ps.a)
+    @test all(isone, ps.dense_x.weight)
+    @test all(isone, ps.dense_e.weight)
+end
+
 @testitem "layers/conv" setup=[TestModuleLux] begin
     using .TestModuleLux
     
