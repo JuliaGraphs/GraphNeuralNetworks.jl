@@ -885,8 +885,8 @@ function GATConv(ch::Pair{NTuple{2, Int}, Int}, σ = identity;
         @assert ein==0 "Using edge features and setting add_self_loops=true at the same time is not yet supported."
     end
 
-    dense_x = Dense(in => out * heads, use_bias = false)
-    dense_e = ein > 0 ? Dense(ein => out * heads, use_bias = false) : nothing
+    dense_x = Dense(in => out * heads; use_bias = false, init_weight)
+    dense_e = ein > 0 ? Dense(ein => out * heads; use_bias = false, init_weight) : nothing
     negative_slope = convert(Float32, negative_slope)
     return GATConv(dense_x, dense_e, init_weight, init_bias, use_bias, 
                  σ, negative_slope, ch, heads, concat, add_self_loops, dropout)
@@ -898,7 +898,7 @@ LuxCore.outputsize(l::GATConv) = (l.concat ? l.channel[2]*l.heads : l.channel[2]
 function LuxCore.initialparameters(rng::AbstractRNG, l::GATConv)
     (in, ein), out = l.channel
     dense_x = LuxCore.initialparameters(rng, l.dense_x)
-    a = l.init_weight(ein > 0 ? 3out : 2out, l.heads)
+    a = l.init_weight(rng, ein > 0 ? 3out : 2out, l.heads)
     ps = (; dense_x, a)
     if ein > 0
         ps = (ps..., dense_e = LuxCore.initialparameters(rng, l.dense_e))
@@ -1055,7 +1055,7 @@ function LuxCore.initialparameters(rng::AbstractRNG, l::GATv2Conv)
     (in, ein), out = l.channel
     dense_i = LuxCore.initialparameters(rng, l.dense_i)
     dense_j = LuxCore.initialparameters(rng, l.dense_j)
-    a = l.init_weight(out, l.heads)
+    a = l.init_weight(rng, out, l.heads)
     ps = (; dense_i, dense_j, a)
     if ein > 0
         ps = (ps..., dense_e = LuxCore.initialparameters(rng, l.dense_e))
